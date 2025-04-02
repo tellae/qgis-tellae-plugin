@@ -31,6 +31,10 @@ from .resources import *
 from .tellae_services_dialog import TellaeServicesDialog
 import os.path
 
+def get_starling_version():
+    from starling_sim.version import __version__
+    return __version__
+
 
 class TellaeServices:
     """QGIS Plugin Implementation."""
@@ -180,6 +184,10 @@ class TellaeServices:
             self.iface.removeToolBarIcon(action)
 
 
+    def set_starling_version(self):
+        starling_version = get_starling_version()
+        self.dlg.lineEdit.setText(starling_version)
+
     def run(self):
         """Run method that performs all the real work"""
 
@@ -188,6 +196,7 @@ class TellaeServices:
         if self.first_start == True:
             self.first_start = False
             self.dlg = TellaeServicesDialog()
+            self.set_starling_version()
 
         # show the dialog
         self.dlg.show()
