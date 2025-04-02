@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/plugins/tellae_services" >
+        <file>icon.png</file>
+    </qresource>
+</RCC>
