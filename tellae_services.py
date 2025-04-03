@@ -21,9 +21,9 @@
  *                                                                         *
  ***************************************************************************/
 """
-from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
+from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtWidgets import QAction, QTableWidget, QTableWidgetItem, QPushButton
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -31,10 +31,13 @@ from .resources import *
 from .tellae_services_dialog import TellaeServicesDialog
 import os.path
 
+# Tellae imports
+from .tellae_store import TellaeStore
 from .tellae_client import requests, binaries, version
-
+from .utils import read_local_config
 def get_sdk_version():
     return version.__version__
+
 
 
 class TellaeServices:
@@ -71,6 +74,12 @@ class TellaeServices:
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads
         self.first_start = None
+
+        # read local config if there is one
+        read_local_config()
+
+        # Tellae attributes
+        self.store = TellaeStore()
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -184,10 +193,54 @@ class TellaeServices:
                 action)
             self.iface.removeToolBarIcon(action)
 
+    def set_user_name(self):
+        user = self.store.user
+        user_name = f'{user["firstName"]} {user["lastName"]}'
+        self.dlg.user_name.setText(user_name)
 
     def set_sdk_version(self):
         sdk_version = get_sdk_version()
-        self.dlg.lineEdit.setText(sdk_version)
+        self.dlg.version_label.setText(f"Client version: {sdk_version}")
+
+    def set_layers_table(self):
+        layers = self.store.get_filtered_layer_summary()
+
+        headers = [
+            {"text": "Nom", "value": lambda x: x["name"]["fr"], "width": 250},
+            {"text": "Date", "value": lambda x: self.store.datasets_summary[x["main_dataset"]].get("date", ""), "width": 80},
+            {"text": "Source", "value": lambda x: self.store.datasets_summary[x["main_dataset"]]["provider_name"], "width": 250},
+            {"text": "Actions", "value": "actions", "width": 60}
+        ]
+
+        table = self.dlg.tableWidget
+
+        table.setRowCount(len(layers))
+        table.setColumnCount(len(headers))
+
+        table.setHorizontalHeaderLabels([header["text"] for header in headers])
+
+        for col, header in enumerate(headers):
+            if "width" in header:
+                table.setColumnWidth(col, header["width"])
+
+        for row, layer in enumerate(layers):
+
+            for col, header in enumerate(headers):
+                item = QTableWidgetItem()
+                if callable(header["value"]):
+                    text = header["value"](layer)
+                elif header["value"] == "actions":
+                    btn = QPushButton(table)
+                    btn.setText("add")
+                    table.setCellWidget(row, col, btn)
+                    continue
+                else:
+                    text = layer[header["value"]]
+
+                item.setText(text)
+                table.setItem(row, col, item)
+
+        table.setEditTriggers(QTableWidget.NoEditTriggers)
 
     def run(self):
         """Run method that performs all the real work"""
@@ -197,7 +250,11 @@ class TellaeServices:
         if self.first_start == True:
             self.first_start = False
             self.dlg = TellaeServicesDialog()
+            self.set_user_name()
             self.set_sdk_version()
+            self.set_layers_table()
+
+
 
         # show the dialog
         self.dlg.show()

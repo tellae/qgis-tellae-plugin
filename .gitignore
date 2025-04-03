@@ -4,5 +4,10 @@
 # virtual environment
 .venv/
 
-# ignore simlink tellae-client (used for development)
+# development files and folders
+
+# simlink to tellae-client
 tellae_client
+
+# local config file
+local.config.jsonc
