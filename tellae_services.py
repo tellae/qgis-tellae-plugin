@@ -35,8 +35,6 @@ import os.path
 from .tellae_store import TellaeStore
 from .tellae_client import requests, binaries, version
 from .utils import read_local_config
-def get_sdk_version():
-    return version.__version__
 
 
 
@@ -199,7 +197,7 @@ class TellaeServices:
         self.dlg.user_name.setText(user_name)
 
     def set_sdk_version(self):
-        sdk_version = get_sdk_version()
+        sdk_version = version.__version__
         self.dlg.version_label.setText(f"Client version: {sdk_version}")
 
     def set_layers_table(self):
