@@ -27,7 +27,7 @@ tags=python
 
 homepage=https://github.com/tellae/qgis-tellae-plugin
 category=Plugins
-icon=icon.png
+icon=tellae.png
 # experimental flag
 experimental=True
 
