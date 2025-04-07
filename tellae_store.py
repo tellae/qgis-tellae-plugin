@@ -1,8 +1,5 @@
 
 from .tellae_client import requests, binaries, version
-from qgis.core import (
-    QgsMessageLog,
-)
 
 class TellaeStore:
 
@@ -16,6 +13,8 @@ class TellaeStore:
 
         # full layer summary
         self.layer_summary = []
+
+        self.themes = []
 
         # data datasets summary
         self.datasets_summary = {}
@@ -33,6 +32,10 @@ class TellaeStore:
         layers = sorted(layers, key=lambda x: x["name"]["fr"])
         self.layer_summary = layers
 
+        themes = list(set([theme for layer in layers for theme in layer["themes"]]))
+
+        self.themes = sorted(themes)
+
     def request_datasets_summary(self):
         datasets = self.request_manager.shark("/datasets/summary").json()
 
@@ -40,8 +43,9 @@ class TellaeStore:
 
         self.datasets_summary = datasets
 
-    def get_filtered_layer_summary(self):
-        return self.layer_summary
+    def get_filtered_layer_summary(self, selected_themes: list):
 
-    def log(self, message):
-        QgsMessageLog.logMessage(message, "TellaeServices")
+        if len(selected_themes) == 0:
+            return self.layer_summary
+        else:
+            return [layer for layer in self.layer_summary if (set(selected_themes) & set(layer["themes"]))]
