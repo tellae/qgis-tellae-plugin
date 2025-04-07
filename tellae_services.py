@@ -23,7 +23,17 @@
 """
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction, QTableWidget, QTableWidgetItem, QPushButton
+from qgis.PyQt.QtWidgets import QAction, QTableWidget, QTableWidgetItem, QPushButton, QAbstractItemView
+
+from qgis.core import (
+    QgsApplication,
+    QgsAuthMethodConfig,
+    QgsProject,
+    QgsVectorLayer,
+    QgsMessageLog,
+)
+
+import requests
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -33,8 +43,8 @@ import os.path
 
 # Tellae imports
 from .tellae_store import TellaeStore
-from .tellae_client import requests, binaries, version
-from .utils import read_local_config
+from .tellae_client import requests as tellae_requests, binaries, version
+from .utils import read_local_config, create_layer_instance, log, create_vector_layer_instance
 
 
 
@@ -74,10 +84,14 @@ class TellaeServices:
         self.first_start = None
 
         # read local config if there is one
-        read_local_config()
+        res = read_local_config(self.plugin_dir)
 
         # Tellae attributes
         self.store = TellaeStore()
+
+        self.layers = []
+
+        self.selected_themes = []
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -191,6 +205,9 @@ class TellaeServices:
                 action)
             self.iface.removeToolBarIcon(action)
 
+    def display_message(self, message: str):
+        self.dlg.message.setText(message)
+
     def set_user_name(self):
         user = self.store.user
         user_name = f'{user["firstName"]} {user["lastName"]}'
@@ -201,7 +218,7 @@ class TellaeServices:
         self.dlg.version_label.setText(f"Client version: {sdk_version}")
 
     def set_layers_table(self):
-        layers = self.store.get_filtered_layer_summary()
+        self.layers = self.store.get_filtered_layer_summary(self.selected_themes)
 
         headers = [
             {"text": "Nom", "value": lambda x: x["name"]["fr"], "width": 250},
@@ -212,7 +229,7 @@ class TellaeServices:
 
         table = self.dlg.tableWidget
 
-        table.setRowCount(len(layers))
+        table.setRowCount(len(self.layers))
         table.setColumnCount(len(headers))
 
         table.setHorizontalHeaderLabels([header["text"] for header in headers])
@@ -221,7 +238,7 @@ class TellaeServices:
             if "width" in header:
                 table.setColumnWidth(col, header["width"])
 
-        for row, layer in enumerate(layers):
+        for row, layer in enumerate(self.layers):
 
             for col, header in enumerate(headers):
                 item = QTableWidgetItem()
@@ -229,7 +246,8 @@ class TellaeServices:
                     text = header["value"](layer)
                 elif header["value"] == "actions":
                     btn = QPushButton(table)
-                    btn.setText("add")
+                    btn.setText("Add")
+                    btn.clicked.connect(lambda state, x=row: self.add_layer(x))
                     table.setCellWidget(row, col, btn)
                     continue
                 else:
@@ -239,6 +257,39 @@ class TellaeServices:
                 table.setItem(row, col, item)
 
         table.setEditTriggers(QTableWidget.NoEditTriggers)
+
+    def add_layer(self, index):
+        layer_item = self.layers[index]
+        layer_type = layer_item["sourceType"]
+        layer_name = layer_item["name"]["fr"]
+
+        layer_data = layer_item["data"]
+        if layer_type == "geojson":
+            response = requests.get(layer_data, stream=True)
+            layer = create_layer_instance(layer_name, response)
+        elif layer_type == "shark":
+            response = self.store.request_manager.shark(f"/layers/geojson/{layer_data}")
+            layer = create_layer_instance(layer_name, response)
+        elif layer_type == "vector":
+            layer = create_vector_layer_instance(layer_name, layer_data)
+        else:
+            self.display_message(f"Unsupported layer type '{layer_type}'")
+            return
+
+        QgsProject.instance().addMapLayer(layer)
+
+        self.display_message(f"La couche '{layer_name}' a été ajoutée avec succès !")
+
+    def create_theme_selector(self):
+        self.dlg.themeSelector.addItems(self.store.themes)
+
+        self.dlg.themeSelector.itemSelectionChanged.connect(self.update_themes)
+
+    def update_themes(self):
+
+        self.selected_themes = [item.text() for item in self.dlg.themeSelector.selectedItems()]
+
+        self.set_layers_table()
 
     def run(self):
         """Run method that performs all the real work"""
@@ -250,6 +301,7 @@ class TellaeServices:
             self.dlg = TellaeServicesDialog()
             self.set_user_name()
             self.set_sdk_version()
+            self.create_theme_selector()
             self.set_layers_table()
 
 
