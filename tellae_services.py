@@ -227,30 +227,34 @@ class TellaeServices:
         self.dlg.user_name.setText(user_name)
 
     def set_layers_table(self):
-        self.layers = self.store.get_filtered_layer_summary(self.selected_theme)
-
-        headers = [
-            {"text": "Nom", "value": lambda x: x["name"]["fr"], "width": 250},
-            {"text": "Date", "value": lambda x: self.store.datasets_summary[x["main_dataset"]].get("date", ""), "width": 80},
-            {"text": "Source", "value": lambda x: self.store.datasets_summary[x["main_dataset"]]["provider_name"], "width": 250},
-            {"text": "Actions", "value": "actions", "width": 60}
-        ]
-
+        # get table widget
         table = self.dlg.tableWidget
 
+        # get list of layers to display
+        self.layers = self.store.get_filtered_layer_summary(self.selected_theme)
         table.setRowCount(len(self.layers))
+
+        # setup table headers
+        # total table length is 721, scroll bar is 16 => header width must total to 705
+        headers = [
+            {"text": "Nom", "value": lambda x: x["name"]["fr"], "width": 285},
+            {"text": "Date", "value": lambda x: self.store.datasets_summary[x["main_dataset"]].get("date", ""), "width": 80, "align": Qt.AlignCenter},
+            {"text": "Source", "value": lambda x: self.store.datasets_summary[x["main_dataset"]]["provider_name"], "width": 280},
+            {"text": "Actions", "value": "actions", "width": 60}
+        ]
         table.setColumnCount(len(headers))
-
         table.setHorizontalHeaderLabels([header["text"] for header in headers])
-
         for col, header in enumerate(headers):
             if "width" in header:
                 table.setColumnWidth(col, header["width"])
 
+        # populate table cells
         for row, layer in enumerate(self.layers):
-
             for col, header in enumerate(headers):
-                item = QTableWidgetItem()
+                # create a table cell
+                cell = QTableWidgetItem()
+
+                # evaluate its content depending on the row and column
                 if callable(header["value"]):
                     text = header["value"](layer)
                 elif header["value"] == "actions":
@@ -262,9 +266,18 @@ class TellaeServices:
                 else:
                     text = layer[header["value"]]
 
-                item.setText(text)
-                table.setItem(row, col, item)
+                # set cell text and tooltip
+                cell.setText(text)
+                cell.setToolTip(text)
 
+                # set text alignment
+                if "align" in header:
+                    cell.setTextAlignment(header["align"])
+
+                # put the cell in the table
+                table.setItem(row, col, cell)
+
+        # disable table edition
         table.setEditTriggers(QTableWidget.NoEditTriggers)
 
     def add_layer(self, index):

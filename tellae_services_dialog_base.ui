@@ -32,14 +32,23 @@
   <widget class="QTableWidget" name="tableWidget">
    <property name="geometry">
     <rect>
-     <x>20</x>
+     <x>10</x>
      <y>70</y>
-     <width>711</width>
-     <height>311</height>
+     <width>721</width>
+     <height>321</height>
     </rect>
    </property>
+   <property name="toolTip">
+    <string/>
+   </property>
+   <property name="verticalScrollBarPolicy">
+    <enum>Qt::ScrollBarAlwaysOn</enum>
+   </property>
+   <property name="alternatingRowColors">
+    <bool>true</bool>
+   </property>
    <property name="selectionMode">
-    <enum>QAbstractItemView::MultiSelection</enum>
+    <enum>QAbstractItemView::NoSelection</enum>
    </property>
    <attribute name="verticalHeaderVisible">
     <bool>false</bool>
@@ -80,7 +89,7 @@
     </size>
    </property>
    <property name="text">
-    <string>TextLabel</string>
+    <string/>
    </property>
   </widget>
   <widget class="QComboBox" name="themeSelector">
