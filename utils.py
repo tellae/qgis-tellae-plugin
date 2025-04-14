@@ -21,19 +21,13 @@ def log(message):
     QgsMessageLog.logMessage(str(message), "TellaeServices")
 
 def read_local_config(plugin_dir):
+    config = None
     path = plugin_dir + "/local.config.jsonc"
     if os.path.exists(path):
         with open(path, "r") as local_config:
             config = json.load(local_config)
-        environment_variables = config.get("env", {})
 
-        for k, v in environment_variables.items():
-            os.environ[k] = v
-
-        return True
-
-    else:
-        return False
+    return config
 
 
 class CancelImportDialog(QtWidgets.QDialog):
@@ -120,6 +114,7 @@ def get_apikey_from_cache():
     auth_manager = QgsApplication.authManager()
     config_dict = auth_manager.availableAuthMethodConfigs()
     apikey = None
+    secret = None
     for config in config_dict.values():
         if config.name() == "tellae-cache":
             aux_config = QgsAuthMethodConfig()
@@ -127,3 +122,15 @@ def get_apikey_from_cache():
             apikey = aux_config.configMap()["key"]
             secret = aux_config.configMap()["secret"]
     return apikey, secret
+
+
+class AuthenticationError(Exception):
+    pass
+
+
+class AccessError(Exception):
+    pass
+
+
+class InternalError(Exception):
+    pass

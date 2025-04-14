@@ -9,18 +9,28 @@ from qgis.core import (
     QgsVectorTileLayer,
     QgsMessageLog,
 )
-from .utils import log
+from .utils import log, AuthenticationError, read_local_config
 import urllib.parse
+import os
 
 
 class TellaeStore:
 
     def __init__(self):
+        log("Create TellaeStore")
         # whale request manager
-        self.request_manager = requests.ApiKeyRequestManager()
+        self.request_manager = None
+
+        self.authenticated = False
+
+        self.store_initiated = False
+
+        # plugin data
+        self.plugin_dir = os.path.dirname(__file__)
 
         # stored objects
 
+        # authenticated user
         self.user = {}
 
         # full layer summary
@@ -31,13 +41,60 @@ class TellaeStore:
         # data datasets summary
         self.datasets_summary = {}
 
-        # call some initialisation requests
+        # local config
+        self.local_config = None
+        self.read_local_config()
+
+    def read_local_config(self):
+        # store local configuration
+        self.local_config = read_local_config(self.plugin_dir)
+
+        # TODO: put the function and this call somewhere else
+        self.remove_auth_environment()
+
+        if self.local_config is not None:
+            log(str(self.local_config))
+            # setup environment variables from local config
+            environment_variables = self.local_config.get("env", {})
+            for k, v in environment_variables.items():
+                log(k)
+                os.environ[k] = v
+
+    def remove_auth_environment(self):
+        for var in ["WHALE_API_KEY_ID", "WHALE_SECRET_ACCESS_KEY", "WHALE_ENDPOINT"]:
+            if var in os.environ:
+                os.environ.pop(var)
+    def authenticate(self):
+        try:
+            # request manager instance
+            self.request_manager = requests.ApiKeyRequestManager()
+
+            # call some initialisation requests
+            self.request_auth_me()
+
+            # tag store as authenticated
+            self.authenticated = True
+
+        except (EnvironmentError, AuthenticationError) as e:
+            self.authenticated = False
+            raise e
+
+    def init_store(self):
+
+        if not self.authenticated:
+            raise AuthenticationError("User need to be authenticated before the store is initiated")
+
         self.request_layer_summary()
         self.request_datasets_summary()
-        self.request_auth_me()
+
+        self.store_initiated = True
 
     def request_auth_me(self):
-        self.user = self.request_manager.request("/auth/me").json()
+        try:
+            log(self.request_manager.whale_endpoint)
+            self.user = self.request_manager.request("/auth/me").json()
+        except:
+            raise AuthenticationError
 
     def request_layer_summary(self):
         layers = self.request_manager.shark("/layers/table").json()
@@ -72,3 +129,4 @@ class TellaeStore:
         return uri
 
 
+TELLAE_STORE = TellaeStore()
