@@ -49,7 +49,7 @@ import os.path
 from .tellae_store import TellaeStore
 from .tellae_client import requests as tellae_requests, binaries, version
 from .utils import read_local_config, create_layer_instance, log, create_vector_layer_instance
-
+from .tellae_store import TELLAE_STORE
 
 def preprocess_requests(request):
     log(str(request))
@@ -90,10 +90,10 @@ class TellaeServices:
         self.first_start = None
 
         # read local config if there is one
-        res = read_local_config(self.plugin_dir)
+        # res = read_local_config(self.plugin_dir)
 
         # Tellae attributes
-        self.store = TellaeStore()
+        self.store = TELLAE_STORE
 
         self.layers = []
 
@@ -101,8 +101,6 @@ class TellaeServices:
 
         self.network_manager = QgsNetworkAccessManager.instance()
         self.setupNetwork()
-
-        print(self.network_manager)
 
         self.test_uri()
 
@@ -343,23 +341,28 @@ class TellaeServices:
 
         # Create the dialog with elements (after translation) and keep reference
         # Only create GUI ONCE in callback, so that it will only load when the plugin is started
-        if self.first_start == True:
+        if self.first_start:
             log("first start")
             self.first_start = False
             self.dlg = TellaeServicesDialog()
             self.auth = TellaeAuthDialog()
+
+
+        if TELLAE_STORE.authenticated:
+            if not TELLAE_STORE.store_initiated:
+                TELLAE_STORE.init_store()
             self.set_user_name()
             self.create_theme_selector()
             self.set_layers_table()
 
-
-
-        # show the dialog
-        self.dlg.show()
-        # Run the dialog event loop
-        result = self.dlg.exec_()
-        # See if OK was pressed
-        if result:
-            # Do something useful here - delete the line containing pass and
-            # substitute with your code.
-            pass
+            # show the dialog
+            self.dlg.show()
+            # Run the dialog event loop
+            result = self.dlg.exec_()
+            # See if OK was pressed
+            if result:
+                # Do something useful here - delete the line containing pass and
+                # substitute with your code.
+                pass
+        else:
+            self.auth.show()
