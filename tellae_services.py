@@ -39,6 +39,7 @@ import requests
 from .resources import *
 # Import the code for the dialog
 from .tellae_services_dialog import TellaeServicesDialog
+from .tellae_auth_dialog import TellaeAuthDialog
 import os.path
 
 # Tellae imports
@@ -299,6 +300,7 @@ class TellaeServices:
         if self.first_start == True:
             self.first_start = False
             self.dlg = TellaeServicesDialog()
+            self.auth = TellaeAuthDialog()
             self.set_user_name()
             self.set_sdk_version()
             self.create_theme_selector()
