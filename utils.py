@@ -22,12 +22,9 @@ def log(message):
 
 def read_local_config(plugin_dir):
     path = plugin_dir + "/local.config.jsonc"
-    log(path)
     if os.path.exists(path):
-        log("config found")
         with open(path, "r") as local_config:
             config = json.load(local_config)
-        log(str(config))
         environment_variables = config.get("env", {})
 
         for k, v in environment_variables.items():
@@ -91,9 +88,13 @@ def create_layer_instance(layer_id, layer_stream, path=""):
 
     return vector_layer
 
-def create_vector_layer_instance(layer_name, layer_id):
-    data_source = QgsDataSourceUri("type=xyz&url=http://localhost:3000/" + layer_id + "/{z}/{x}/{y}")
-    return QgsVectorTileLayer("type=xyz&url=http://localhost:3000/" + layer_id + "/{z}/{x}/{y}", layer_name)
+
+
+def create_vector_layer_instance(layer_name, url):
+
+
+
+    return QgsVectorTileLayer(url, layer_name)
 
 def create_new_tellae_auth_config(api_key, api_secret):
 
