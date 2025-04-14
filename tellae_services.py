@@ -31,6 +31,9 @@ from qgis.core import (
     QgsProject,
     QgsVectorLayer,
     QgsMessageLog,
+    QgsDataSourceUri,
+    QgsHttpHeaders,
+    QgsNetworkAccessManager,
 )
 
 import requests
@@ -48,6 +51,8 @@ from .tellae_client import requests as tellae_requests, binaries, version
 from .utils import read_local_config, create_layer_instance, log, create_vector_layer_instance
 
 
+def preprocess_requests(request):
+    log(str(request))
 
 class TellaeServices:
     """QGIS Plugin Implementation."""
@@ -93,6 +98,13 @@ class TellaeServices:
         self.layers = []
 
         self.selected_themes = []
+
+        self.network_manager = QgsNetworkAccessManager.instance()
+        self.setupNetwork()
+
+        print(self.network_manager)
+
+        self.test_uri()
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -272,7 +284,7 @@ class TellaeServices:
             response = self.store.request_manager.shark(f"/layers/geojson/{layer_data}")
             layer = create_layer_instance(layer_name, response)
         elif layer_type == "vector":
-            layer = create_vector_layer_instance(layer_name, layer_data)
+            layer = create_vector_layer_instance(layer_name, self.store.vector_tile_url(layer_data))
         else:
             self.display_message(f"Unsupported layer type '{layer_type}'")
             return
@@ -292,12 +304,32 @@ class TellaeServices:
 
         self.set_layers_table()
 
+    def test_uri(self):
+        uri = QgsDataSourceUri()
+        uri.setDriver("https://whale.tellae.fr")
+        headers = QgsHttpHeaders({
+            "apikey": "test",
+            "secret": "OHOHOG"
+        })
+        uri.setHttpHeaders(headers)
+        log(uri.uri())
+        log(uri.encodedUri())
+
+    def setupNetwork(self):
+        log("setupNetwork")
+        # QgsNetworkAccessManager.setRequestPreprocessor(preprocess_requests)
+        self.network_manager.requestAboutToBeCreated.connect(preprocess_requests)
+
+
+
+
     def run(self):
         """Run method that performs all the real work"""
 
         # Create the dialog with elements (after translation) and keep reference
         # Only create GUI ONCE in callback, so that it will only load when the plugin is started
         if self.first_start == True:
+            log("first start")
             self.first_start = False
             self.dlg = TellaeServicesDialog()
             self.auth = TellaeAuthDialog()

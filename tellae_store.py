@@ -1,5 +1,17 @@
 
 from .tellae_client import requests, binaries, version
+from qgis.core import (
+    QgsApplication,
+    QgsAuthMethodConfig,
+    QgsProject,
+    QgsVectorLayer,
+    QgsDataSourceUri,
+    QgsVectorTileLayer,
+    QgsMessageLog,
+)
+from .utils import log
+import urllib.parse
+
 
 class TellaeStore:
 
@@ -49,3 +61,14 @@ class TellaeStore:
             return self.layer_summary
         else:
             return [layer for layer in self.layer_summary if (set(selected_themes) & set(layer["themes"]))]
+
+    def vector_tile_url(self, table_id):
+
+        full_url = self.request_manager.whale_endpoint + "/martin/" + table_id + "/{z}/{x}/{y}".replace("{", "%7B").replace("}", "%7D")
+        headers = self.request_manager._get_headers(full_url, "GET", None, "application/json", None)
+
+        uri = f"url={full_url}&type=xyz&http-header:Authorization={headers['Authorization']}&http-header:Content-Type={headers['Content-Type']}"
+        log(uri)
+        return uri
+
+
