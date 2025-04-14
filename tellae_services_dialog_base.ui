@@ -29,19 +29,6 @@
     <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
    </property>
   </widget>
-  <widget class="QLabel" name="version_label">
-   <property name="geometry">
-    <rect>
-     <x>560</x>
-     <y>10</y>
-     <width>171</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Client version:</string>
-   </property>
-  </widget>
   <widget class="QTableWidget" name="tableWidget">
    <property name="geometry">
     <rect>
@@ -54,6 +41,9 @@
    <property name="selectionMode">
     <enum>QAbstractItemView::MultiSelection</enum>
    </property>
+   <attribute name="verticalHeaderVisible">
+    <bool>false</bool>
+   </attribute>
   </widget>
   <widget class="QLabel" name="user_name">
    <property name="geometry">
@@ -93,17 +83,36 @@
     <string>TextLabel</string>
    </property>
   </widget>
-  <widget class="QListWidget" name="themeSelector">
+  <widget class="QComboBox" name="themeSelector">
    <property name="geometry">
     <rect>
      <x>560</x>
      <y>40</y>
      <width>171</width>
-     <height>21</height>
+     <height>27</height>
     </rect>
    </property>
-   <property name="selectionMode">
-    <enum>QAbstractItemView::MultiSelection</enum>
+   <property name="editable">
+    <bool>false</bool>
+   </property>
+   <property name="currentText">
+    <string/>
+   </property>
+   <property name="frame">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>560</x>
+     <y>10</y>
+     <width>66</width>
+     <height>19</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Thème :</string>
    </property>
   </widget>
  </widget>

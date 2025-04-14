@@ -97,7 +97,7 @@ class TellaeServices:
 
         self.layers = []
 
-        self.selected_themes = []
+        self.selected_theme = "Tous"
 
         self.network_manager = QgsNetworkAccessManager.instance()
         self.setupNetwork()
@@ -226,12 +226,8 @@ class TellaeServices:
         user_name = f'{user["firstName"]} {user["lastName"]}'
         self.dlg.user_name.setText(user_name)
 
-    def set_sdk_version(self):
-        sdk_version = version.__version__
-        self.dlg.version_label.setText(f"Client version: {sdk_version}")
-
     def set_layers_table(self):
-        self.layers = self.store.get_filtered_layer_summary(self.selected_themes)
+        self.layers = self.store.get_filtered_layer_summary(self.selected_theme)
 
         headers = [
             {"text": "Nom", "value": lambda x: x["name"]["fr"], "width": 250},
@@ -294,14 +290,20 @@ class TellaeServices:
         self.display_message(f"La couche '{layer_name}' a été ajoutée avec succès !")
 
     def create_theme_selector(self):
-        self.dlg.themeSelector.addItems(self.store.themes)
+        # set list of layers
+        self.dlg.themeSelector.addItems(["Tous"] + self.store.themes)
 
-        self.dlg.themeSelector.itemSelectionChanged.connect(self.update_themes)
+        # set default selection to "all"
+        self.dlg.themeSelector.setCurrentText("Tous")
 
-    def update_themes(self):
+        # add listener on update event
+        self.dlg.themeSelector.currentTextChanged.connect(self.update_theme)
 
-        self.selected_themes = [item.text() for item in self.dlg.themeSelector.selectedItems()]
+    def update_theme(self, new_theme):
+        # update selected theme
+        self.selected_theme = new_theme
 
+        # update layers table
         self.set_layers_table()
 
     def test_uri(self):
@@ -334,7 +336,6 @@ class TellaeServices:
             self.dlg = TellaeServicesDialog()
             self.auth = TellaeAuthDialog()
             self.set_user_name()
-            self.set_sdk_version()
             self.create_theme_selector()
             self.set_layers_table()
 

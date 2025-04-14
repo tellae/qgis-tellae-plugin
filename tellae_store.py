@@ -55,12 +55,12 @@ class TellaeStore:
 
         self.datasets_summary = datasets
 
-    def get_filtered_layer_summary(self, selected_themes: list):
+    def get_filtered_layer_summary(self, selected_theme: str):
 
-        if len(selected_themes) == 0:
+        if selected_theme == "Tous":
             return self.layer_summary
         else:
-            return [layer for layer in self.layer_summary if (set(selected_themes) & set(layer["themes"]))]
+            return [layer for layer in self.layer_summary if selected_theme in layer["themes"]]
 
     def vector_tile_url(self, table_id):
 
