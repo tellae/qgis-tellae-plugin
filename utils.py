@@ -70,12 +70,13 @@ def create_layer_instance(layer_id, layer_stream, path=""):
                 f.write(chunk)
                 downloaded += len(chunk)
                 QCoreApplication.processEvents()
-                cancel_import_dialog.chunkLabel.setText(
-                    "Downloaded: {}MB\nSpeed: {:.2f}kB/s".format(
-                        downloaded // 1024 // 1024,
-                        (downloaded / 1024) / (timer.elapsed() / 1000),
+                if timer.elapsed() > 0:
+                    cancel_import_dialog.chunkLabel.setText(
+                        "Downloaded: {}MB\nSpeed: {:.2f}kB/s".format(
+                            downloaded // 1024 // 1024,
+                            (downloaded / 1024) / (timer.elapsed() / 1000),
+                        )
                     )
-                )
                 if cancel_import_dialog.isCanceled:
                     return
 
