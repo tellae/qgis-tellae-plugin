@@ -7,6 +7,8 @@ from qgis.PyQt import QtWidgets
 
 from .utils import log, create_new_tellae_auth_config, get_apikey_from_cache, remove_tellae_auth_config, AuthenticationError, AccessError, read_local_config
 from .tellae_store import TELLAE_STORE
+import requests
+
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -82,6 +84,8 @@ class TellaeAuthDialog(QtWidgets.QDialog, FORM_CLASS):
         try:
             # authenticate the TellaeStore
             TELLAE_STORE.authenticate()
+        except requests.ConnectionError:
+            message = "Le serveur distant ne répond pas"
         except EnvironmentError:
             message = "Erreur lors de la récupération des identifiants"
         except AuthenticationError:
