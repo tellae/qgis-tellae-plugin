@@ -34,6 +34,9 @@ from qgis.core import (
     QgsDataSourceUri,
     QgsHttpHeaders,
     QgsNetworkAccessManager,
+    QgsSymbolLayer,
+    QgsProperty,
+    qgsfunction
 )
 
 import requests
@@ -48,8 +51,18 @@ import os.path
 # Tellae imports
 from .tellae_store import TellaeStore
 from .tellae_client import requests as tellae_requests, binaries, version
-from .utils import read_local_config, create_layer_instance, log, create_vector_layer_instance
+from .utils import read_local_config, create_layer_instance, log, create_vector_layer_instance, prepare_layer_style
 from .tellae_store import TELLAE_STORE
+
+@qgsfunction(group='Custom', referenced_columns=[])
+def prefixed_color(color):
+    """
+
+    """
+    if color.startswith('#'):
+        return color
+    else:
+        return "#" + color
 
 def preprocess_requests(request):
     log(str(request))
@@ -296,6 +309,10 @@ class TellaeServices:
             self.display_message(f"Unsupported layer type '{layer_type}'")
             return
 
+        # setup the layer's style
+        prepare_layer_style(layer, layer_item)
+
+        # add the layer to QGIS
         QgsProject.instance().addMapLayer(layer)
 
         self.display_message(f"La couche '{layer_name}' a été ajoutée avec succès !")

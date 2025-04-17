@@ -3,7 +3,6 @@ import json
 
 import tempfile
 
-
 import requests
 from PyQt5 import QtWidgets, uic
 from PyQt5.QtCore import QCoreApplication, QElapsedTimer
@@ -15,6 +14,12 @@ from qgis.core import (
     QgsDataSourceUri,
     QgsVectorTileLayer,
     QgsMessageLog,
+    QgsSymbolLayer,
+    QgsSymbol,
+    QgsProperty,
+    QgsCategorizedSymbolRenderer,
+    QgsRendererCategory,
+    QgsSingleSymbolRenderer
 )
 
 def log(message):
@@ -123,6 +128,76 @@ def get_apikey_from_cache():
             secret = aux_config.configMap()["secret"]
     return apikey, secret
 
+
+def prepare_layer_style(layer, layer_info):
+
+    renderer = layer.renderer()
+
+    additional_properties = layer_info.get("additionalProperties", {})
+    log(str(additional_properties))
+    if "editAttributes" in additional_properties:
+        renderer = set_color_edit_attribute(layer, additional_properties["editAttributes"]["color"])
+        # set_edit_attributes(renderer, additional_properties["editAttributes"])
+
+    layer.setRenderer(renderer)  # necessary to emit rendererChanged signal (updates Layer Styling panel)
+
+
+def set_edit_attributes(layer, edit_attributes):
+    for key, props_mapping in edit_attributes.items():
+        if key == "color":
+            set_color_edit_attribute(layer, props_mapping)
+
+
+def set_color_edit_attribute(layer, color_props_mapping):
+    # get props_mapping type
+    mapping_type = color_props_mapping["type"]
+
+    mapping_options = color_props_mapping.get("mapping_options", color_props_mapping.get("mapping_data"))
+
+    if mapping_type == "constant":
+        pass
+    elif mapping_type == "direct":
+        renderer = layer.renderer()
+
+        color_attribute = mapping_options["key"]
+        expression = f'prefixed_color("{color_attribute}")'
+
+        renderer.symbol().symbolLayer(0).setDataDefinedProperty(
+            infer_color_property(renderer),
+            QgsProperty.fromExpression(expression)
+        )
+
+        # renderer = QgsSingleSymbolRenderer.convertFromRenderer(layer.renderer())
+        # symbol = QgsSymbol.defaultSymbol(layer.geometryType())
+        # log(symbol.__class__.__name__)
+        # symbol.setDataDefinedProperty(
+        #     infer_color_property(layer),
+        #     QgsProperty.fromExpression(expression)
+        # )
+        # renderer.setSymbol(symbol)
+
+    elif mapping_type == "category":
+        raise NotImplementedError
+        renderer = QgsCategorizedSymbolRenderer()
+        values_labels = mapping_options.get("values_labels", {})
+        for key, color in mapping_options["values_map"].items():
+            symbol = QgsSymbol.defaultSymbol(myVectorLayer.geometryType())
+            symbol.setColor(color)
+
+            category = QgsRendererCategory(key, symbol, values_labels.get(key, key))
+            renderer.addCategory(category)
+
+
+    elif mapping_type == "continuous":
+        raise NotImplementedError
+    else:
+        raise ValueError("Unknown mapping type")
+
+    return renderer
+
+
+def infer_color_property(layer):
+    return QgsSymbolLayer.PropertyStrokeColor
 
 class AuthenticationError(Exception):
     pass
