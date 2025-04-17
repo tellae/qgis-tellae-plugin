@@ -1,5 +1,5 @@
 
-from .tellae_client import requests, binaries, version
+from .tellae_client import requests as tellae_requests, binaries, version
 from qgis.core import (
     QgsApplication,
     QgsAuthMethodConfig,
@@ -12,6 +12,7 @@ from qgis.core import (
 from .utils import log, AuthenticationError, read_local_config
 import urllib.parse
 import os
+import requests
 
 
 class TellaeStore:
@@ -67,7 +68,7 @@ class TellaeStore:
     def authenticate(self):
         try:
             # request manager instance
-            self.request_manager = requests.ApiKeyRequestManager()
+            self.request_manager = tellae_requests.ApiKeyRequestManager()
 
             # call some initialisation requests
             self.request_auth_me()
@@ -90,11 +91,15 @@ class TellaeStore:
         self.store_initiated = True
 
     def request_auth_me(self):
-        try:
-            log(self.request_manager.whale_endpoint)
-            self.user = self.request_manager.request("/auth/me").json()
-        except:
+
+        response = self.request_manager.request("/auth/me", raise_exception=False)
+
+        if 200 <= response.status_code < 300:
+            self.user = response.json()
+        elif response.status_code in [401, 403]:
             raise AuthenticationError
+        else:
+            raise ValueError(response.status_code)
 
     def request_layer_summary(self):
         layers = self.request_manager.shark("/layers/table").json()
