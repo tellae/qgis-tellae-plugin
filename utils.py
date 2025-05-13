@@ -19,7 +19,8 @@ from qgis.core import (
     QgsProperty,
     QgsCategorizedSymbolRenderer,
     QgsRendererCategory,
-    QgsSingleSymbolRenderer
+    QgsSingleSymbolRenderer,
+    QgsNetworkReplyContent
 )
 
 def log(message):
@@ -91,8 +92,6 @@ def create_layer_instance(layer_id, layer_stream, path=""):
 
 
 def create_vector_layer_instance(layer_name, url):
-
-
 
     return QgsVectorTileLayer(url, layer_name)
 
@@ -198,6 +197,12 @@ def set_color_edit_attribute(layer, color_props_mapping):
 
 def infer_color_property(layer):
     return QgsSymbolLayer.PropertyStrokeColor
+
+class RequestError(Exception):
+    def __init__(self, reply: QgsNetworkReplyContent):
+        super().__init__(reply.errorString())
+        self.code = reply.error()
+
 
 class AuthenticationError(Exception):
     pass
