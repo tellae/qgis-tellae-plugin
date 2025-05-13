@@ -5,7 +5,9 @@ import os
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
 
-from .utils import log, create_new_tellae_auth_config, get_apikey_from_cache, remove_tellae_auth_config, AuthenticationError, AccessError, read_local_config
+from qgis.PyQt.QtWidgets import QDialogButtonBox
+
+from .utils import log, create_new_tellae_auth_config, get_apikey_from_cache, remove_tellae_auth_config, AuthenticationError, AccessError, read_local_config, RequestError
 from .tellae_store import TELLAE_STORE
 import requests
 
@@ -34,6 +36,48 @@ class TellaeAuthDialog(QtWidgets.QDialog, FORM_CLASS):
         if not self._check_local_config_existence():
             self._check_stored_auth_existence()
 
+    def validate(self):
+
+        self.try_authenticate_from_inputs()
+
+        if TELLAE_STORE.authenticated:
+            # save credentials if asked to
+            if self.saveIndentsCheckBox.isChecked():
+                log("SAVE API KEY TO AUTH")
+                create_new_tellae_auth_config(self.keyEdit.text(), self.secretEdit.text())
+
+
+
+            # TODO: go back to main dialog
+
+    def try_authenticate(self, apikey, secret, endpoint=None):
+        message = ""
+        try:
+            TELLAE_STORE.authenticate(apikey, secret, endpoint=endpoint)
+            self.accept()
+        except RequestError as e:
+            message = f"Erreur lors de la requête: {str(e)}"
+        except requests.ConnectionError:
+            message = "Le serveur distant ne répond pas"
+        except EnvironmentError:
+            message = "Erreur lors de la récupération des identifiants"
+        except AuthenticationError:
+            message = "Erreur d'authentification, vérifiez vos identifiants"
+        except AccessError:
+            message = "Vous n'avez pas accès à cette fonctionnalité"
+        self.display_error_message(message)
+
+    def try_authenticate_from_inputs(self):
+        self.try_authenticate(self.keyEdit.text(), self.secretEdit.text())
+
+    def setup_auth_save(self):
+        # self.buttonBox.accepted.connect(self.validate)
+        self.cancelButton.clicked.connect(self.done)
+        self.validateButton.clicked.connect(self.validate)
+
+    def display_error_message(self, message):
+        self.errorMessage.setText(message)
+
     def _check_local_config_existence(self):
         local_auth = False
         if TELLAE_STORE.local_config is not None and "auth" in TELLAE_STORE.local_config and TELLAE_STORE.local_config["auth"].get("use", True):
@@ -41,15 +85,11 @@ class TellaeAuthDialog(QtWidgets.QDialog, FORM_CLASS):
             log("Authentication from local configuration")
 
             try:
-                for key in ["WHALE_API_KEY_ID", "WHALE_SECRET_ACCESS_KEY"]:
-                    os.environ[key] = TELLAE_STORE.local_config["auth"][key]
+                endpoint = TELLAE_STORE.local_config["auth"].get("WHALE_ENDPOINT", None)
+                self.try_authenticate(TELLAE_STORE.local_config["auth"]["WHALE_API_KEY_ID"], TELLAE_STORE.local_config["auth"]["WHALE_SECRET_ACCESS_KEY"], endpoint=endpoint)
             except KeyError as e:
                 self.display_error_message(f"Erreur lors de l'authentification locale, clé manquante: {str(e)}")
                 return local_auth
-
-            self.try_authenticate()
-
-
 
         return local_auth
 
@@ -61,55 +101,5 @@ class TellaeAuthDialog(QtWidgets.QDialog, FORM_CLASS):
             self.keyEdit.setText(apikey)
             self.secretEdit.setText(secret)
 
-            # set the environment variables from the text inputs
-            self._set_environment_from_inputs()
-
-            self.try_authenticate()
-
-    def display_error_message(self, message):
-        self.errorMessage.setText(message)
-
-    def remove_auth_environment(self):
-        for var in ["WHALE_API_KEY_ID", "WHALE_SECRET_ACCESS_KEY", "WHALE_ENDPOINT"]:
-            if var in os.environ:
-                os.environ.pop(var)
-
-    def _set_environment_from_inputs(self):
-        # set environment variables from text inputs
-        os.environ["WHALE_API_KEY_ID"] = self.keyEdit.text()
-        os.environ["WHALE_SECRET_ACCESS_KEY"] = self.secretEdit.text()
-
-    def try_authenticate(self):
-        message = ""
-        try:
-            # authenticate the TellaeStore
-            TELLAE_STORE.authenticate()
-        except requests.ConnectionError:
-            message = "Le serveur distant ne répond pas"
-        except EnvironmentError:
-            message = "Erreur lors de la récupération des identifiants"
-        except AuthenticationError:
-            message = "Erreur d'authentification, vérifiez vos identifiants"
-        except AccessError:
-            message = "Vous n'avez pas accès à cette fonctionnalité"
-
-        self.display_error_message(message)
-
-    def setup_auth_save(self):
-        log("SETUP SAVE")
-        self.pushButton.clicked.connect(self.validate)
-
-    def validate(self):
-        log("SAVE API KEY")
-        log(self.keyEdit.text())
-        log(self.secretEdit.text())
-
-        # try to authenticate from inputs
-        self.authenticate_from_inputs()
-
-        if TELLAE_STORE.authenticated:
-            # save credentials if asked to
-            if self.saveIndentsCheckBox.isChecked():
-                create_new_tellae_auth_config(self.keyEdit.text(), self.secretEdit.text())
-
-            # TODO: go back to main dialog
+            # auth
+            self.try_authenticate_from_inputs()

@@ -21,7 +21,7 @@
  *                                                                         *
  ***************************************************************************/
 """
-from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
+from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt, QUrl
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction, QTableWidget, QTableWidgetItem, QPushButton, QAbstractItemView
 
@@ -111,11 +111,6 @@ class TellaeServices:
         self.layers = []
 
         self.selected_theme = "Tous"
-
-        self.network_manager = QgsNetworkAccessManager.instance()
-        self.setupNetwork()
-
-        self.test_uri()
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -235,7 +230,7 @@ class TellaeServices:
     def set_user_name(self):
         user = self.store.user
         user_name = f'{user["firstName"]} {user["lastName"]}'
-        self.dlg.user_name.setText(user_name)
+        self.dlg.authButton.setText(user_name)
 
     def set_layers_table(self):
         # get table widget
@@ -301,7 +296,7 @@ class TellaeServices:
             response = requests.get(layer_data, stream=True)
             layer = create_layer_instance(layer_name, response)
         elif layer_type == "shark":
-            response = self.store.request_manager.shark(f"/layers/geojson/{layer_data}")
+            response = self.store.request_whale(f"/shark/layers/geojson/{layer_data}")
             layer = create_layer_instance(layer_name, response)
         elif layer_type == "vector":
             layer = create_vector_layer_instance(layer_name, self.store.vector_tile_url(layer_data))
@@ -310,7 +305,7 @@ class TellaeServices:
             return
 
         # setup the layer's style
-        prepare_layer_style(layer, layer_item)
+        # prepare_layer_style(layer, layer_item)
 
         # add the layer to QGIS
         QgsProject.instance().addMapLayer(layer)
@@ -345,13 +340,20 @@ class TellaeServices:
         log(uri.uri())
         log(uri.encodedUri())
 
-    def setupNetwork(self):
-        log("setupNetwork")
-        # QgsNetworkAccessManager.setRequestPreprocessor(preprocess_requests)
-        self.network_manager.requestAboutToBeCreated.connect(preprocess_requests)
+    def setup_auth_button(self):
+        self.auth.accepted.connect(self.on_auth)
+        self.dlg.authButton.clicked.connect(self.open_auth_dialog)
 
+    def on_auth(self):
+        self.set_user_name()
 
+        if not TELLAE_STORE.store_initiated:
+            TELLAE_STORE.init_store()
+            self.create_theme_selector()
+            self.set_layers_table()
 
+    def open_auth_dialog(self):
+        self.auth.open()
 
     def run(self):
         """Run method that performs all the real work"""
@@ -359,27 +361,23 @@ class TellaeServices:
         # Create the dialog with elements (after translation) and keep reference
         # Only create GUI ONCE in callback, so that it will only load when the plugin is started
         if self.first_start:
-            log("first start")
+
             self.first_start = False
             self.dlg = TellaeServicesDialog()
             self.auth = TellaeAuthDialog()
+            self.setup_auth_button()
+            if TELLAE_STORE.authenticated:
+                self.on_auth()
 
 
-        if TELLAE_STORE.authenticated:
-            if not TELLAE_STORE.store_initiated:
-                TELLAE_STORE.init_store()
-            self.set_user_name()
-            self.create_theme_selector()
-            self.set_layers_table()
 
-            # show the dialog
-            self.dlg.show()
-            # Run the dialog event loop
-            result = self.dlg.exec_()
-            # See if OK was pressed
-            if result:
-                # Do something useful here - delete the line containing pass and
-                # substitute with your code.
-                pass
-        else:
-            self.auth.show()
+        # show the dialog
+        self.dlg.show()
+        # Run the dialog event loop
+        result = self.dlg.exec_()
+        # See if OK was pressed
+        if result:
+            # Do something useful here - delete the line containing pass and
+            # substitute with your code.
+            pass
+

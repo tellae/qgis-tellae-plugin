@@ -8,19 +8,23 @@ from qgis.core import (
     QgsDataSourceUri,
     QgsVectorTileLayer,
     QgsMessageLog,
+    QgsNetworkAccessManager,
 )
-from .utils import log, AuthenticationError, read_local_config
-import urllib.parse
+from qgis.PyQt.QtCore import QUrl
+from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkReply
+from .utils import log, AuthenticationError, read_local_config, RequestError
 import os
-import requests
+import json
 
 
 class TellaeStore:
 
     def __init__(self):
-        log("Create TellaeStore")
+        # qgis network manager
+        self.network_manager = QgsNetworkAccessManager.instance()
+
         # whale request manager
-        self.request_manager = None
+        self.whale_endpoint = "https://whale.tellae.fr"
 
         self.authenticated = False
 
@@ -50,35 +54,17 @@ class TellaeStore:
         # store local configuration
         self.local_config = read_local_config(self.plugin_dir)
 
-        # TODO: put the function and this call somewhere else
-        self.remove_auth_environment()
+    def authenticate(self, apikey, secret, endpoint=None):
 
-        if self.local_config is not None:
-            log(str(self.local_config))
-            # setup environment variables from local config
-            environment_variables = self.local_config.get("env", {})
-            for k, v in environment_variables.items():
-                log(k)
-                os.environ[k] = v
+        self.whale_endpoint = endpoint
 
-    def remove_auth_environment(self):
-        for var in ["WHALE_API_KEY_ID", "WHALE_SECRET_ACCESS_KEY", "WHALE_ENDPOINT"]:
-            if var in os.environ:
-                os.environ.pop(var)
-    def authenticate(self):
-        try:
-            # request manager instance
-            self.request_manager = tellae_requests.ApiKeyRequestManager()
+        response = self.request_whale("/auth/me")
 
-            # call some initialisation requests
-            self.request_auth_me()
+        # save user info
+        self.user = response
 
-            # tag store as authenticated
-            self.authenticated = True
-
-        except (EnvironmentError, AuthenticationError) as e:
-            self.authenticated = False
-            raise e
+        # tag store as authenticated
+        self.authenticated = True
 
     def init_store(self):
 
@@ -90,19 +76,21 @@ class TellaeStore:
 
         self.store_initiated = True
 
-    def request_auth_me(self):
+    def request_whale(self, url, method="GET", body=None):
 
-        response = self.request_manager.request("/auth/me", raise_exception=False)
+        request = QNetworkRequest(QUrl(self.whale_endpoint + url))
+        response = self.network_manager.blockingGet(request, authCfg="12hbli9")
 
-        if 200 <= response.status_code < 300:
-            self.user = response.json()
-        elif response.status_code in [401, 403]:
-            raise AuthenticationError
+        if response.error() == QNetworkReply.NoError:
+            response_json = json.loads(bytes(response.content()))
         else:
-            raise ValueError(response.status_code)
+            raise RequestError(response)
+
+        return response_json
 
     def request_layer_summary(self):
-        layers = self.request_manager.shark("/layers/table").json()
+        layers = self.request_whale("/shark/layers/table")
+
         layers = sorted(layers, key=lambda x: x["name"]["fr"])
         self.layer_summary = layers
 
@@ -111,7 +99,7 @@ class TellaeStore:
         self.themes = sorted(themes)
 
     def request_datasets_summary(self):
-        datasets = self.request_manager.shark("/datasets/summary").json()
+        datasets = self.request_whale("/shark/datasets/summary")
 
         datasets = {dataset["id"]: dataset for dataset in datasets}
 
@@ -126,10 +114,12 @@ class TellaeStore:
 
     def vector_tile_url(self, table_id):
 
-        full_url = self.request_manager.whale_endpoint + "/martin/" + table_id + "/{z}/{x}/{y}".replace("{", "%7B").replace("}", "%7D")
-        headers = self.request_manager._get_headers(full_url, "GET", None, "application/json", None)
+        full_url = self.whale_endpoint + "/martin/" + table_id + "/{z}/{x}/{y}".replace("{", "%7B").replace("}", "%7D")
+        # headers = self.request_manager._get_headers(full_url, "GET", None, "application/json", None)
+        # uri = f"url={full_url}&type=xyz&http-header:Authorization={headers['Authorization']}&http-header:Content-Type={headers['Content-Type']}"
 
-        uri = f"url={full_url}&type=xyz&http-header:Authorization={headers['Authorization']}&http-header:Content-Type={headers['Content-Type']}"
+        uri = f"url={full_url}&type=xyz&authcfg=12hbli9"
+
         log(uri)
         return uri
 
