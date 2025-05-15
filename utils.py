@@ -23,6 +23,8 @@ from qgis.core import (
     QgsNetworkReplyContent
 )
 
+AWS_REGION = "fr-north-1"
+
 def log(message):
     QgsMessageLog.logMessage(str(message), "TellaeServices")
 
@@ -95,36 +97,62 @@ def create_vector_layer_instance(layer_name, url):
 
     return QgsVectorTileLayer(url, layer_name)
 
-def create_new_tellae_auth_config(api_key, api_secret):
+
+def create_auth_config(config_name, api_key, api_secret):
+    config = None
 
     auth_manager = QgsApplication.authManager()
-    config = QgsAuthMethodConfig()
-    config.setName("tellae-cache")
-    config.setMethod("APIHeader")
-    config.setConfig("key", api_key)
-    config.setConfig("secret", api_secret)
-    auth_manager.storeAuthenticationConfig(config)
+    config_dict = auth_manager.availableAuthMethodConfigs()
+    for existing_config in config_dict.values():
+        if existing_config.name() == config_name:
+            config = existing_config
 
+    if config is not None:
+        config.setConfig("region", AWS_REGION)
+        config.setConfig("username", api_key)
+        config.setConfig("password", api_secret)
+        auth_manager.updateAuthenticationConfig(config)
+    else:
+        auth_manager = QgsApplication.authManager()
+        config = QgsAuthMethodConfig()
+        config.setName(config_name)
+        config.setMethod("AWSS3")
+        config.setConfig("region", AWS_REGION)
+        config.setConfig("username", api_key)
+        config.setConfig("password", api_secret)
+        auth_manager.storeAuthenticationConfig(config)
 
-def remove_tellae_auth_config():
+    return config.id()
+
+def get_auth_config(config_name):
+    auth_manager = QgsApplication.authManager()
+    config_dict = auth_manager.availableAuthMethodConfigs()
+    for config in config_dict.values():
+        if config.name() == config_name:
+            return config.id()
+    return None
+
+def remove_tellae_auth_config(cfg_name):
     auth_manager = QgsApplication.authManager()
     config_dict = auth_manager.availableAuthMethodConfigs()
     for authConfig in config_dict.keys():
-        if config_dict[authConfig].name() == "tellae-cache":
+        if config_dict[authConfig].name() == cfg_name:
             auth_manager.removeAuthenticationConfig(authConfig)
             break
 
-def get_apikey_from_cache():
+
+
+def get_apikey_from_cache(cfg_name):
     auth_manager = QgsApplication.authManager()
     config_dict = auth_manager.availableAuthMethodConfigs()
     apikey = None
     secret = None
     for config in config_dict.values():
-        if config.name() == "tellae-cache":
+        if config.name() == cfg_name:
             aux_config = QgsAuthMethodConfig()
             auth_manager.loadAuthenticationConfig(config.id(), aux_config, True)
-            apikey = aux_config.configMap()["key"]
-            secret = aux_config.configMap()["secret"]
+            apikey = aux_config.configMap()["username"]
+            secret = aux_config.configMap()["password"]
     return apikey, secret
 
 
@@ -176,11 +204,10 @@ def set_color_edit_attribute(layer, color_props_mapping):
         # renderer.setSymbol(symbol)
 
     elif mapping_type == "category":
-        raise NotImplementedError
         renderer = QgsCategorizedSymbolRenderer()
         values_labels = mapping_options.get("values_labels", {})
         for key, color in mapping_options["values_map"].items():
-            symbol = QgsSymbol.defaultSymbol(myVectorLayer.geometryType())
+            symbol = QgsSymbol.defaultSymbol(layer.geometryType())
             symbol.setColor(color)
 
             category = QgsRendererCategory(key, symbol, values_labels.get(key, key))

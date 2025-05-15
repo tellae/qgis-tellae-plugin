@@ -12,10 +12,13 @@ from qgis.core import (
 )
 from qgis.PyQt.QtCore import QUrl
 from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkReply
-from .utils import log, AuthenticationError, read_local_config, RequestError
+from .utils import log, AuthenticationError, read_local_config, RequestError, get_apikey_from_cache, create_auth_config, get_auth_config, remove_tellae_auth_config
 import os
 import json
 
+AWS_TELLAE_CONFIG = "AWS-Tellae"
+AWS_TELLAE_DEV_CONFIG = "AWS-Tellae-dev"
+AWS_TELLAE_TMP_CONFIG = "AWS-Tellae-tmp"
 
 class TellaeStore:
 
@@ -23,8 +26,15 @@ class TellaeStore:
         # qgis network manager
         self.network_manager = QgsNetworkAccessManager.instance()
 
+
+
         # whale request manager
         self.whale_endpoint = "https://whale.tellae.fr"
+
+        # authentication
+
+        self.authCfg = None
+        self.authName = None
 
         self.authenticated = False
 
@@ -54,17 +64,79 @@ class TellaeStore:
         # store local configuration
         self.local_config = read_local_config(self.plugin_dir)
 
-    def authenticate(self, apikey, secret, endpoint=None):
 
-        self.whale_endpoint = endpoint
+    def get_current_indents(self):
+        return get_apikey_from_cache(self.authName)
 
+    def init_auth(self):
+        dev_auth = False
+        if TELLAE_STORE.local_config is not None and "auth" in TELLAE_STORE.local_config and TELLAE_STORE.local_config["auth"].get("use", True):
+            if "WHALE_ENDPOINT" in TELLAE_STORE.local_config["auth"]:
+                self.whale_endpoint = TELLAE_STORE.local_config["auth"]["WHALE_ENDPOINT"]
+            dev_auth = True
+
+        # if dev authentification is required, use idents from local config
+        if dev_auth:
+            try:
+                api_key = self.local_config["auth"]["WHALE_API_KEY_ID"]
+                secret = self.local_config["auth"]["WHALE_SECRET_ACCESS_KEY"]
+            except KeyError as e:
+                raise ValueError(f"Erreur lors de l'authentification locale, clé manquante: {str(e)}")
+
+            # create/set dev auth
+            self.authenticate(
+                api_key,
+                secret,
+                AWS_TELLAE_DEV_CONFIG
+            )
+        else:
+            # try to get existing auth config
+            cfg_id = get_auth_config(AWS_TELLAE_CONFIG)
+
+            if cfg_id is not None:
+                self.set_config(AWS_TELLAE_CONFIG, cfg_id)
+                self.try_auth(set_user=True)
+                self.authenticated = True
+
+
+    def authenticate(self, key, secret, config_name=AWS_TELLAE_CONFIG):
+        # try idents with a tmp config
+        self.set_auth_config(AWS_TELLAE_TMP_CONFIG, key, secret)
+
+        try:
+            self.try_auth(set_user=True)
+        except Exception as e:
+            log("AUTHENTICATE EXCEPTION")
+            log(str(e))
+            raise e
+        finally:
+            remove_tellae_auth_config(AWS_TELLAE_TMP_CONFIG)
+
+        # if indents are valid, set the asked config
+        self.set_auth_config(config_name, key, secret)
+
+        # validate authentification
+        self.authenticated = True
+
+
+    def set_auth_config(self, name, key, secret):
+        auth_cfg = create_auth_config(
+            name,
+            key,
+            secret
+        )
+        self.set_config(name, auth_cfg)
+
+    def set_config(self, cfg_name, cfg_id):
+        self.authCfg = cfg_id
+        self.authName = cfg_name
+
+    def try_auth(self, set_user=False):
         response = self.request_whale("/auth/me")
 
         # save user info
-        self.user = response
-
-        # tag store as authenticated
-        self.authenticated = True
+        if set_user:
+            self.user = response
 
     def init_store(self):
 
@@ -77,9 +149,8 @@ class TellaeStore:
         self.store_initiated = True
 
     def request_whale(self, url, method="GET", body=None):
-
         request = QNetworkRequest(QUrl(self.whale_endpoint + url))
-        response = self.network_manager.blockingGet(request, authCfg="12hbli9")
+        response = self.network_manager.blockingGet(request, authCfg=self.authCfg)
 
         if response.error() == QNetworkReply.NoError:
             response_json = json.loads(bytes(response.content()))
@@ -118,9 +189,8 @@ class TellaeStore:
         # headers = self.request_manager._get_headers(full_url, "GET", None, "application/json", None)
         # uri = f"url={full_url}&type=xyz&http-header:Authorization={headers['Authorization']}&http-header:Content-Type={headers['Content-Type']}"
 
-        uri = f"url={full_url}&type=xyz&authcfg=12hbli9"
+        uri = f"url={full_url}&type=xyz&authcfg={self.authCfg}"
 
-        log(uri)
         return uri
 
 
