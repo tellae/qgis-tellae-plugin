@@ -373,6 +373,10 @@ class TellaeServices:
 
         # show the dialog
         self.dlg.show()
+
+        if not TELLAE_STORE.authenticated:
+            self.auth.show()
+
         # Run the dialog event loop
         result = self.dlg.exec_()
         # See if OK was pressed
