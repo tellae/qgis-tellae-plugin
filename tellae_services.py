@@ -53,6 +53,8 @@ from .tellae_store import TellaeStore
 from .tellae_client import requests as tellae_requests, binaries, version
 from .utils import read_local_config, create_layer_instance, log, create_vector_layer_instance, prepare_layer_style
 from .tellae_store import TELLAE_STORE
+from .layer_styles import *
+
 
 @qgsfunction(group='Custom', referenced_columns=[])
 def prefixed_color(color):
@@ -305,6 +307,15 @@ class TellaeServices:
             return
 
         # setup the layer's style
+        # style = VectorTilesStyle(layer, layer_item)
+        # style.get_renderer()
+        # if layer_type == "vector":
+        #     style = VectorTilesStyle(layer, layer_item)
+        # else:
+        #     style = ClassicStyle(layer, layer_item)
+        #
+        # style.update_layer()
+
         # prepare_layer_style(layer, layer_item)
 
         # add the layer to QGIS
