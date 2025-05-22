@@ -50,7 +50,6 @@ import os.path
 
 # Tellae imports
 from .tellae_store import TellaeStore
-from .tellae_client import requests as tellae_requests, binaries, version
 from .utils import read_local_config, create_layer_instance, log, create_vector_layer_instance, prepare_layer_style
 from .tellae_store import TELLAE_STORE
 from .layer_styles import *

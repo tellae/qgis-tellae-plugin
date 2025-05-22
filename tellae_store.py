@@ -1,5 +1,4 @@
 
-from .tellae_client import requests as tellae_requests, binaries, version
 from qgis.core import (
     QgsApplication,
     QgsAuthMethodConfig,
@@ -160,8 +159,8 @@ class TellaeStore:
         return response_json
 
     def request_layer_summary(self):
-        # layers = self.request_whale("/shark/layers/table?ne_lng=180&ne_lat=90&sw_lng=-180&sw_lat=-90")
-        layers = self.request_whale("/shark/layers/table")
+        layers = self.request_whale("/shark/layers/table?ne_lng=180&ne_lat=90&sw_lng=-180&sw_lat=-90")
+        # layers = self.request_whale("/shark/layers/table")
 
         layers = sorted(layers, key=lambda x: x["name"]["fr"])
         self.layer_summary = layers
