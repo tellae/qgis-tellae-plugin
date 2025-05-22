@@ -308,12 +308,12 @@ class TellaeServices:
         # setup the layer's style
         # style = VectorTilesStyle(layer, layer_item)
         # style.get_renderer()
-        # if layer_type == "vector":
-        #     style = VectorTilesStyle(layer, layer_item)
-        # else:
-        #     style = ClassicStyle(layer, layer_item)
-        #
-        # style.update_layer()
+        if layer_type == "vector":
+            style = VectorTilesStyle(layer, layer_item)
+        else:
+            style = ClassicStyle(layer, layer_item)
+
+        style.update_layer()
 
         # prepare_layer_style(layer, layer_item)
 
