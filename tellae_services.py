@@ -21,52 +21,27 @@
  *                                                                         *
  ***************************************************************************/
 """
-from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt, QUrl
+from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction, QTableWidget, QTableWidgetItem, QPushButton, QAbstractItemView
-
-from qgis.core import (
-    QgsApplication,
-    QgsAuthMethodConfig,
-    QgsProject,
-    QgsVectorLayer,
-    QgsMessageLog,
-    QgsDataSourceUri,
-    QgsHttpHeaders,
-    QgsNetworkAccessManager,
-    QgsSymbolLayer,
-    QgsProperty,
-    qgsfunction
-)
-
-import requests
+from qgis.PyQt.QtWidgets import QAction, QTableWidget, QTableWidgetItem, QPushButton
 
 # Initialize Qt resources from file resources.py
-from .resources import *
 # Import the code for the dialog
 from .tellae_services_dialog import TellaeServicesDialog
 from .tellae_auth_dialog import TellaeAuthDialog
-import os.path
+
 
 # Tellae imports
-from .tellae_store import TellaeStore
-from .utils import read_local_config, create_layer_instance, log, create_vector_layer_instance, prepare_layer_style
+
 from .tellae_store import TELLAE_STORE
-from .layer_styles import *
+from .models.layers import create_layer
+from .utils import log
+
+
 import traceback
+import os.path
 
-@qgsfunction(group='Custom', referenced_columns=[])
-def prefixed_color(color):
-    """
 
-    """
-    if color.startswith('#'):
-        return color
-    else:
-        return "#" + color
-
-def preprocess_requests(request):
-    log(str(request))
 
 class TellaeServices:
     """QGIS Plugin Implementation."""
@@ -316,17 +291,6 @@ class TellaeServices:
 
         # update layers table
         self.set_layers_table()
-
-    def test_uri(self):
-        uri = QgsDataSourceUri()
-        uri.setDriver("https://whale.tellae.fr")
-        headers = QgsHttpHeaders({
-            "apikey": "test",
-            "secret": "OHOHOG"
-        })
-        uri.setHttpHeaders(headers)
-        log(uri.uri())
-        log(uri.encodedUri())
 
     def setup_auth_button(self):
         self.auth.accepted.connect(self.on_auth)

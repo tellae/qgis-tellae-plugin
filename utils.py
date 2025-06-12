@@ -55,66 +55,66 @@ class CancelImportDialog(QtWidgets.QDialog):
         self.isCanceled = True
 
 
-def create_layer_instance(layer_id, layer_stream, path=""):
-    try:
-        file_path = path
-        if file_path == "":
-            file = tempfile.NamedTemporaryFile(suffix=".geojson")
-            file.close()
-            file_path = file.name
-        with open(file_path, "wb") as f:
-            f.write(layer_stream)
-    except FileNotFoundError:
-        raise FileNotFoundError
-    except PermissionError:
-        raise PermissionError
-
-    vector_layer = QgsVectorLayer(file_path, layer_id, "ogr")
-
-    return vector_layer
-
-
-
-
-    cancel_import_dialog = CancelImportDialog()
-    try:
-        file_path = path
-        if file_path == "":
-            file = tempfile.NamedTemporaryFile(suffix=".geojson")
-            file.close()
-            file_path = file.name
-        downloaded = 0
-        timer = QElapsedTimer()
-        timer.start()
-        with open(file_path, "wb") as f:
-            for chunk in layer_stream.iter_content(chunk_size=1024 * 64):
-                f.write(chunk)
-                downloaded += len(chunk)
-                QCoreApplication.processEvents()
-                if timer.elapsed() > 0:
-                    cancel_import_dialog.chunkLabel.setText(
-                        "Downloaded: {}MB\nSpeed: {:.2f}kB/s".format(
-                            downloaded // 1024 // 1024,
-                            (downloaded / 1024) / (timer.elapsed() / 1000),
-                        )
-                    )
-                if cancel_import_dialog.isCanceled:
-                    return
-
-    except FileNotFoundError:
-        raise FileNotFoundError
-    except PermissionError:
-        raise PermissionError
-
-    vector_layer = QgsVectorLayer(file_path, layer_id, "ogr")
-
-    return vector_layer
-
-
-
-def create_vector_layer_instance(layer_name, url):
-
-    return QgsVectorTileLayer(url, layer_name)
+# def create_layer_instance(layer_id, layer_stream, path=""):
+#     try:
+#         file_path = path
+#         if file_path == "":
+#             file = tempfile.NamedTemporaryFile(suffix=".geojson")
+#             file.close()
+#             file_path = file.name
+#         with open(file_path, "wb") as f:
+#             f.write(layer_stream)
+#     except FileNotFoundError:
+#         raise FileNotFoundError
+#     except PermissionError:
+#         raise PermissionError
+#
+#     vector_layer = QgsVectorLayer(file_path, layer_id, "ogr")
+#
+#     return vector_layer
+#
+#
+#
+#
+#     cancel_import_dialog = CancelImportDialog()
+#     try:
+#         file_path = path
+#         if file_path == "":
+#             file = tempfile.NamedTemporaryFile(suffix=".geojson")
+#             file.close()
+#             file_path = file.name
+#         downloaded = 0
+#         timer = QElapsedTimer()
+#         timer.start()
+#         with open(file_path, "wb") as f:
+#             for chunk in layer_stream.iter_content(chunk_size=1024 * 64):
+#                 f.write(chunk)
+#                 downloaded += len(chunk)
+#                 QCoreApplication.processEvents()
+#                 if timer.elapsed() > 0:
+#                     cancel_import_dialog.chunkLabel.setText(
+#                         "Downloaded: {}MB\nSpeed: {:.2f}kB/s".format(
+#                             downloaded // 1024 // 1024,
+#                             (downloaded / 1024) / (timer.elapsed() / 1000),
+#                         )
+#                     )
+#                 if cancel_import_dialog.isCanceled:
+#                     return
+#
+#     except FileNotFoundError:
+#         raise FileNotFoundError
+#     except PermissionError:
+#         raise PermissionError
+#
+#     vector_layer = QgsVectorLayer(file_path, layer_id, "ogr")
+#
+#     return vector_layer
+#
+#
+#
+# def create_vector_layer_instance(layer_name, url):
+#
+#     return QgsVectorTileLayer(url, layer_name)
 
 
 def create_auth_config(config_name, api_key, api_secret):
@@ -175,76 +175,76 @@ def get_apikey_from_cache(cfg_name):
     return apikey, secret
 
 
-def prepare_layer_style(layer, layer_info):
-
-    renderer = layer.renderer()
-
-    additional_properties = layer_info.get("additionalProperties", {})
-    if "editAttributes" in additional_properties:
-        log(str(additional_properties["editAttributes"]["color"]))
-        renderer = set_color_edit_attribute(layer, additional_properties["editAttributes"]["color"])
-        # set_edit_attributes(renderer, additional_properties["editAttributes"])
-
-    layer.setRenderer(renderer)  # necessary to emit rendererChanged signal (updates Layer Styling panel)
-
-
-def set_edit_attributes(layer, edit_attributes):
-    for key, props_mapping in edit_attributes.items():
-        if key == "color":
-            set_color_edit_attribute(layer, props_mapping)
-
-
-def set_color_edit_attribute(layer, color_props_mapping):
-    # get props_mapping type
-    mapping_type = color_props_mapping["type"]
-
-    mapping_options = color_props_mapping.get("mapping_options", color_props_mapping.get("mapping_data"))
-
-    log(layer.renderer().__class__.__name__)
-
-    if mapping_type == "constant":
-        pass
-    elif mapping_type == "direct":
-        renderer = layer.renderer()
-
-        color_attribute = mapping_options["key"]
-        expression = f'prefixed_color("{color_attribute}")'
-
-        renderer.symbol().symbolLayer(0).setDataDefinedProperty(
-            infer_color_property(renderer),
-            QgsProperty.fromExpression(expression)
-        )
-
-        # renderer = QgsSingleSymbolRenderer.convertFromRenderer(layer.renderer())
-        # symbol = QgsSymbol.defaultSymbol(layer.geometryType())
-        # log(symbol.__class__.__name__)
-        # symbol.setDataDefinedProperty(
-        #     infer_color_property(layer),
-        #     QgsProperty.fromExpression(expression)
-        # )
-        # renderer.setSymbol(symbol)
-
-    elif mapping_type == "category":
-
-        values_labels = mapping_options.get("values_labels", {})
-        for key, color in mapping_options["values_map"].items():
-            symbol = QgsSymbol.defaultSymbol(layer.geometryType())
-            symbol.setColor(color)
-
-            category = QgsRendererCategory(key, symbol, values_labels.get(key, key))
-            # renderer.addCategory(category)
-
-
-    elif mapping_type == "continuous":
-        raise NotImplementedError
-    else:
-        raise ValueError("Unknown mapping type")
-
-    return renderer
-
-
-def infer_color_property(layer):
-    return QgsSymbolLayer.PropertyStrokeColor
+# def prepare_layer_style(layer, layer_info):
+#
+#     renderer = layer.renderer()
+#
+#     additional_properties = layer_info.get("additionalProperties", {})
+#     if "editAttributes" in additional_properties:
+#         log(str(additional_properties["editAttributes"]["color"]))
+#         renderer = set_color_edit_attribute(layer, additional_properties["editAttributes"]["color"])
+#         # set_edit_attributes(renderer, additional_properties["editAttributes"])
+#
+#     layer.setRenderer(renderer)  # necessary to emit rendererChanged signal (updates Layer Styling panel)
+#
+#
+# def set_edit_attributes(layer, edit_attributes):
+#     for key, props_mapping in edit_attributes.items():
+#         if key == "color":
+#             set_color_edit_attribute(layer, props_mapping)
+#
+#
+# def set_color_edit_attribute(layer, color_props_mapping):
+#     # get props_mapping type
+#     mapping_type = color_props_mapping["type"]
+#
+#     mapping_options = color_props_mapping.get("mapping_options", color_props_mapping.get("mapping_data"))
+#
+#     log(layer.renderer().__class__.__name__)
+#
+#     if mapping_type == "constant":
+#         pass
+#     elif mapping_type == "direct":
+#         renderer = layer.renderer()
+#
+#         color_attribute = mapping_options["key"]
+#         expression = f'prefixed_color("{color_attribute}")'
+#
+#         renderer.symbol().symbolLayer(0).setDataDefinedProperty(
+#             infer_color_property(renderer),
+#             QgsProperty.fromExpression(expression)
+#         )
+#
+#         # renderer = QgsSingleSymbolRenderer.convertFromRenderer(layer.renderer())
+#         # symbol = QgsSymbol.defaultSymbol(layer.geometryType())
+#         # log(symbol.__class__.__name__)
+#         # symbol.setDataDefinedProperty(
+#         #     infer_color_property(layer),
+#         #     QgsProperty.fromExpression(expression)
+#         # )
+#         # renderer.setSymbol(symbol)
+#
+#     elif mapping_type == "category":
+#
+#         values_labels = mapping_options.get("values_labels", {})
+#         for key, color in mapping_options["values_map"].items():
+#             symbol = QgsSymbol.defaultSymbol(layer.geometryType())
+#             symbol.setColor(color)
+#
+#             category = QgsRendererCategory(key, symbol, values_labels.get(key, key))
+#             # renderer.addCategory(category)
+#
+#
+#     elif mapping_type == "continuous":
+#         raise NotImplementedError
+#     else:
+#         raise ValueError("Unknown mapping type")
+#
+#     return renderer
+#
+#
+# def infer_color_property(layer):
+#     return QgsSymbolLayer.PropertyStrokeColor
 
 class RequestError(Exception):
     def __init__(self, reply: QgsNetworkReplyContent):

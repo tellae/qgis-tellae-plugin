@@ -1,5 +1,5 @@
 
-from .utils import log, create_layer_instance, create_vector_layer_instance
+from ..utils import log
 
 from qgis.core import (
     QgsProject,
@@ -18,152 +18,21 @@ from qgis.core import (
     QgsTextFormat,
     QgsTextBufferSettings,
     QgsLabelPlacementSettings,
+    qgsfunction
 )
 
-import requests
 
 from PyQt5.QtGui import QColor
 from abc import ABC, abstractmethod
-
-from .tellae_store import TELLAE_STORE
 
 MAPPING_CONSTS = {
   "population_densities_colors": ["#EFE3CF", "#F7C99E", "#F9AF79", "#F79465", "#E8705D", "#D4495A", "#D03568"]
 }
 
-class QgsKiteLayer:
-
-    def __init__(self, layer_data):
-
-
-
-        self.id = layer_data["id"]
-
-        self.layerClass = layer_data["layer_class"]
-
-        self.data = layer_data.get("data", None)
-
-        self.sourceType = layer_data.get("sourceType", "geojson")
-
-        self.mapboxProps = layer_data.get("layerProps", dict())
-
-        self.dataProperties = layer_data.get("dataProperties", None)
-
-        self.category = layer_data.get("category", None)
-
-        self.name = layer_data.get("name", dict()).get("fr", "Unnamed")
-
-        self.datasets = layer_data.get("datasets", [])
-        self.main_dataset = layer_data.get("main_dataset", None)
-
-        # TODO: what data structure
-        self.filter = layer_data.get("filter", None)
-
-        self.editAttributes = layer_data.get("editAttributes", None)
-        self.read_edit_attributes()
-
-        self.qgis_layer = None
-
-        self.style = None
-
-    @property
-    def is_vector(self):
-        return self.sourceType == "vector"
-
-    def create_qgis_layer(self, response):
-        log("create_qgis_layer")
-        if self.sourceType == "geojson":
-            # response = requests.get(self.data, stream=True)
-            layer = create_layer_instance(self.name, response)
-        elif self.sourceType == "shark":
-            # response = TELLAE_STORE.request_whale(f"/shark/layers/geojson/{self.data}")
-            layer = create_layer_instance(self.name, response)
-        elif self.sourceType == "vector":
-            pass
-        else:
-            raise ValueError(f"Unsupported layer type '{self.sourceType}'")
-
-        self.qgis_layer = layer
-
-        self._add_to_qgis()
-
-
-    def add_to_qgis(self):
-        log("add to qgis")
-        if self.sourceType == "geojson":
-            TELLAE_STORE.request(self.data, self.create_qgis_layer, dialog=True, to_json=False)
-        elif self.sourceType == "shark":
-            TELLAE_STORE.request_whale(f"/shark/layers/geojson/{self.data}", self.create_qgis_layer, dialog=True, to_json=False)
-        elif self.sourceType == "vector":
-
-            self.qgis_layer = create_vector_layer_instance(self.name, TELLAE_STORE.vector_tile_url(self.data))
-            self._add_to_qgis()
-        else:
-            raise ValueError(f"Unsupported layer type '{self.sourceType}'")
-
-
-
-
-    def create_style(self):
-        if self.is_vector:
-            style = VectorTilesStyle(self)
-        else:
-            style = ClassicStyle(self)
-        self.style = style
-
-    def update_style(self):
-        self._call_style_update()
-
-    def _call_style_update(self):
-        if self.style.editAttributes:
-            self.style.update_layer()
-
-    def _add_to_qgis(self):
-        log("_add_to_qgis")
-
-        self.create_style()
-
-        self.update_style()
-
-        QgsProject.instance().addMapLayer(self.qgis_layer)
-
-    def read_edit_attributes(self):
-        log(self.editAttributes)
-        if self.editAttributes is not None:
-            self.editAttributes = {key: PropsMapping.from_spec(key, spec) for key, spec in self.editAttributes.items()}
-
-
-class KiteSymbolLayer(QgsKiteLayer):
-
-    def _call_style_update(self):
-
-        assert self.style.main_props_mapping.paint_type == "text", "KiteSymbolLayer mapping should have 'text' paint type"
-
-        self.style.set_labelling(self.style.main_props_mapping.mapping_options["key"])
-
-
-def create_layer(layer_data):
-    layer_data = {
-        **layer_data,
-        **layer_data.get("additionalProperties", dict())
-    }
-
-    layer_class = layer_data["layer_class"]
-
-    if layer_class in LAYER_CLASSES:
-        layer_constructor = LAYER_CLASSES[layer_class]
-    else:
-        layer_constructor = LAYER_CLASSES["default"]
-
-    layer_instance = layer_constructor.__new__(layer_constructor)
-    layer_instance.__init__(layer_data)
-
-    return layer_instance
-
 
 class LayerStyle:
 
-    def __init__(self, layer: QgsKiteLayer):
+    def __init__(self, layer):
 
 
         self.layer = layer
@@ -673,7 +542,12 @@ class PaintTypeError(ValueError):
         super().__init__("Paint type error")
 
 
-LAYER_CLASSES = {
-    "default": QgsKiteLayer,
-    "KiteSymbolLayer": KiteSymbolLayer
-}
+@qgsfunction(group='Custom', referenced_columns=[])
+def prefixed_color(color):
+    """
+
+    """
+    if color.startswith('#'):
+        return color
+    else:
+        return "#" + color
