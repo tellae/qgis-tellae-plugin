@@ -56,6 +56,24 @@ class CancelImportDialog(QtWidgets.QDialog):
 
 
 def create_layer_instance(layer_id, layer_stream, path=""):
+    try:
+        file_path = path
+        if file_path == "":
+            file = tempfile.NamedTemporaryFile(suffix=".geojson")
+            file.close()
+            file_path = file.name
+        with open(file_path, "wb") as f:
+            f.write(layer_stream)
+    except FileNotFoundError:
+        raise FileNotFoundError
+    except PermissionError:
+        raise PermissionError
+
+    vector_layer = QgsVectorLayer(file_path, layer_id, "ogr")
+
+    return vector_layer
+
+
 
 
     cancel_import_dialog = CancelImportDialog()

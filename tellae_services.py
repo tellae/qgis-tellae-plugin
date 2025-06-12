@@ -53,7 +53,7 @@ from .tellae_store import TellaeStore
 from .utils import read_local_config, create_layer_instance, log, create_vector_layer_instance, prepare_layer_style
 from .tellae_store import TELLAE_STORE
 from .layer_styles import *
-
+import traceback
 
 @qgsfunction(group='Custom', referenced_columns=[])
 def prefixed_color(color):
@@ -289,38 +289,16 @@ class TellaeServices:
 
     def add_layer(self, index):
         layer_item = self.layers[index]
-        layer_type = layer_item["sourceType"]
-        layer_name = layer_item["name"]["fr"]
+        qgs_kite_layer = create_layer(layer_item)
 
-        layer_data = layer_item["data"]
-        if layer_type == "geojson":
-            response = requests.get(layer_data, stream=True)
-            layer = create_layer_instance(layer_name, response)
-        elif layer_type == "shark":
-            response = self.store.request_whale(f"/shark/layers/geojson/{layer_data}")
-            layer = create_layer_instance(layer_name, response)
-        elif layer_type == "vector":
-            layer = create_vector_layer_instance(layer_name, self.store.vector_tile_url(layer_data))
-        else:
-            self.display_message(f"Unsupported layer type '{layer_type}'")
-            return
+        try:
+            qgs_kite_layer.add_to_qgis()
+            self.display_message(f"La couche '{qgs_kite_layer.name}' a été ajoutée avec succès !")
 
-        # setup the layer's style
-        # style = VectorTilesStyle(layer, layer_item)
-        # style.get_renderer()
-        if layer_type == "vector":
-            style = VectorTilesStyle(layer, layer_item)
-        else:
-            style = ClassicStyle(layer, layer_item)
-
-        style.update_layer()
-
-        # prepare_layer_style(layer, layer_item)
-
-        # add the layer to QGIS
-        QgsProject.instance().addMapLayer(layer)
-
-        self.display_message(f"La couche '{layer_name}' a été ajoutée avec succès !")
+        except Exception as e:
+            log(str(traceback.format_exc()))
+            self.display_message(f"Erreur lors de l'ajout de la couche '{qgs_kite_layer.name}': {str(e)}")
+            raise e
 
     def create_theme_selector(self):
         # set list of layers
@@ -355,15 +333,17 @@ class TellaeServices:
         self.dlg.authButton.clicked.connect(self.open_auth_dialog)
 
     def on_auth(self):
-        self.set_user_name()
+        # self.set_user_name()
 
         if not TELLAE_STORE.store_initiated:
             TELLAE_STORE.init_store()
-            self.create_theme_selector()
-            self.set_layers_table()
+            # self.create_theme_selector()
+            # self.set_layers_table()
 
     def open_auth_dialog(self):
-        self.auth.open()
+        # self.auth.open()
+        self.create_theme_selector()
+        self.set_layers_table()
 
     def run(self):
         """Run method that performs all the real work"""
@@ -377,6 +357,7 @@ class TellaeServices:
             self.auth = TellaeAuthDialog()
             self.setup_auth_button()
             if TELLAE_STORE.authenticated:
+                log("Authenticated")
                 self.on_auth()
 
 
