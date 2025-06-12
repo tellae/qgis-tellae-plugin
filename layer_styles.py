@@ -1,8 +1,8 @@
-from shapely import GeometryType
 
-from .utils import log
+from .utils import log, create_layer_instance, create_vector_layer_instance
 
 from qgis.core import (
+    QgsProject,
     QgsVectorTileBasicRendererStyle,
     Qgis,
     QgsSymbol,
@@ -11,39 +11,181 @@ from qgis.core import (
     QgsProperty,
     QgsSingleSymbolRenderer,
     QgsCategorizedSymbolRenderer,
-    QgsRendererCategory
+    QgsRendererCategory,
+    QgsVectorTileBasicLabeling,
+    QgsVectorTileBasicLabelingStyle,
+    QgsPalLayerSettings,
+    QgsTextFormat,
+    QgsTextBufferSettings,
+    QgsLabelPlacementSettings,
 )
+
+import requests
 
 from PyQt5.QtGui import QColor
 from abc import ABC, abstractmethod
+
+from .tellae_store import TELLAE_STORE
 
 MAPPING_CONSTS = {
   "population_densities_colors": ["#EFE3CF", "#F7C99E", "#F9AF79", "#F79465", "#E8705D", "#D4495A", "#D03568"]
 }
 
+class QgsKiteLayer:
+
+    def __init__(self, layer_data):
+
+
+
+        self.id = layer_data["id"]
+
+        self.layerClass = layer_data["layer_class"]
+
+        self.data = layer_data.get("data", None)
+
+        self.sourceType = layer_data.get("sourceType", "geojson")
+
+        self.mapboxProps = layer_data.get("layerProps", dict())
+
+        self.dataProperties = layer_data.get("dataProperties", None)
+
+        self.category = layer_data.get("category", None)
+
+        self.name = layer_data.get("name", dict()).get("fr", "Unnamed")
+
+        self.datasets = layer_data.get("datasets", [])
+        self.main_dataset = layer_data.get("main_dataset", None)
+
+        # TODO: what data structure
+        self.filter = layer_data.get("filter", None)
+
+        self.editAttributes = layer_data.get("editAttributes", None)
+        self.read_edit_attributes()
+
+        self.qgis_layer = None
+
+        self.style = None
+
+    @property
+    def is_vector(self):
+        return self.sourceType == "vector"
+
+    def create_qgis_layer(self, response):
+        log("create_qgis_layer")
+        if self.sourceType == "geojson":
+            # response = requests.get(self.data, stream=True)
+            layer = create_layer_instance(self.name, response)
+        elif self.sourceType == "shark":
+            # response = TELLAE_STORE.request_whale(f"/shark/layers/geojson/{self.data}")
+            layer = create_layer_instance(self.name, response)
+        elif self.sourceType == "vector":
+            pass
+        else:
+            raise ValueError(f"Unsupported layer type '{self.sourceType}'")
+
+        self.qgis_layer = layer
+
+        self._add_to_qgis()
+
+
+    def add_to_qgis(self):
+        log("add to qgis")
+        if self.sourceType == "geojson":
+            TELLAE_STORE.request(self.data, self.create_qgis_layer, dialog=True, to_json=False)
+        elif self.sourceType == "shark":
+            TELLAE_STORE.request_whale(f"/shark/layers/geojson/{self.data}", self.create_qgis_layer, dialog=True, to_json=False)
+        elif self.sourceType == "vector":
+
+            self.qgis_layer = create_vector_layer_instance(self.name, TELLAE_STORE.vector_tile_url(self.data))
+            self._add_to_qgis()
+        else:
+            raise ValueError(f"Unsupported layer type '{self.sourceType}'")
+
+
+
+
+    def create_style(self):
+        if self.is_vector:
+            style = VectorTilesStyle(self)
+        else:
+            style = ClassicStyle(self)
+        self.style = style
+
+    def update_style(self):
+        self._call_style_update()
+
+    def _call_style_update(self):
+        if self.style.editAttributes:
+            self.style.update_layer()
+
+    def _add_to_qgis(self):
+        log("_add_to_qgis")
+
+        self.create_style()
+
+        self.update_style()
+
+        QgsProject.instance().addMapLayer(self.qgis_layer)
+
+    def read_edit_attributes(self):
+        log(self.editAttributes)
+        if self.editAttributes is not None:
+            self.editAttributes = {key: PropsMapping.from_spec(key, spec) for key, spec in self.editAttributes.items()}
+
+
+class KiteSymbolLayer(QgsKiteLayer):
+
+    def _call_style_update(self):
+
+        assert self.style.main_props_mapping.paint_type == "text", "KiteSymbolLayer mapping should have 'text' paint type"
+
+        self.style.set_labelling(self.style.main_props_mapping.mapping_options["key"])
+
+
+def create_layer(layer_data):
+    layer_data = {
+        **layer_data,
+        **layer_data.get("additionalProperties", dict())
+    }
+
+    layer_class = layer_data["layer_class"]
+
+    if layer_class in LAYER_CLASSES:
+        layer_constructor = LAYER_CLASSES[layer_class]
+    else:
+        layer_constructor = LAYER_CLASSES["default"]
+
+    layer_instance = layer_constructor.__new__(layer_constructor)
+    layer_instance.__init__(layer_data)
+
+    return layer_instance
+
 
 class LayerStyle:
 
-    def __init__(self, layer, layer_data):
-        log(layer_data)
+    def __init__(self, layer: QgsKiteLayer):
 
-        self.additionalProperties = layer_data.get("additionalProperties", {})
 
         self.layer = layer
 
-        self.originalRenderer = layer.renderer()
+        self.originalRenderer = self.layer.qgis_layer.renderer()
 
-        self.editAttributes = self.additionalProperties["editAttributes"]
+        self.geometry_type = infer_geometry_type_from_layer_class(self.layer.layerClass)
 
-        self.geometry_type = infer_geometry_type_from_layer_class(layer_data["layer_class"])
+        self.min_zoom_level = None
+        if "minzoom" in self.layer.mapboxProps:
+            self.min_zoom_level = self.layer.mapboxProps["minzoom"]
 
-        self.editAttributes = self.read_edit_attributes(self.additionalProperties.get("editAttributes", dict()))
+        self.editAttributes = self.layer.editAttributes
 
-        self.main_props_mapping = self.infer_main_props_mapping()
+        self.main_props_mapping = None
+        if self.layer.editAttributes:
+            self.main_props_mapping = self.infer_main_props_mapping()
 
-    def read_edit_attributes(self, edit_attributes):
 
-        return {key: PropsMapping.from_spec(key, spec) for key, spec in edit_attributes.items() }
+    @property
+    def layer_renderer(self):
+        return self.layer.qgis_layer.renderer()
 
     def infer_main_props_mapping(self):
 
@@ -80,6 +222,9 @@ class LayerStyle:
 
         raise ValueError("Could not infer main props mapping")
 
+    def set_labelling(self, text_attribute):
+        raise NotImplementedError
+
 
 class VectorTilesStyle(LayerStyle):
 
@@ -87,9 +232,7 @@ class VectorTilesStyle(LayerStyle):
 
         styles = self.create_styles()
 
-        renderer = self.layer.renderer()
-
-        renderer.setStyles(styles)
+        self.layer_renderer.setStyles(styles)
 
 
     def create_styles(self):
@@ -107,6 +250,63 @@ class VectorTilesStyle(LayerStyle):
 
         return styles
 
+    def set_labelling(self, text_attribute):
+
+        # add a buffer around text
+        buffer_settings = QgsTextBufferSettings()
+        # enable buffer
+        buffer_settings.setEnabled(True)
+        # fill buffer interior
+        buffer_settings.setFillBufferInterior(True)
+        # set fill color to white
+        buffer_settings.setColor(QColor("white"))
+        # set buffer settings into text format
+        text_format = QgsTextFormat()
+        text_format.setBuffer(buffer_settings)
+
+        # placement settings
+        placement_settings = QgsLabelPlacementSettings()
+        # allow label overlap
+        placement_settings.setOverlapHandling(Qgis.LabelOverlapHandling.AllowOverlapIfRequired)
+
+        # create label settings and set values
+        label_settings = QgsPalLayerSettings()
+        label_settings.setFormat(text_format)
+        label_settings.setPlacementSettings(placement_settings)
+
+        # label value expression
+        label_settings.fieldName = text_attribute
+
+        # place labels over the point feature
+        label_settings.placement = Qgis.LabelPlacement.OverPoint
+
+        # enable labels
+        label_settings.enabled = True
+
+        # create labeling style from settings
+        labeling_style = QgsVectorTileBasicLabelingStyle()
+        labeling_style.setLabelSettings(label_settings)
+
+        # set minimum zoom
+        if self.min_zoom_level is not None:
+            labeling_style.setMinZoomLevel(self.min_zoom_level)
+
+        # create labeling for the layer with a single label style
+        labeling = QgsVectorTileBasicLabeling()
+        labeling.setStyles([labeling_style])
+        self.layer.qgis_layer.setLabeling(labeling)
+
+
+        # disable default rendering styles of the layer
+        rendering_styles = self.layer_renderer.styles()
+        for style in rendering_styles:
+            log(style)
+            style.setEnabled(False)
+
+        self.layer_renderer.setStyles(rendering_styles)
+
+
+
 
 class ClassicStyle(LayerStyle):
 
@@ -116,59 +316,7 @@ class ClassicStyle(LayerStyle):
 
         renderer = self.main_props_mapping.create_renderer(self.layer, self.geometry_type)
 
-        self.layer.setRenderer(renderer)
-
-
-
-# class VectorTilesStyle2(LayerStyle):
-#
-#     def get_renderer(self):
-#
-#         if "editAttributes" not in self.additionalProperties:
-#             return
-#
-#         if self.color_mapping_type == "category":
-#             key = self.color_mapping_options["key"]
-#
-#             styles = []
-#
-#             for value, color in self.color_mapping_options["values_map"].items():
-#                 log(f"{value} : {color}")
-#                 style = QgsVectorTileBasicRendererStyle(self.color_mapping_options["values_labels"][value], None, self.geometry_type)
-#                 log(style.geometryType())
-#                 log(style.filterExpression())
-#                 log(style.isEnabled())
-#
-#                 style.setFilterExpression(f"\"{key}\" IS '{value}'")
-#
-#                 symbol = QgsSymbol.defaultSymbol(self.geometry_type)
-#
-#                 symbol.symbolLayer(0).setFillColor(QColor(color))
-#                 symbol.symbolLayer(0).setStrokeStyle(0)
-#
-#                 if "opacity" in self.editAttributes:
-#                     symbol.setOpacity(self.editAttributes["opacity"])
-#
-#                 style.setSymbol(symbol)
-#
-#                 styles.append(style)
-#
-#             renderer = self.originalRenderer
-#             renderer.setStyles(styles)
-#
-#         elif self.color_mapping_type == "constant":
-#
-#             style = QgsVectorTileBasicRendererStyle(None, None, self.geometry_type)
-#
-#             color = self.colorMapping
-#
-#             symbol = QgsSymbol.defaultSymbol(self.geometry_type)
-#             symbol_layer = symbol.symbolLayer(0)
-#             symbol_layer.setStrokeColor(QColor(color))
-#             self.set_symbol_layer_size(symbol_layer)
-#
-#
-#
+        self.layer.qgis_layer.setRenderer(renderer)
 
 
 class PropsMapping(ABC):
@@ -228,9 +376,10 @@ class PropsMapping(ABC):
         raise NotImplementedError
 
     def from_spec(key, spec):
+        log(key)
         log(spec)
 
-        if key in ["color", "size", "opacity"]:
+        if key in ["color", "size", "opacity", "text", "filter"]:
             paint_type = key
         else:
             paint_type = None
@@ -522,3 +671,9 @@ def infer_geometry_type_from_layer_class(layer_class):
 class PaintTypeError(ValueError):
     def __init__(self):
         super().__init__("Paint type error")
+
+
+LAYER_CLASSES = {
+    "default": QgsKiteLayer,
+    "KiteSymbolLayer": KiteSymbolLayer
+}
