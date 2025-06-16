@@ -180,8 +180,7 @@ class TellaeServices:
 
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
-
-        icon_path = ':/plugins/tellae_services/icon.png'
+        icon_path = ':/plugins/qgis-tellae-plugin/tellae.png'
         self.add_action(
             icon_path,
             text=self.tr(u'Tellae services'),
@@ -202,11 +201,6 @@ class TellaeServices:
 
     def display_message(self, message: str):
         self.dlg.message.setText(message)
-
-    def set_user_name(self):
-        user = self.store.user
-        user_name = f'{user["firstName"]} {user["lastName"]}'
-        self.dlg.authButton.setText(user_name)
 
     def set_layers_table(self):
         # get table widget
@@ -292,22 +286,9 @@ class TellaeServices:
         # update layers table
         self.set_layers_table()
 
-    def setup_auth_button(self):
-        self.auth.accepted.connect(self.on_auth)
-        self.dlg.authButton.clicked.connect(self.open_auth_dialog)
-
-    def on_auth(self):
-        # self.set_user_name()
-
-        if not TELLAE_STORE.store_initiated:
-            TELLAE_STORE.init_store()
-            # self.create_theme_selector()
-            # self.set_layers_table()
-
-    def open_auth_dialog(self):
-        # self.auth.open()
-        self.create_theme_selector()
-        self.set_layers_table()
+    def setup_dialog(self):
+        # open authentication dialog on authButton click
+        self.dlg.authButton.clicked.connect(self.auth.open)
 
     def run(self):
         """Run method that performs all the real work"""
@@ -315,28 +296,26 @@ class TellaeServices:
         # Create the dialog with elements (after translation) and keep reference
         # Only create GUI ONCE in callback, so that it will only load when the plugin is started
         if self.first_start:
-
             self.first_start = False
             self.dlg = TellaeServicesDialog()
             self.auth = TellaeAuthDialog()
-            self.setup_auth_button()
-            if TELLAE_STORE.authenticated:
-                log("Authenticated")
-                self.on_auth()
 
+            # store dialogs
+            TELLAE_STORE.tellae_services = self
+            TELLAE_STORE.main_dialog = self.dlg
+            TELLAE_STORE.auth_dialog = self.auth
 
+            # setup dialog reactions
+            self.setup_dialog()
 
         # show the dialog
         self.dlg.show()
 
-        if not TELLAE_STORE.authenticated:
-            self.auth.show()
-
-        # Run the dialog event loop
-        result = self.dlg.exec_()
-        # See if OK was pressed
-        if result:
-            # Do something useful here - delete the line containing pass and
-            # substitute with your code.
-            pass
+        # # Run the dialog event loop
+        # result = self.dlg.exec_()
+        # # See if OK was pressed
+        # if result:
+        #     # Do something useful here - delete the line containing pass and
+        #     # substitute with your code.
+        #     pass
 

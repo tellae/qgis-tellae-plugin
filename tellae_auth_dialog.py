@@ -28,24 +28,18 @@ class TellaeAuthDialog(QtWidgets.QDialog, FORM_CLASS):
         # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
-        self.setup_auth_save()
-
-        # remove existing environment variables
-        # self.remove_auth_environment()
+        self.setup_dialog()
 
         try:
             TELLAE_STORE.init_auth()
         except Exception as e:
             self.display_error_message(f"Erreur  lors de l'authentification: {str(e)}")
 
-        if TELLAE_STORE.authenticated:
-            self._set_indents_from_auth_config()
-
 
     def validate(self):
 
         try:
-            TELLAE_STORE.authenticate(self.keyEdit.text(), self.secretEdit.text())
+            TELLAE_STORE.try_new_indents(self.keyEdit.text(), self.secretEdit.text())
         except Exception as e:
             self.display_error_message(f"Erreur  lors de l'authentification: {str(e)}")
 
@@ -70,7 +64,7 @@ class TellaeAuthDialog(QtWidgets.QDialog, FORM_CLASS):
     # def try_authenticate_from_inputs(self):
     #     self.try_authenticate(self.keyEdit.text(), self.secretEdit.text())
 
-    def setup_auth_save(self):
+    def setup_dialog(self):
         # self.buttonBox.accepted.connect(self.validate)
         self.cancelButton.clicked.connect(self.done)
         self.validateButton.clicked.connect(self.validate)
@@ -93,7 +87,7 @@ class TellaeAuthDialog(QtWidgets.QDialog, FORM_CLASS):
     #
     #     return local_auth
 
-    def _set_indents_from_auth_config(self):
+    def set_indents_from_auth_config(self):
         apikey, secret = TELLAE_STORE.get_current_indents()
 
         if apikey is not None:

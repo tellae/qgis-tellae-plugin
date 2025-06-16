@@ -18,7 +18,6 @@ class QgsLayerSource(ABC):
 
         self.layer: QgsKiteLayer = layer
 
-    @abstractmethod
     @property
     def url(self) -> str:
         """
@@ -75,17 +74,21 @@ class GeojsonSource(QgsLayerSource):
 
     def init_qgis_layer(self):
         # make a web request and read the geojson result as bytes
-        TELLAE_STORE.request(self.url, self.on_download, dialog=True, to_json=False)
+        TELLAE_STORE.request(self.url, handler=self.on_download, to_json=False)
 
     def on_download(self, response):
         # store request response
-        self.response = response
+        self.response = response["content"]
 
         if self.response is None:
             log("Missing response for layer creation !")
         else:
             # call QGIS layer creation and add
             self._set_qgis_layer()
+
+    def on_download_error(self, response):
+        exception = response["exception"]
+        TELLAE_STORE.tellae_services.display_message(f"Erreur lors de l'ajout de la couche '{self.layer_name}': {str(exception)}")
 
     def _new_qgis_layer_instance(self):
         try:
@@ -112,7 +115,7 @@ class SharkSource(GeojsonSource):
 
     def download_geojson(self):
         # make a request to whale and read the geojson result as bytes
-        TELLAE_STORE.request_whale(self.url, self.on_download, dialog=True, to_json=False)
+        TELLAE_STORE.request_whale(self.url, handler=self.on_download, to_json=False)
 
 
 class VectorTileSource(QgsLayerSource):
