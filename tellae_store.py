@@ -1,41 +1,17 @@
 
-from qgis.core import (
-    QgsApplication,
-    QgsAuthMethodConfig,
-    QgsProject,
-    QgsVectorLayer,
-    QgsDataSourceUri,
-    QgsVectorTileLayer,
-    QgsMessageLog,
-    QgsNetworkAccessManager,
-    QgsBlockingNetworkRequest,
-    QgsFeedback,
-QgsNetworkContentFetcher,
-QgsNetworkContentFetcherTask
-)
-from qgis.PyQt.QtCore import QUrl
-from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkReply
-from .utils import log, AuthenticationError, read_local_config, RequestError, get_apikey_from_cache, create_auth_config, get_auth_config, remove_tellae_auth_config, CancelImportDialog
+from .utils import log, AuthenticationError, read_local_config, get_apikey_from_cache, create_auth_config, get_auth_config, remove_tellae_auth_config
 import os
 import json
+from .network_access_manager import NetworkAccessManager
 
 AWS_TELLAE_CONFIG = "AWS-Tellae"
 AWS_TELLAE_DEV_CONFIG = "AWS-Tellae-dev"
 AWS_TELLAE_TMP_CONFIG = "AWS-Tellae-tmp"
 
+
 class TellaeStore:
 
     def __init__(self):
-        # qgis network manager
-        self.network_manager = QgsNetworkAccessManager.instance()
-
-        self.network_fetcher = QgsNetworkContentFetcher()
-
-        self.fetchers = []
-
-        # self.network_fetcher.finished.connect(self.on_request_finish)
-
-        # self.network_fetcher.errorOccurred.connect(self.on_request_error)
 
         # whale request manager
         self.whale_endpoint = "https://whale.tellae.fr"
@@ -69,264 +45,55 @@ class TellaeStore:
         self.local_config = None
         self.read_local_config()
 
+        # plugin dialogs
+        self.tellae_services = None
+        self.main_dialog = None
+        self.auth_dialog = None
+
     def read_local_config(self):
         # store local configuration
         self.local_config = read_local_config(self.plugin_dir)
 
-
-    def get_current_indents(self):
-        return get_apikey_from_cache(self.authName)
-
-    def init_auth(self):
-        dev_auth = False
-        if TELLAE_STORE.local_config is not None and "auth" in TELLAE_STORE.local_config and TELLAE_STORE.local_config["auth"].get("use", True):
-            if "WHALE_ENDPOINT" in TELLAE_STORE.local_config["auth"]:
-                self.whale_endpoint = TELLAE_STORE.local_config["auth"]["WHALE_ENDPOINT"]
-            dev_auth = True
-
-        # if dev authentification is required, use idents from local config
-        if dev_auth:
-            try:
-                api_key = self.local_config["auth"]["WHALE_API_KEY_ID"]
-                secret = self.local_config["auth"]["WHALE_SECRET_ACCESS_KEY"]
-            except KeyError as e:
-                raise ValueError(f"Erreur lors de l'authentification locale, clé manquante: {str(e)}")
-
-            # create/set dev auth
-            self.authenticate(
-                api_key,
-                secret,
-                AWS_TELLAE_DEV_CONFIG
-            )
-        else:
-            # try to get existing auth config
-            cfg_id = get_auth_config(AWS_TELLAE_CONFIG)
-
-            if cfg_id is not None:
-                self.set_config(AWS_TELLAE_CONFIG, cfg_id)
-                self.try_auth(set_user=True)
-                self.authenticated = True
-
-
-    def authenticate(self, key, secret, config_name=AWS_TELLAE_CONFIG):
-        # try idents with a tmp config
-        self.set_auth_config(AWS_TELLAE_TMP_CONFIG, key, secret)
-
-        try:
-            self.try_auth(set_user=True)
-        except Exception as e:
-            log("AUTHENTICATE EXCEPTION")
-            log(str(e))
-            raise e
-        finally:
-            remove_tellae_auth_config(AWS_TELLAE_TMP_CONFIG)
-
-        # if indents are valid, set the asked config
-        self.set_auth_config(config_name, key, secret)
-
-        # validate authentification
-        self.authenticated = True
-
-
-    def set_auth_config(self, name, key, secret):
-        auth_cfg = create_auth_config(
-            name,
-            key,
-            secret
-        )
-        self.set_config(name, auth_cfg)
-
-    def set_config(self, cfg_name, cfg_id):
-        self.authCfg = cfg_id
-        self.authName = cfg_name
-
-    def try_auth(self, set_user=False):
-
-        def handler(response):
-            if set_user:
-                self.user = response
-
-        self.request_whale("/auth/me", handler)
-
-        return
-
-        # save user info
-        if set_user:
-            self.user = response
+    # STORE ACTIONS
 
     def init_store(self):
-
         if not self.authenticated:
             raise AuthenticationError("User need to be authenticated before the store is initiated")
 
-        self.request_layer_summary()
-        self.request_datasets_summary()
+        self._init_layers_table()
 
         self.store_initiated = True
 
-    def on_request_error(self, error_code, error_msg):
-        log("request error")
-        log("error code " + str(error_code))
-        log("error msg " + str(error_msg))
+    def _init_layers_table(self):
 
-    def on_request_finish(self, fetcher, handler: callable, dialog=None, to_json=True):
-        def on_finish():
+        def common_handler():
+            self.tellae_services.create_theme_selector()
+            self.tellae_services.set_layers_table()
 
-            if dialog:
-                dialog.done(0)
-            log("request finish")
-
-            log("was canceled: " + str(fetcher.wasCanceled()))
-            if fetcher.wasCanceled():
-                raise ValueError("Canceled")
-
-            content = bytes(fetcher.reply().readAll())
-            if content:
-                if to_json:
-                    content = json.loads(content)
-
-            handler(content)
-
-            self.fetchers.remove(fetcher)
-
-        return on_finish
-
-
-
-    def request(self, url, handler, auth_cfg=None, to_json=True, dialog=False):
-
-        fetcher = QgsNetworkContentFetcher()
-
-        self.fetchers.append(fetcher)
-
-        if dialog:
-            cancel_import_dialog = CancelImportDialog()
-
-            def set_dialog_text(bytes_received, total_bytes):
-                cancel_import_dialog.chunkLabel.setText(
-                    "{}% downloaded".format(
-                        round(float(bytes_received)/total_bytes*100),
-                    )
-                )
-
-            fetcher.downloadProgress.connect(set_dialog_text)
-
-            cancel_import_dialog.cancelButton.clicked.connect(fetcher.cancel)
-        else:
-            cancel_import_dialog = None
-
-        fetcher.finished.connect(self.on_request_finish(fetcher, handler, cancel_import_dialog, to_json=to_json))
-        fetcher.errorOccurred.connect(self.on_request_error)
-
-        fetcher.fetchContent(QUrl(url), authcfg=auth_cfg)
-
-
-        # TODO : manage callbacks
-
-
-
-
-
-
-    def request_whale(self, url, handler, **kwargs):
-
-        if url.startswith("https://"):
-            raise ValueError("Only the relative path of the Whale url should be provided")
-
-        # prepend whale endpoint
-        whale_url = self.whale_endpoint + url
-
-        # make the request using the AWS authentication
-        self.request(whale_url, handler, auth_cfg=self.authCfg, **kwargs)
-
-        return
-
-
-
-
-        # blocking_request = QgsBlockingNetworkRequest()
-        # blocking_request.setAuthCfg(self.authCfg)
-        #
-        # feedback = QgsFeedback()
-        # blocking_request.downloadProgress.connect(self.log_download_content)
-        request = QNetworkRequest(QUrl(self.whale_endpoint + url))
-
-        error_code = blocking_request.get(request, feedback=feedback)
-
-
-
-        log(QgsBlockingNetworkRequest.NetworkError)
-        log(QgsBlockingNetworkRequest.NoError)
-        log(QgsBlockingNetworkRequest.ServerExceptionError)
-        log(QgsBlockingNetworkRequest.TimeoutError)
-
-        if error_code == QgsBlockingNetworkRequest.NoError:
-            response = bytes(blocking_request.reply().content())
-            if to_json:
-                response = json.loads(response)
-        else:
-            raise RequestError(error_code)
-
-        return response
-
-
-        response = self.network_manager.blockingGet(request, authCfg=self.authCfg)
-
-
-
-        error_code = response.error()
-
-        if error_code == QNetworkReply.NoError:
-            response = bytes(response.content())
-            if to_json:
-                response = json.loads(response)
-        elif error_code == QNetworkReply.NetworkError:
-            raise ValueError("NetworkError")
-        elif error_code == QNetworkReply.ServerExceptionError:
-            raise ValueError("ServerExceptionError")
-        elif error_code == QNetworkReply.TimeoutError:
-            raise ValueError("TimeoutError ")
-        else:
-            raise RequestError(response)
-
-        return response
-
-    def request_layer_summary(self):
-
-        def handler(response):
-            layers = sorted(response, key=lambda x: x["name"]["fr"])
+        def layer_summary_handler(response):
+            result = response["content"]
+            layers = sorted(result, key=lambda x: x["name"]["fr"])
             self.layer_summary = layers
 
             themes = list(set([theme for layer in layers for theme in layer["themes"]]))
 
             self.themes = sorted(themes)
 
-        self.request_whale("/shark/layers/table?ne_lng=180&ne_lat=90&sw_lng=-180&sw_lat=-90", handler)
-        # layers = self.request_whale("/shark/layers/table")
+            if self.layer_summary and self.datasets_summary:
+                common_handler()
 
-        return
+        self.request_whale("/shark/layers/table", handler=layer_summary_handler)
 
-        layers = sorted(layers, key=lambda x: x["name"]["fr"])
-        self.layer_summary = layers
-
-        themes = list(set([theme for layer in layers for theme in layer["themes"]]))
-
-        self.themes = sorted(themes)
-
-    def request_datasets_summary(self):
-
-        def handler(response):
-            datasets = {dataset["id"]: dataset for dataset in response}
+        def datasets_summary_handler(response):
+            result = response["content"]
+            datasets = {dataset["id"]: dataset for dataset in result}
 
             self.datasets_summary = datasets
 
-        self.request_whale("/shark/datasets/summary", handler)
+            if self.layer_summary and self.datasets_summary:
+                common_handler()
 
-        return
-
-        datasets = {dataset["id"]: dataset for dataset in datasets}
-
-        self.datasets_summary = datasets
+        self.request_whale("/shark/datasets/summary", handler=datasets_summary_handler)
 
     def get_filtered_layer_summary(self, selected_theme: str):
 
@@ -345,5 +112,175 @@ class TellaeStore:
 
         return uri
 
+    # AUTHENTICATION methods
+
+    def init_auth(self):
+        if TELLAE_STORE.local_config is not None and "auth" in TELLAE_STORE.local_config and TELLAE_STORE.local_config[
+            "auth"].get("use", True):
+            if "WHALE_ENDPOINT" in TELLAE_STORE.local_config["auth"]:
+                self.whale_endpoint = TELLAE_STORE.local_config["auth"]["WHALE_ENDPOINT"]
+            self._try_dev_indents()
+            return
+
+        # try to get existing auth config
+        if not self._try_existing_indents():
+            # if no existing indents where found, show auth dialog to manually input new indents
+            self.auth_dialog.show()
+
+    def try_new_indents(self, key, secret):
+
+        # create a temporary config with new indents
+        self._create_or_update_auth_config(AWS_TELLAE_TMP_CONFIG, key, secret)
+
+        def handler(_):
+            # if the login was successful, remove temporary config and update main config
+            remove_tellae_auth_config(AWS_TELLAE_TMP_CONFIG)
+            self._create_or_update_auth_config(AWS_TELLAE_CONFIG, key, secret)
+
+        def on_error(_):
+            # if the login failed, just remove the temporary config
+            remove_tellae_auth_config(AWS_TELLAE_TMP_CONFIG)
+
+        # try to login
+        self._login(handler=handler, error_handler=on_error)
+
+    def get_current_indents(self):
+        return get_apikey_from_cache(self.authName)
+
+
+    def _try_dev_indents(self):
+        # get indents from local config
+        try:
+            api_key = self.local_config["auth"]["WHALE_API_KEY_ID"]
+            secret = self.local_config["auth"]["WHALE_SECRET_ACCESS_KEY"]
+        except KeyError as e:
+            raise ValueError(f"Erreur lors de l'authentification locale, clé manquante: {str(e)}")
+
+        # create or update DEV auth config
+        self._create_or_update_auth_config(AWS_TELLAE_DEV_CONFIG, api_key, secret)
+
+        # try to login
+        self._login(set_indents=True)
+
+    def _try_existing_indents(self):
+        # check for an existing auth config
+        cfg_id = get_auth_config(AWS_TELLAE_CONFIG)
+
+        if cfg_id is not None:
+            # set auth config
+            self._set_auth_config(AWS_TELLAE_CONFIG, cfg_id)
+
+            # try to login
+            self._login(set_indents=True)
+
+            return True
+
+        return False
+
+    def _login(self, handler=None, error_handler=None, set_indents=False):
+
+        # create full success callback
+        def full_handler(result):
+            if handler:
+                handler(result)
+
+            # set user in store
+            self.user = result["content"]
+
+            # update login button
+            self.main_dialog.set_auth_button_text(self.user)
+
+            # tag store as authenticated
+            self.authenticated = True
+
+            # if store is not initiated, do it now
+            if not self.store_initiated:
+                self.init_store()
+
+            if set_indents:
+                self.auth_dialog.set_indents_from_auth_config()
+
+        def full_error_handler(result):
+            if error_handler:
+                error_handler(result)
+
+            # display error message in auth dialog
+            self.auth_dialog.display_error_message(
+                f"Erreur  lors de l'authentification: {message_from_request_error(result)}")
+            # show authentication dialog
+            self.auth_dialog.show()
+
+        # make request to whale /auth/me service
+        self.request_whale("/auth/me", handler=full_handler, error_handler=full_error_handler)
+
+    def _create_or_update_auth_config(self, name, key, secret):
+        auth_cfg = create_auth_config(
+            name,
+            key,
+            secret
+        )
+        self._set_auth_config(name, auth_cfg)
+
+    def _set_auth_config(self, cfg_name, cfg_id):
+        self.authCfg = cfg_id
+        self.authName = cfg_name
+
+    # NETWORK REQUESTS METHODS
+
+    def request(self, url, method="GET", body=None, handler=None, error_handler=None, auth_cfg=None, to_json=True):
+
+        # create a network access manager instance
+        nam = NetworkAccessManager(authid=auth_cfg)
+
+        # create callback function: call handler depending on request success
+        def on_finished():
+
+            result = nam.httpResult()
+            if result["ok"] and handler:
+                # convert request result to json
+                if to_json:
+                    result["content"] = json.loads(result["content"])
+                handler(result)
+            elif not result["ok"] and error_handler:
+                error_handler(result)
+
+        try:
+            # make async request
+            nam.request(url, method=method, body=body, blocking=False)
+
+            # add callback
+            nam.reply.finished.connect(on_finished)
+        except Exception as e:
+            # call error handler on exception
+            error_handler({
+                "status": None,
+                "status_code": None,
+                "status_message": "Python error while making request",
+                "content": None,
+                "ok": False,
+                "headers": None,
+                "reason": "Python error while making request",
+                "exception": e
+            })
+
+    def request_whale(self, url, **kwargs):
+
+        if url.startswith("https://"):
+            raise ValueError("Only the relative path of the Whale url should be provided")
+
+        # prepend whale endpoint
+        whale_url = self.whale_endpoint + url
+
+        # make the request using the AWS authentication
+        return self.request(whale_url, auth_cfg=self.authCfg, **kwargs)
+
+
+def message_from_request_error(result):
+    status = result["status"]
+    status_code = result["status_code"]
+    status_message = result["status_message"]
+    reason = result["reason"]
+    log(str(result["exception"]))
+    return str(result["exception"])
 
 TELLAE_STORE = TellaeStore()

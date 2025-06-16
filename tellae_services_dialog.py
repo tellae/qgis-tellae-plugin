@@ -43,3 +43,11 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
         # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
+
+    def set_auth_button_text(self, user):
+        if user is None:
+            text = "Login"
+        else:
+            text = f'{user["firstName"]} {user["lastName"]}'
+
+        self.authButton.setText(text)
