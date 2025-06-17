@@ -44,6 +44,7 @@ class TellaeStore:
         # local config
         self.local_config = None
         self.read_local_config()
+        self.network_debug = False if self.local_config is None else self.local_config.get("network_debug", False)
 
         # plugin dialogs
         self.tellae_services = None
@@ -206,7 +207,8 @@ class TellaeStore:
 
             # display error message in auth dialog
             self.auth_dialog.display_error_message(
-                f"Erreur  lors de l'authentification: {message_from_request_error(result)}")
+                message_from_request_error(result)
+            )
             # show authentication dialog
             self.auth_dialog.show()
 
@@ -230,7 +232,7 @@ class TellaeStore:
     def request(self, url, method="GET", body=None, handler=None, error_handler=None, auth_cfg=None, to_json=True):
 
         # create a network access manager instance
-        nam = NetworkAccessManager(authid=auth_cfg)
+        nam = NetworkAccessManager(authid=auth_cfg, debug=self.network_debug)
 
         # create callback function: call handler depending on request success
         def on_finished():

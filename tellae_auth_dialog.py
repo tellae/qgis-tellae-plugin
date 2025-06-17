@@ -33,7 +33,7 @@ class TellaeAuthDialog(QtWidgets.QDialog, FORM_CLASS):
         try:
             TELLAE_STORE.init_auth()
         except Exception as e:
-            self.display_error_message(f"Erreur  lors de l'authentification: {str(e)}")
+            self.display_error_message(str(e))
 
 
     def validate(self):
@@ -41,7 +41,7 @@ class TellaeAuthDialog(QtWidgets.QDialog, FORM_CLASS):
         try:
             TELLAE_STORE.try_new_indents(self.keyEdit.text(), self.secretEdit.text())
         except Exception as e:
-            self.display_error_message(f"Erreur  lors de l'authentification: {str(e)}")
+            self.display_error_message(str(e))
 
 
     # def try_authenticate(self, apikey, secret, endpoint=None):
