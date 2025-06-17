@@ -195,7 +195,7 @@ class PropsMapping(ABC):
     def __init__(self, paint_type, mapping_options, paint=True, legend=False, legend_options=None, editable=True, **kwargs):
 
         self.paint_type = paint_type
-        self.mapping_options = mapping_options
+        self.mapping_options = mapping_options if mapping_options is not None else dict()
         self.paint = paint
         self.legend = legend
         self.legend_options = dict() if legend_options is None else legend_options
