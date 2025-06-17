@@ -1,6 +1,7 @@
 import tempfile
 import requests
 from abc import ABC, abstractmethod
+import urllib.parse
 
 from qgis.core import (
     QgsProject,
@@ -122,7 +123,54 @@ class VectorTileSource(QgsLayerSource):
 
     @property
     def url(self):
-        return TELLAE_STORE.vector_tile_url(self.layer.data)
+        whale_endpoint = TELLAE_STORE.whale_endpoint
+        auth_cfg = TELLAE_STORE.authCfg
+
+        params = {
+            "table": self.layer.data
+        }
+
+        # evaluate selected properties
+
+        # start with properties from dataProperties
+        select = list(self.layer.dataProperties.keys()) if self.layer.dataProperties is not None else []
+
+        # add edit attributes that read properties
+        edit_attributes = self.layer.editAttributes
+        if edit_attributes is None:
+            edit_attributes = dict()
+
+        for key in edit_attributes.keys():
+            edit_attribute = edit_attributes[key]
+            mapping_options = edit_attribute.mapping_options
+            if "key" in mapping_options and not mapping_options["key"] in select:
+                select.append(mapping_options["key"])
+
+        if len(select) > 0:
+            log(select)
+            params["select"] = f"[{','.join(select)}]"
+
+        # evaluate features filter
+        if "filter" in self.layer.editAttributes:  # new way
+            filter_mapping = self.layer.editAttributes["filter"]
+            if filter_mapping.mapping_type != "enum":
+                raise ValueError("Vector tiles filter is expected to be of type 'enum'")
+            params["filter_key"] = filter_mapping.mapping_options["key"]
+            params["filter"] = f"[{','.join(filter_mapping.mapping_options['values'])}"
+        elif "filter" in self.layer.mapboxProps:  # old way
+            mapbox_filter = self.layer.mapboxProps["filter"]
+            params["filter_key"] = mapbox_filter[1][1]
+            params["filter"] = f"[{','.join(mapbox_filter[2][1])}"
+
+        # build final url
+        martin_url = (whale_endpoint +
+                      "/martin/table_selection/{z}/{x}/{y}".replace("{", "%7B").replace("}", "%7D") +
+                      f"?{urllib.parse.urlencode(params, safe='[]').replace('&', '%26')}")
+
+        # build final uri (with url type and auth config)
+        uri = f"url={martin_url}&type=xyz&authcfg={auth_cfg}"
+
+        return uri
 
     def init_qgis_layer(self):
         # nothing to download, just create the instance with the correct vector tiles url

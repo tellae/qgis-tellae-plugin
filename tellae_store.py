@@ -103,16 +103,6 @@ class TellaeStore:
         else:
             return [layer for layer in self.layer_summary if selected_theme in layer["themes"]]
 
-    def vector_tile_url(self, table_id):
-
-        full_url = self.whale_endpoint + "/martin/" + table_id + "/{z}/{x}/{y}".replace("{", "%7B").replace("}", "%7D")
-        # headers = self.request_manager._get_headers(full_url, "GET", None, "application/json", None)
-        # uri = f"url={full_url}&type=xyz&http-header:Authorization={headers['Authorization']}&http-header:Content-Type={headers['Content-Type']}"
-
-        uri = f"url={full_url}&type=xyz&authcfg={self.authCfg}"
-
-        return uri
-
     # AUTHENTICATION methods
 
     def init_auth(self):
