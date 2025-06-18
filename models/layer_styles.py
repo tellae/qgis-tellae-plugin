@@ -18,7 +18,10 @@ from qgis.core import (
     QgsTextFormat,
     QgsTextBufferSettings,
     QgsLabelPlacementSettings,
-    qgsfunction
+    qgsfunction,
+    QgsMarkerSymbolLayer,
+    QgsLineSymbolLayer,
+    QgsExpressionContext
 )
 
 
@@ -109,7 +112,6 @@ class VectorTilesStyle(LayerStyle):
     def create_styles(self):
 
         secondary_mappings = [v for v in self.editAttributes.values() if v != self.main_props_mapping and v.paint]
-        log(self.main_props_mapping)
         styles = self.main_props_mapping.create_vector_tile_styles(self.geometry_type)
 
         for style in styles:
@@ -227,8 +229,14 @@ class PropsMapping(ABC):
             # set the new property with a value depending on the props mapping
             symbol_layer.setDataDefinedProperty(
                 updated_prop,
-                QgsProperty.fromValue(self._evaluate_property_value(**kwargs))
+                self._property_from_value(self._evaluate_property_value(**kwargs))
             )
+
+            # update symbol size unit
+            self.setRenderUnit(symbol_layer)
+
+    def _property_from_value(self, value):
+        return QgsProperty.fromValue(value)
 
     def update_style_paint(self, style, **kwargs):
         self.update_symbol(style.symbol(), **kwargs)
@@ -246,13 +254,18 @@ class PropsMapping(ABC):
 
         return [style]
 
+    def setRenderUnit(self, symbol: QgsSymbolLayer):
+        if isinstance(symbol, QgsMarkerSymbolLayer):
+            symbol.setSizeUnit(Qgis.RenderUnit.Points)
+        elif isinstance(symbol, QgsLineSymbolLayer):
+            symbol.setWidthUnit(Qgis.RenderUnit.Points)
+
     def create_renderer(self, layer, geometry_type):
         return layer.renderer()
 
 
-    @abstractmethod
     def get_label(self, **kwargs):
-        raise NotImplementedError
+        return None
 
     def from_spec(key, spec):
         log(key)
@@ -304,6 +317,8 @@ class PropsMapping(ABC):
             mapping = ContinuousMapping(**spec)
         elif mapping_type == "enum":
             mapping = EnumMapping(**spec)
+        elif mapping_type == "exp_zoom_interpolation":
+            mapping = ExponentialZoomInterpolationMapping(**spec)
         else:
             raise ValueError(f"Unsupported mapping type '{mapping_type}'")
 
@@ -356,15 +371,13 @@ class DirectMapping(PropsMapping):
 
         return QgsProperty.fromExpression(expression)
 
-    def get_label(self, **kwargs):
-        return None
-
     def create_renderer(self, layer, geometry_type):
         symbol = create_default_symbol(geometry_type)
         self.update_symbol(symbol)
         renderer = QgsSingleSymbolRenderer(symbol)
 
-
+    def _property_from_value(self, value):
+        return QgsProperty.fromExpression(value)
 
 class CategoryMapping(PropsMapping):
     mapping_type = "category"
@@ -478,14 +491,28 @@ class ContinuousMapping(PropsMapping):
 
         return label
 
+
+
+class ExponentialZoomInterpolationMapping(PropsMapping):
+    mapping_type = "exp_zoom_interpolation"
+
+    def _evaluate_property_value(self):
+        key = self.mapping_options["key"]
+
+        if self.paint_type == "size":
+            expression =  f'scale_exponential(@zoom_level, 0, 20, 0,  50*sqrt((100*"{key}")/3.14), 2)'
+        else:
+            raise PaintTypeError
+
+        return expression
+
+    def _property_from_value(self, value):
+        return QgsProperty.fromExpression(value)
+
 class EnumMapping(PropsMapping):
     mapping_type = "enum"
 
     def _evaluate_property_value(self, **kwargs):
-        raise NotImplementedError
-
-
-    def get_label(self, **kwargs):
         raise NotImplementedError
 
 
@@ -573,3 +600,15 @@ def prefixed_color(color):
         return color
     else:
         return "#" + color
+
+from math import exp, sqrt
+
+def linear_zoom_interpolation(prop_value, context : QgsExpressionContext=None):
+
+    zoom_level = context.variable("zoom_level")
+
+
+
+
+    result = 50 * sqrt(100 * prop_value / 3.14)
+
