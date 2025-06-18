@@ -595,6 +595,8 @@ def infer_geometry_type_from_layer_class(layer_class):
         return Qgis.GeometryType.Point
     elif layer_class == "KiteSymbolLayer":
         return Qgis.GeometryType.Point
+    elif layer_class == "KiteLabelLayer":
+        return Qgis.GeometryType.Point
     elif layer_class == "KiteLineLayer":
         return Qgis.GeometryType.Line
     elif layer_class == "KiteFillLayer":
