@@ -73,11 +73,17 @@ class TellaeStore:
 
         def layer_summary_handler(response):
             result = response["content"]
-            layers = sorted(result, key=lambda x: x["name"]["fr"])
-            self.layer_summary = layers
+            # filter visible layers
+            layers = [layer for layer in result if layer["visible"]]
 
+            # sort layers by name
+            layers = sorted(layers, key=lambda x: x["name"]["fr"])
+
+            # evaluate list of themes
             themes = list(set([theme for layer in layers for theme in layer["themes"]]))
 
+            # update store
+            self.layer_summary = layers
             self.themes = sorted(themes)
 
             if self.layer_summary and self.datasets_summary:
