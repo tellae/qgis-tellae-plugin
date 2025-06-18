@@ -156,11 +156,11 @@ class VectorTileSource(QgsLayerSource):
             if filter_mapping.mapping_type != "enum":
                 raise ValueError("Vector tiles filter is expected to be of type 'enum'")
             params["filter_key"] = filter_mapping.mapping_options["key"]
-            params["filter"] = f"[{','.join(filter_mapping.mapping_options['values'])}"
+            params["filter"] = f"[{','.join(filter_mapping.mapping_options['values'])}]"
         elif "filter" in self.layer.mapboxProps:  # old way
             mapbox_filter = self.layer.mapboxProps["filter"]
             params["filter_key"] = mapbox_filter[1][1]
-            params["filter"] = f"[{','.join(mapbox_filter[2][1])}"
+            params["filter"] = f"[{','.join(mapbox_filter[2][1])}]"
 
         # build final url
         martin_url = (whale_endpoint +
