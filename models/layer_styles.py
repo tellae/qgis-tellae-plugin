@@ -64,6 +64,8 @@ class LayerStyle:
 
         for key in self.editAttributes:
             mapping = self.editAttributes[key]
+            if not mapping.paint:
+                continue
 
             if mapping.legend:
                 if legend is not None:
@@ -106,8 +108,8 @@ class VectorTilesStyle(LayerStyle):
 
     def create_styles(self):
 
-        secondary_mappings = [v for v in self.editAttributes.values() if v != self.main_props_mapping]
-
+        secondary_mappings = [v for v in self.editAttributes.values() if v != self.main_props_mapping and v.paint]
+        log(self.main_props_mapping)
         styles = self.main_props_mapping.create_vector_tile_styles(self.geometry_type)
 
         for style in styles:
@@ -192,10 +194,18 @@ class PropsMapping(ABC):
 
     mapping_type = None
 
-    def __init__(self, paint_type, mapping_options, paint=True, legend=False, legend_options=None, editable=True, **kwargs):
+    def __init__(self, paint_type, mapping_options, paint=None, legend=False, legend_options=None, editable=True, **kwargs):
 
         self.paint_type = paint_type
         self.mapping_options = mapping_options if mapping_options is not None else dict()
+
+        # define default value depending on paint type
+        if paint is None:
+            if paint_type in ["filter", "sort"]:
+                paint = False
+            else:
+                paint = True
+
         self.paint = paint
         self.legend = legend
         self.legend_options = dict() if legend_options is None else legend_options
@@ -248,7 +258,7 @@ class PropsMapping(ABC):
         log(key)
         log(spec)
 
-        if key in ["color", "size", "opacity", "text", "filter"]:
+        if key in ["color", "size", "opacity", "text", "filter", "sort"]:
             paint_type = key
         else:
             paint_type = None
@@ -292,6 +302,8 @@ class PropsMapping(ABC):
             if isinstance(spec["mapping_options"]["values"], str):
                 spec["mapping_options"]["values"] = MAPPING_CONSTS[spec["mapping_options"]["values"]]
             mapping = ContinuousMapping(**spec)
+        elif mapping_type == "enum":
+            mapping = EnumMapping(**spec)
         else:
             raise ValueError(f"Unsupported mapping type '{mapping_type}'")
 
@@ -465,6 +477,16 @@ class ContinuousMapping(PropsMapping):
             label += f" {self.legend_options['unit']}"
 
         return label
+
+class EnumMapping(PropsMapping):
+    mapping_type = "enum"
+
+    def _evaluate_property_value(self, **kwargs):
+        raise NotImplementedError
+
+
+    def get_label(self, **kwargs):
+        raise NotImplementedError
 
 
 def infer_symbol_prop(geometry_type: Qgis.GeometryType, paint_type: str):
