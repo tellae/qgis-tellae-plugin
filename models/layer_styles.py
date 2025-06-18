@@ -32,6 +32,8 @@ MAPPING_CONSTS = {
   "population_densities_colors": ["#EFE3CF", "#F7C99E", "#F9AF79", "#F79465", "#E8705D", "#D4495A", "#D03568"]
 }
 
+DEFAULT_LABEL_NAME = "Default"
+
 
 class LayerStyle:
 
@@ -383,11 +385,16 @@ class CategoryMapping(PropsMapping):
     mapping_type = "category"
 
     def _evaluate_property_value(self, **kwargs):
-        value = kwargs["value"]
+        if "default" in kwargs and kwargs["default"]:
+            paint_value = self.mapping_options["default"]
+        else:
+            paint_value = self.mapping_options["values_map"][kwargs["value"]]
+
+
         if self.paint_type == "color":
-            return QColor(self.mapping_options["values_map"][value])
+            return QColor(paint_value)
         elif self.paint_type == "size":
-            return self.mapping_options["values_map"][value]
+            return paint_value
         else:
             raise PaintTypeError
 
@@ -419,6 +426,15 @@ class CategoryMapping(PropsMapping):
             self.update_style_paint(style, value=value)
 
             styles.append(style)
+
+        if "default" in self.mapping_options:
+            default_style = create_vector_tile_style(DEFAULT_LABEL_NAME, geometry_type)
+            default_style.setFilterExpression("ELSE")
+
+            # update paint
+            self.update_style_paint(default_style, default=True)
+
+            styles.append(default_style)
 
         return styles
 
