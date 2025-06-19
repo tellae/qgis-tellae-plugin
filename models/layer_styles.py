@@ -44,7 +44,7 @@ class LayerStyle:
 
         self.originalRenderer = self.layer.qgis_layer.renderer()
 
-        self.geometry_type = infer_geometry_type_from_layer_class(self.layer.layerClass)
+        self.geometry_type = self.layer.GEOMETRY_TYPE
 
         self.min_zoom_level = None
         if "minzoom" in self.layer.mapboxProps:
@@ -590,19 +590,6 @@ def infer_geometry_type_from_symbol_layer(symbol_layer):
     else:
         raise ValueError(f"Unsupported symbol layer class '{symbol_layer_class}'")
 
-def infer_geometry_type_from_layer_class(layer_class):
-    if layer_class == "KiteCircleLayer":
-        return Qgis.GeometryType.Point
-    elif layer_class == "KiteSymbolLayer":
-        return Qgis.GeometryType.Point
-    elif layer_class == "KiteLabelLayer":
-        return Qgis.GeometryType.Point
-    elif layer_class == "KiteLineLayer":
-        return Qgis.GeometryType.Line
-    elif layer_class == "KiteFillLayer":
-        return Qgis.GeometryType.Polygon
-    else:
-        raise ValueError(f"Unsupported layer class '{layer_class}'")
 
 class PaintTypeError(ValueError):
     def __init__(self):
@@ -619,14 +606,14 @@ def prefixed_color(color):
     else:
         return "#" + color
 
-from math import exp, sqrt
-
-def linear_zoom_interpolation(prop_value, context : QgsExpressionContext=None):
-
-    zoom_level = context.variable("zoom_level")
-
-
-
-
-    result = 50 * sqrt(100 * prop_value / 3.14)
+# from math import exp, sqrt
+#
+# def linear_zoom_interpolation(prop_value, context : QgsExpressionContext=None):
+#
+#     zoom_level = context.variable("zoom_level")
+#
+#
+#
+#
+#     result = 50 * sqrt(100 * prop_value / 3.14)
 
