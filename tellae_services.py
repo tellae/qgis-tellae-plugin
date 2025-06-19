@@ -23,22 +23,17 @@
 """
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction, QTableWidget, QTableWidgetItem, QPushButton
+from qgis.PyQt.QtWidgets import QAction
 
 # Initialize Qt resources from file resources.py
 # Import the code for the dialog
-from .tellae_services_dialog import TellaeServicesDialog
-from .tellae_auth_dialog import TellaeAuthDialog
-
 
 # Tellae imports
-
+from .tellae_services_dialog import TellaeServicesDialog
+from .tellae_auth_dialog import TellaeAuthDialog
 from .tellae_store import TELLAE_STORE
-from .models.layers import create_layer
 from .utils import log
 
-
-import traceback
 import os.path
 
 
@@ -80,13 +75,6 @@ class TellaeServices:
 
         # read local config if there is one
         # res = read_local_config(self.plugin_dir)
-
-        # Tellae attributes
-        self.store = TELLAE_STORE
-
-        self.layers = []
-
-        self.selected_theme = "Tous"
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -199,89 +187,6 @@ class TellaeServices:
                 action)
             self.iface.removeToolBarIcon(action)
 
-    def set_layers_table(self):
-        # get table widget
-        table = self.dlg.tableWidget
-
-        # get list of layers to display
-        self.layers = self.store.get_filtered_layer_summary(self.selected_theme)
-        table.setRowCount(len(self.layers))
-
-        # setup table headers
-        # total table length is 721, scroll bar is 16 => header width must total to 705
-        headers = [
-            {"text": "Nom", "value": lambda x: x["name"]["fr"], "width": 285},
-            {"text": "Date", "value": lambda x: self.store.datasets_summary[x["main_dataset"]].get("date", ""), "width": 80, "align": Qt.AlignCenter},
-            {"text": "Source", "value": lambda x: self.store.datasets_summary[x["main_dataset"]]["provider_name"], "width": 280},
-            {"text": "Actions", "value": "actions", "width": 60}
-        ]
-        table.setColumnCount(len(headers))
-        table.setHorizontalHeaderLabels([header["text"] for header in headers])
-        for col, header in enumerate(headers):
-            if "width" in header:
-                table.setColumnWidth(col, header["width"])
-
-        # populate table cells
-        for row, layer in enumerate(self.layers):
-            for col, header in enumerate(headers):
-                # create a table cell
-                cell = QTableWidgetItem()
-
-                # evaluate its content depending on the row and column
-                if callable(header["value"]):
-                    text = header["value"](layer)
-                elif header["value"] == "actions":
-                    btn = QPushButton(table)
-                    btn.setText("Add")
-                    btn.clicked.connect(lambda state, x=row: self.add_layer(x))
-                    table.setCellWidget(row, col, btn)
-                    continue
-                else:
-                    text = layer[header["value"]]
-
-                # set cell text and tooltip
-                cell.setText(text)
-                cell.setToolTip(text)
-
-                # set text alignment
-                if "align" in header:
-                    cell.setTextAlignment(header["align"])
-
-                # put the cell in the table
-                table.setItem(row, col, cell)
-
-        # disable table edition
-        table.setEditTriggers(QTableWidget.NoEditTriggers)
-
-    def add_layer(self, index):
-        layer_item = self.layers[index]
-        qgs_kite_layer = create_layer(layer_item)
-
-        try:
-            qgs_kite_layer.add_to_qgis()
-
-        except Exception as e:
-            log(str(traceback.format_exc()))
-            self.dlg.display_message(f"Erreur lors de l'ajout de la couche '{qgs_kite_layer.name}': {str(e)}")
-            raise e
-
-    def create_theme_selector(self):
-        # set list of layers
-        self.dlg.themeSelector.addItems(["Tous"] + self.store.themes)
-
-        # set default selection to "all"
-        self.dlg.themeSelector.setCurrentText("Tous")
-
-        # add listener on update event
-        self.dlg.themeSelector.currentTextChanged.connect(self.update_theme)
-
-    def update_theme(self, new_theme):
-        # update selected theme
-        self.selected_theme = new_theme
-
-        # update layers table
-        self.set_layers_table()
-
     def setup_dialog(self):
         # open authentication dialog on authButton click
         self.dlg.authButton.clicked.connect(self.auth.open)
@@ -297,7 +202,6 @@ class TellaeServices:
             self.auth = TellaeAuthDialog()
 
             # store dialogs
-            TELLAE_STORE.tellae_services = self
             TELLAE_STORE.main_dialog = self.dlg
             TELLAE_STORE.auth_dialog = self.auth
 
