@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/plugins/tellae_services" >
-        <file>icon.png</file>
+    <qresource prefix="/plugins/qgis-tellae-plugin" >
+        <file>tellae.png</file>
     </qresource>
 </RCC>
