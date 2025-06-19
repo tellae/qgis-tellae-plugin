@@ -199,9 +199,6 @@ class TellaeServices:
                 action)
             self.iface.removeToolBarIcon(action)
 
-    def display_message(self, message: str):
-        self.dlg.message.setText(message)
-
     def set_layers_table(self):
         # get table widget
         table = self.dlg.tableWidget
@@ -262,11 +259,10 @@ class TellaeServices:
 
         try:
             qgs_kite_layer.add_to_qgis()
-            self.display_message(f"La couche '{qgs_kite_layer.name}' a été ajoutée avec succès !")
 
         except Exception as e:
             log(str(traceback.format_exc()))
-            self.display_message(f"Erreur lors de l'ajout de la couche '{qgs_kite_layer.name}': {str(e)}")
+            self.dlg.display_message(f"Erreur lors de l'ajout de la couche '{qgs_kite_layer.name}': {str(e)}")
             raise e
 
     def create_theme_selector(self):

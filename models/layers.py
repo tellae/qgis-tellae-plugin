@@ -89,7 +89,7 @@ class GeojsonSource(QgsLayerSource):
 
     def on_download_error(self, response):
         exception = response["exception"]
-        TELLAE_STORE.tellae_services.display_message(f"Erreur lors de l'ajout de la couche '{self.layer_name}': {str(exception)}")
+        TELLAE_STORE.main_dialog.display_message(f"Erreur lors de l'ajout de la couche '{self.layer_name}': {str(exception)}")
 
     def _new_qgis_layer_instance(self):
         try:
@@ -255,11 +255,16 @@ class QgsKiteLayer:
     def _add_to_qgis(self):
         log("_add_to_qgis")
 
-        self._create_style()
+        try:
+            self._create_style()
 
-        self._update_style()
+            self._update_style()
 
-        self._add_to_project()
+            self._add_to_project()
+
+            TELLAE_STORE.main_dialog.display_message(f"La couche '{self.name}' a été ajoutée avec succès !")
+        except Exception as e:
+            TELLAE_STORE.main_dialog.display_message(f"Erreur lors de l'ajout de la couche '{self.name}': {str(e)}")
 
     def _add_to_project(self):
         QgsProject.instance().addMapLayer(self.qgis_layer)
