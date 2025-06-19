@@ -32,25 +32,6 @@
     <string>12345-abcde</string>
    </property>
   </widget>
-  <widget class="QLineEdit" name="secretEdit">
-   <property name="geometry">
-    <rect>
-     <x>80</x>
-     <y>70</y>
-     <width>301</width>
-     <height>27</height>
-    </rect>
-   </property>
-   <property name="echoMode">
-    <enum>QLineEdit::Password</enum>
-   </property>
-   <property name="placeholderText">
-    <string>tai-a1b2c3d4e5</string>
-   </property>
-   <property name="clearButtonEnabled">
-    <bool>false</bool>
-   </property>
-  </widget>
   <widget class="QLabel" name="keyLabel">
    <property name="geometry">
     <rect>
@@ -162,7 +143,27 @@
     <string>Annuler</string>
    </property>
   </widget>
+  <widget class="QgsPasswordLineEdit" name="secretEdit">
+   <property name="geometry">
+    <rect>
+     <x>80</x>
+     <y>70</y>
+     <width>301</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="placeholderText">
+    <string>tai-a1b2c3d4e5</string>
+   </property>
+  </widget>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QgsPasswordLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>qgspasswordlineedit.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
