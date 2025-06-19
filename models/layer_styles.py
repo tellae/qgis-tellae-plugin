@@ -1,3 +1,4 @@
+import copy
 
 from ..utils import log
 
@@ -34,6 +35,8 @@ from abc import ABC, abstractmethod
 MAPPING_CONSTS = {
   "population_densities_colors": ["#EFE3CF", "#F7C99E", "#F9AF79", "#F79465", "#E8705D", "#D4495A", "#D03568"]
 }
+
+
 
 DEFAULT_LABEL_NAME = "Default"
 
@@ -306,55 +309,21 @@ class PropsMapping(ABC):
         log(key)
         log(spec)
 
-        if key in ["color", "size", "opacity", "text", "filter", "sort"]:
-            paint_type = key
-        else:
-            paint_type = None
+        # repair and add missing value in mapping init json
+        spec = repair_mapping_init(key, spec)
 
-        if isinstance(spec, (str, float, int)):
+        try:
+            mapping_type = spec["type"]
+        except KeyError:
+            raise ValueError("Missing 'type' field in mapping init")
 
-            if paint_type is None:
-                raise ValueError("Cannot infer paint type")
+        try:
+            mapping_class = MAPPING_CLASSES[mapping_type]
 
-            spec = {
-                "type": "constant",
-                "mapping_options": {
-                    "value": spec
-                },
-                "paint_type": paint_type
-            }
+            mapping = mapping_class.__new__(mapping_class)
+            mapping.__init__(**spec)
 
-        if "mapping_data" in spec:
-            spec["mapping_options"] = spec["mapping_data"]
-            del spec["mapping_data"]
-
-        if "value_type" in spec:
-            spec["paint_type"] = spec["value_type"]
-            del spec["value_type"]
-
-        if "paint_type" not in spec:
-            if paint_type is None:
-                raise ValueError("Cannot infer paint type")
-            else:
-                spec["paint_type"] = paint_type
-
-        mapping_type = spec["type"]
-        del spec["type"]
-        if mapping_type == "constant":
-            mapping = ConstantMapping(**spec)
-        elif mapping_type == "direct":
-            mapping = DirectMapping(**spec)
-        elif mapping_type == "category":
-            mapping = CategoryMapping(**spec)
-        elif mapping_type == "continuous":
-            if isinstance(spec["mapping_options"]["values"], str):
-                spec["mapping_options"]["values"] = MAPPING_CONSTS[spec["mapping_options"]["values"]]
-            mapping = ContinuousMapping(**spec)
-        elif mapping_type == "enum":
-            mapping = EnumMapping(**spec)
-        elif mapping_type == "exp_zoom_interpolation":
-            mapping = ExponentialZoomInterpolationMapping(**spec)
-        else:
+        except KeyError:
             raise ValueError(f"Unsupported mapping type '{mapping_type}'")
 
         return mapping
@@ -498,6 +467,13 @@ class CategoryMapping(PropsMapping):
 
 class ContinuousMapping(PropsMapping):
     mapping_type = "continuous"
+
+    def __init__(self, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
+        if isinstance(self.mapping_options["values"], str):
+            self.mapping_options["values"] = MAPPING_CONSTS[self.mapping_options["values"]]
 
     def _evaluate_paint_value(self, **kwargs):
         interval = kwargs["interval"]
@@ -682,6 +658,59 @@ def create_vector_tile_style(label, geometry_type):
 
     return style
 
+def repair_mapping_init(edit_key, mapping_init):
+
+    # make a copy of the init json
+    mapping_init = copy.deepcopy(mapping_init)
+
+    # infer paint type from edit key
+    if edit_key in ["color", "size", "opacity", "text", "filter", "sort"]:
+        inferred_paint_type = edit_key
+    else:
+        inferred_paint_type = None
+
+    # if edit attribute is a constant, create a 'constant' mapping init
+    if isinstance(mapping_init, (str, float, int)):
+
+        if inferred_paint_type is None:
+            raise ValueError("Cannot infer paint type")
+
+        mapping_init = {
+            "type": "constant",
+            "mapping_options": {
+                "value": mapping_init
+            },
+            "paint_type": inferred_paint_type
+        }
+
+    # support deprecated 'mapping_data' field
+    if "mapping_data" in mapping_init:
+        mapping_init["mapping_options"] = mapping_init["mapping_data"]
+        del mapping_init["mapping_data"]
+
+    # support deprecated 'value_type' field
+    if "value_type" in mapping_init:
+        mapping_init["paint_type"] = mapping_init["value_type"]
+        del mapping_init["value_type"]
+
+    # add inferred paint type if missing
+    if "paint_type" not in mapping_init:
+        if inferred_paint_type is None:
+            raise ValueError("Cannot infer paint type")
+        else:
+            mapping_init["paint_type"] = inferred_paint_type
+
+    return mapping_init
+
+MAPPING_CLASSES = {
+    "ConstantMapping": ConstantMapping,
+    "DirectMapping": DirectMapping,
+    "CategoryMapping": CategoryMapping,
+    "ContinuousMapping": ContinuousMapping,
+    "ExponentialZoomInterpolationMapping": ExponentialZoomInterpolationMapping,
+    "LinearZoomInterpolationMapping": LinearZoomInterpolationMapping,
+    "EnumMapping": EnumMapping
+}
 
 class PaintTypeError(ValueError):
     def __init__(self):
