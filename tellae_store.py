@@ -1,5 +1,5 @@
 
-from .utils import log, AuthenticationError, read_local_config, get_apikey_from_cache, create_auth_config, get_auth_config, remove_tellae_auth_config
+from .utils import log, AuthenticationError, read_local_config, get_apikey_from_cache, create_auth_config, get_auth_config, remove_tellae_auth_config, THEMES_TRANSLATION
 import os
 import json
 from .network_access_manager import NetworkAccessManager
@@ -80,6 +80,7 @@ class TellaeStore:
 
             # evaluate list of themes
             themes = list(set([theme for layer in layers for theme in layer["themes"]]))
+            themes = [THEMES_TRANSLATION[theme] for theme in themes]
 
             # update store
             self.layer_summary = layers
@@ -106,7 +107,7 @@ class TellaeStore:
         if selected_theme == "Tous":
             return self.layer_summary
         else:
-            return [layer for layer in self.layer_summary if selected_theme in layer["themes"]]
+            return [layer for layer in self.layer_summary if selected_theme in [THEMES_TRANSLATION[theme] for theme in layer["themes"]]]
 
     # AUTHENTICATION methods
 
