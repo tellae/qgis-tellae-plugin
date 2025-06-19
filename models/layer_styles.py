@@ -21,7 +21,10 @@ from qgis.core import (
     qgsfunction,
     QgsMarkerSymbolLayer,
     QgsLineSymbolLayer,
-    QgsExpressionContext
+    QgsExpressionContext,
+    QgsFillSymbol,
+QgsMarkerSymbol,
+QgsLineSymbol,
 )
 
 
@@ -55,6 +58,8 @@ class LayerStyle:
         self.main_props_mapping = None
         if self.layer.editAttributes:
             self.main_props_mapping = self.infer_main_props_mapping()
+
+        self.secondary_mappings = [v for v in self.editAttributes.values() if v != self.main_props_mapping and v.paint]
 
 
     @property
@@ -113,11 +118,10 @@ class VectorTilesStyle(LayerStyle):
 
     def create_styles(self):
 
-        secondary_mappings = [v for v in self.editAttributes.values() if v != self.main_props_mapping and v.paint]
         styles = self.main_props_mapping.create_vector_tile_styles(self.geometry_type)
 
         for style in styles:
-            for mapping in secondary_mappings:
+            for mapping in self.secondary_mappings:
                 if mapping.mapping_type != "constant":
                     raise ValueError("Secondary mappings should have 'constant' type")
 
@@ -189,7 +193,7 @@ class ClassicStyle(LayerStyle):
 
 
 
-        renderer = self.main_props_mapping.create_renderer(self.layer, self.geometry_type)
+        renderer = self.main_props_mapping.create_renderer(self.layer, self.geometry_type, self.secondary_mappings)
 
         self.layer.qgis_layer.setRenderer(renderer)
 
@@ -197,6 +201,8 @@ class ClassicStyle(LayerStyle):
 class PropsMapping(ABC):
 
     mapping_type = None
+
+    SYMBOL_SIZE_UNIT = Qgis.RenderUnit.Points
 
     def __init__(self, paint_type, mapping_options, paint=None, legend=False, legend_options=None, editable=True, **kwargs):
 
@@ -218,33 +224,57 @@ class PropsMapping(ABC):
     def update_symbol(self, symbol: QgsSymbol, **kwargs):
 
         if self.paint_type == "opacity":
-            symbol.setOpacity(self.mapping_options["value"])
+            self._update_symbol_opacity(symbol, **kwargs)
+        elif self.paint_type == "color":
+            self._update_symbol_color(symbol, **kwargs)
+        elif self.paint_type == "size":
+            self._update_symbol_size(symbol, **kwargs)
+            self._update_symbol_size_unit(symbol)
         else:
-            # we assume that we only manipulate symbols with a single symbol layer
-            symbol_layer = symbol.symbolLayer(0)
+            raise PaintTypeError
 
-            # evaluate the updated property based on the geometry type and paint type
-            log(self.mapping_type)
-            log(self.paint_type)
-            updated_prop = infer_symbol_prop(infer_geometry_type_from_symbol_layer(symbol_layer), self.paint_type)
 
-            # set the new property with a value depending on the props mapping
-            symbol_layer.setDataDefinedProperty(
-                updated_prop,
-                self._property_from_value(self._evaluate_property_value(**kwargs))
-            )
 
-            # update symbol size unit
-            self.setRenderUnit(symbol_layer)
+    def _update_symbol_opacity(self, symbol: QgsSymbol, **kwargs):
+        if self.mapping_type != "constant":
+            raise ValueError("Opacity mapping should be of type 'constant'")
 
-    def _property_from_value(self, value):
-        return QgsProperty.fromValue(value)
+        # call symbol setOpacity method
+        symbol.setOpacity(self.mapping_options["value"])
+
+    def _update_symbol_color(self, symbol: QgsSymbol, **kwargs):
+        # call symbol setOpacity method
+        symbol.setColor(self._evaluate_paint_value(**kwargs))
+
+    def _update_symbol_size(self, symbol: QgsSymbol, **kwargs):
+
+        if isinstance(symbol, QgsMarkerSymbol):
+            symbol.setSize(self._evaluate_paint_value(**kwargs))
+        elif isinstance(symbol, QgsLineSymbol):
+            symbol.setWidth(self._evaluate_paint_value(**kwargs))
+        elif isinstance(symbol, QgsFillSymbol):
+            log("Trying to use size paint on polygon layer")
+            pass
+        else:
+            raise ValueError(f"Unsupported symbol class '{symbol.__class__.__name__}'")
+
+    def _update_symbol_size_unit(self, symbol: QgsSymbol):
+
+        if isinstance(symbol, QgsMarkerSymbol):
+            symbol.setSizeUnit(self.SYMBOL_SIZE_UNIT)
+        elif isinstance(symbol, QgsLineSymbol):
+            symbol.setWidthUnit(self.SYMBOL_SIZE_UNIT)
+        elif isinstance(symbol, QgsFillSymbol):
+            log("Trying to set size unit on polygon layer")
+            pass
+        else:
+            raise ValueError(f"Unsupported symbol class '{symbol.__class__.__name__}'")
 
     def update_style_paint(self, style, **kwargs):
         self.update_symbol(style.symbol(), **kwargs)
 
     @abstractmethod
-    def _evaluate_property_value(self, **kwargs):
+    def _evaluate_paint_value(self, **kwargs):
         raise NotImplementedError
 
     def create_vector_tile_styles(self, geometry_type):
@@ -262,7 +292,7 @@ class PropsMapping(ABC):
         elif isinstance(symbol, QgsLineSymbolLayer):
             symbol.setWidthUnit(Qgis.RenderUnit.Points)
 
-    def create_renderer(self, layer, geometry_type):
+    def create_renderer(self, layer, geometry_type, secondary_mappings):
         return layer.renderer()
 
 
@@ -332,7 +362,7 @@ class PropsMapping(ABC):
 class ConstantMapping(PropsMapping):
     mapping_type = "constant"
 
-    def _evaluate_property_value(self):
+    def _evaluate_paint_value(self):
 
         if self.paint_type == "color":
             return QColor(self.mapping_options["value"])
@@ -344,11 +374,14 @@ class ConstantMapping(PropsMapping):
     def get_label(self, **kwargs):
         return self.mapping_options.get("label", None)
 
-    def create_renderer(self, layer, geometry_type):
+    def create_renderer(self, layer, geometry_type, secondary_mappings):
 
         symbol = create_default_symbol(geometry_type)
 
         self.update_symbol(symbol)
+
+        for mapping in secondary_mappings:
+            mapping.update_symbol(symbol)
 
         renderer = QgsSingleSymbolRenderer(symbol)
 
@@ -361,7 +394,13 @@ class ConstantMapping(PropsMapping):
 class DirectMapping(PropsMapping):
     mapping_type = "direct"
 
-    def _evaluate_property_value(self):
+    def _update_symbol_color(self, symbol: QgsSymbol, **kwargs):
+        set_symbol_data_defined_color(symbol, self._evaluate_paint_value())
+
+    def _update_symbol_size(self, symbol: QgsSymbol, **kwargs):
+        set_symbol_data_defined_size(symbol, self._evaluate_paint_value())
+
+    def _evaluate_paint_value(self):
         key = self.mapping_options["key"]
 
         if self.paint_type == "color":
@@ -373,18 +412,22 @@ class DirectMapping(PropsMapping):
 
         return QgsProperty.fromExpression(expression)
 
-    def create_renderer(self, layer, geometry_type):
+    def create_renderer(self, layer, geometry_type, secondary_mappings):
         symbol = create_default_symbol(geometry_type)
         self.update_symbol(symbol)
+
+        for mapping in secondary_mappings:
+            mapping.update_symbol(symbol)
+
         renderer = QgsSingleSymbolRenderer(symbol)
 
-    def _property_from_value(self, value):
-        return QgsProperty.fromExpression(value)
+        return renderer
+
 
 class CategoryMapping(PropsMapping):
     mapping_type = "category"
 
-    def _evaluate_property_value(self, **kwargs):
+    def _evaluate_paint_value(self, **kwargs):
         if "default" in kwargs and kwargs["default"]:
             paint_value = self.mapping_options["default"]
         else:
@@ -398,12 +441,15 @@ class CategoryMapping(PropsMapping):
         else:
             raise PaintTypeError
 
-    def create_renderer(self, layer, geometry_type):
+    def create_renderer(self, layer, geometry_type, secondary_mappings):
 
         categories = []
         for value, color in self.mapping_options["values_map"].items():
             symbol = create_default_symbol(geometry_type)
             self.update_symbol(symbol, value=value)
+
+            for mapping in secondary_mappings:
+                mapping.update_symbol(symbol)
 
             category = QgsRendererCategory(value, symbol, self.get_label(value))
 
@@ -450,7 +496,7 @@ class CategoryMapping(PropsMapping):
 class ContinuousMapping(PropsMapping):
     mapping_type = "continuous"
 
-    def _evaluate_property_value(self, **kwargs):
+    def _evaluate_paint_value(self, **kwargs):
         interval = kwargs["interval"]
         if self.paint_type == "color":
             return QColor(self.mapping_options["values"][interval])
@@ -459,7 +505,7 @@ class ContinuousMapping(PropsMapping):
         else:
             raise PaintTypeError
 
-    def create_renderer(self, layer, geometry_type):
+    def create_renderer(self, layer, geometry_type, secondary_mapping):
 
         raise NotImplementedError
 
@@ -512,7 +558,13 @@ class ContinuousMapping(PropsMapping):
 class ExponentialZoomInterpolationMapping(PropsMapping):
     mapping_type = "exp_zoom_interpolation"
 
-    def _evaluate_property_value(self):
+    def _update_symbol_color(self, symbol: QgsSymbol, **kwargs):
+        set_symbol_data_defined_color(symbol, self._evaluate_paint_value())
+
+    def _update_symbol_size(self, symbol: QgsSymbol, **kwargs):
+        set_symbol_data_defined_size(symbol, self._evaluate_paint_value())
+
+    def _evaluate_paint_value(self):
         key = self.mapping_options["key"]
 
         if self.paint_type == "size":
@@ -520,43 +572,73 @@ class ExponentialZoomInterpolationMapping(PropsMapping):
         else:
             raise PaintTypeError
 
-        return expression
+        return QgsProperty.fromExpression(expression)
 
-    def _property_from_value(self, value):
-        return QgsProperty.fromExpression(value)
 
 class EnumMapping(PropsMapping):
     mapping_type = "enum"
 
-    def _evaluate_property_value(self, **kwargs):
+    def _evaluate_paint_value(self, **kwargs):
         raise NotImplementedError
 
 
-def infer_symbol_prop(geometry_type: Qgis.GeometryType, paint_type: str):
-    if geometry_type == Qgis.GeometryType.Line:
-        if paint_type == "color":
-            return QgsSymbolLayer.PropertyStrokeColor
-        elif paint_type == "size":
-            return QgsSymbolLayer.PropertyStrokeWidth
-        else:
-            raise PaintTypeError
-    elif geometry_type == Qgis.GeometryType.Polygon:
-        if paint_type == "color":
-            return QgsSymbolLayer.PropertyFillColor
-        elif paint_type == "size":
-            log("Trying to use size paint on polygon layer")
-            return None
-        else:
-            raise PaintTypeError
-    elif geometry_type == Qgis.GeometryType.Point:
-        if paint_type == "color":
-            return QgsSymbolLayer.PropertyFillColor
-        elif paint_type == "size":
-            return QgsSymbolLayer.PropertySize
-        else:
-            raise PaintTypeError
+def set_symbol_data_defined_size(symbol: QgsSymbol, qgs_property: QgsProperty):
+    # call the relevant setDataDefined* method to set an expression defining the size
+    if isinstance(symbol, QgsMarkerSymbol):
+        symbol.setDataDefinedSize(qgs_property)
+    elif isinstance(symbol, QgsLineSymbol):
+        symbol.setDataDefinedWidth(qgs_property)
+    elif isinstance(symbol, QgsFillSymbol):
+        log("Trying to set size paint on polygon layer")
+        pass
     else:
-        raise ValueError(f"Unsupported geometry type '{geometry_type}'")
+        raise ValueError(f"Unsupported symbol class '{symbol.__class__.__name__}'")
+
+def set_symbol_data_defined_color(symbol: QgsSymbol, qgs_property: QgsProperty):
+    # evaluate updated property based on symbol class
+    if isinstance(symbol, QgsMarkerSymbol):
+        updated_prop = QgsSymbolLayer.Property.FillColor  # QgsSymbolLayer.PropertyFillColor
+    elif isinstance(symbol, QgsLineSymbol):
+        updated_prop = QgsSymbolLayer.Property.StrokeColor  # QgsSymbolLayer.PropertyStrokeColor
+    elif isinstance(symbol, QgsFillSymbol):
+        updated_prop = QgsSymbolLayer.Property.FillColor  # QgsSymbolLayer.PropertyFillColor
+    else:
+        raise ValueError(f"Unsupported symbol class '{symbol.__class__.__name__}'")
+
+    # the symbol is expected to have a single sub symbolLayer
+    symbol_layer = symbol.symbolLayer(0)
+
+    # use the setDataDefinedProperty method to set an expression defining the color
+    symbol_layer.setDataDefinedProperty(
+        updated_prop,
+        qgs_property
+    )
+
+# def infer_symbol_prop(geometry_type: Qgis.GeometryType, paint_type: str):
+#     if geometry_type == Qgis.GeometryType.Line:
+#         if paint_type == "color":
+#             return QgsSymbolLayer.PropertyStrokeColor
+#         elif paint_type == "size":
+#             return QgsSymbolLayer.PropertyStrokeWidth
+#         else:
+#             raise PaintTypeError
+#     elif geometry_type == Qgis.GeometryType.Polygon:
+#         if paint_type == "color":
+#             return QgsSymbolLayer.PropertyFillColor
+#         elif paint_type == "size":
+#             log("Trying to use size paint on polygon layer")
+#             return None
+#         else:
+#             raise PaintTypeError
+#     elif geometry_type == Qgis.GeometryType.Point:
+#         if paint_type == "color":
+#             return QgsSymbolLayer.PropertyFillColor
+#         elif paint_type == "size":
+#             return QgsSymbolLayer.PropertySize
+#         else:
+#             raise PaintTypeError
+#     else:
+#         raise ValueError(f"Unsupported geometry type '{geometry_type}'")
 
 def create_default_symbol(geometry_type):
     symbol = QgsSymbol.defaultSymbol(geometry_type)
@@ -576,19 +658,6 @@ def create_vector_tile_style(label, geometry_type):
     style.setSymbol(symbol)
 
     return style
-
-
-def infer_geometry_type_from_symbol_layer(symbol_layer):
-    symbol_layer_class = symbol_layer.__class__.__name__
-
-    if symbol_layer_class == "QgsSimpleFillSymbolLayer":
-        return Qgis.GeometryType.Polygon
-    elif symbol_layer_class == "QgsSimpleLineSymbolLayer":
-        return Qgis.GeometryType.Line
-    elif symbol_layer_class == "QgsSimpleMarkerSymbolLayer":
-        return Qgis.GeometryType.Point
-    else:
-        raise ValueError(f"Unsupported symbol layer class '{symbol_layer_class}'")
 
 
 class PaintTypeError(ValueError):
