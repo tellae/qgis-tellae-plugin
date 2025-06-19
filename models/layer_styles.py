@@ -296,14 +296,16 @@ class PropsMapping(ABC):
             symbol.setWidthUnit(Qgis.RenderUnit.Points)
 
     def create_renderer(self, layer, geometry_type, secondary_mappings):
-        return layer.renderer()
+        return layer.qgis_layer.renderer()
 
 
     def get_label(self, **kwargs):
         return None
 
     def signal_incompatible_paint(self, paint_type):
-        log(f"Cannot update paint '{paint_type}' using {self.__class__.__name__} class")
+        message = f"Cannot update paint '{paint_type}' using {self.__class__.__name__} class"
+        log(message)
+        return ValueError(message)
 
     def from_spec(key, spec):
         log(key)
@@ -547,29 +549,52 @@ class ExponentialZoomInterpolationMapping(PropsMapping):
         key = self.mapping_options["key"]
 
         if self.paint_type == "size":
+            # exponential scale to max value 50*sqrt(100*PROP_VALUE/3.14)
             expression =  f'scale_exponential(@zoom_level, 0, 20, 0,  50*sqrt((100*"{key}")/3.14), 2)'
         else:
-            raise PaintTypeError
+            raise self.signal_incompatible_paint(self.paint_type)
 
         return QgsProperty.fromExpression(expression)
 
 class LinearZoomInterpolationMapping(PropsMapping):
     mapping_type = "linear_zoom_interpolation"
 
+    def create_renderer(self, layer, geometry_type, secondary_mappings):
+
+        symbol = create_default_symbol(geometry_type)
+
+        self.update_symbol(symbol)
+
+        for mapping in secondary_mappings:
+            mapping.update_symbol(symbol)
+
+        renderer = QgsSingleSymbolRenderer(symbol)
+
+        return renderer
+
     def _update_symbol_color(self, symbol: QgsSymbol, **kwargs):
         self.signal_incompatible_paint("color")
 
     def _update_symbol_size(self, symbol: QgsSymbol, **kwargs):
-        pass
-        # set_symbol_data_defined_size(symbol, self._evaluate_paint_value())
+        set_symbol_data_defined_size(symbol, self._evaluate_paint_value())
 
     def _evaluate_paint_value(self):
-        key = self.mapping_options["key"]
+        interpolation_values = self.mapping_options["interpolation_values"]
+        paint_values = self.mapping_options["paint_values"]
 
         if self.paint_type == "size":
-            expression =  f'scale_exponential(@zoom_level, 0, 20, 0,  50*sqrt((100*"{key}")/3.14), 2)'
+            # manage values under of interpolation interval
+            expression = f"CASE WHEN @zoom_level < {interpolation_values[0]} THEN {paint_values[0]} "
+
+            for i in range(len(interpolation_values)-1):
+                # perform a linear interpolation when zoom level is in an interpolation interval
+                expression += (f"WHEN @zoom_level BETWEEN {interpolation_values[i]} AND {interpolation_values[i+1]} "
+                               f"THEN scale_linear(@zoom_level, {interpolation_values[i]}, {interpolation_values[i+1]}, {paint_values[i]}, {paint_values[i+1]}) ")
+
+            # manage values up of interpolation interval
+            expression += f"WHEN @zoom_level > {interpolation_values[-1]} THEN {paint_values[-1]} END"
         else:
-            raise PaintTypeError
+            raise self.signal_incompatible_paint(self.paint_type)
 
         return QgsProperty.fromExpression(expression)
 
@@ -578,7 +603,7 @@ class EnumMapping(PropsMapping):
     mapping_type = "enum"
 
     def _evaluate_paint_value(self, **kwargs):
-        self.signal_incompatible_paint(self.paint_type)
+        raise self.signal_incompatible_paint(self.paint_type)
 
 
 def set_symbol_data_defined_size(symbol: QgsSymbol, qgs_property: QgsProperty):
@@ -703,13 +728,13 @@ def repair_mapping_init(edit_key, mapping_init):
     return mapping_init
 
 MAPPING_CLASSES = {
-    "ConstantMapping": ConstantMapping,
-    "DirectMapping": DirectMapping,
-    "CategoryMapping": CategoryMapping,
-    "ContinuousMapping": ContinuousMapping,
-    "ExponentialZoomInterpolationMapping": ExponentialZoomInterpolationMapping,
-    "LinearZoomInterpolationMapping": LinearZoomInterpolationMapping,
-    "EnumMapping": EnumMapping
+    ConstantMapping.mapping_type: ConstantMapping,
+    DirectMapping.mapping_type: DirectMapping,
+    CategoryMapping.mapping_type: CategoryMapping,
+    ContinuousMapping.mapping_type: ContinuousMapping,
+    ExponentialZoomInterpolationMapping.mapping_type: ExponentialZoomInterpolationMapping,
+    LinearZoomInterpolationMapping.mapping_type: LinearZoomInterpolationMapping,
+    EnumMapping.mapping_type: EnumMapping
 }
 
 class PaintTypeError(ValueError):
