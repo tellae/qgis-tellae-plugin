@@ -51,3 +51,8 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
             text = f'{user["firstName"]} {user["lastName"]}'
 
         self.authButton.setText(text)
+
+    def display_message(self, message: str):
+        self.message.setText(message)
+
+
