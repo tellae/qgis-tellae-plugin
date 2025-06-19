@@ -73,6 +73,10 @@ class TellaeServices:
         # Must be set in initGui() to survive plugin reloads
         self.first_start = None
 
+        # dialogs
+        self.dlg = None
+        self.auth = None
+
         # read local config if there is one
         # res = read_local_config(self.plugin_dir)
 
