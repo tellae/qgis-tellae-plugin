@@ -1,5 +1,4 @@
 import tempfile
-import requests
 from abc import ABC, abstractmethod
 import urllib.parse
 
@@ -7,6 +6,7 @@ from qgis.core import (
     QgsProject,
     QgsVectorLayer,
     QgsVectorTileLayer,
+Qgis
 )
 
 from ..utils import log
@@ -269,14 +269,27 @@ class QgsKiteLayer:
         if self.editAttributes is not None:
             self.editAttributes = {key: PropsMapping.from_spec(key, spec) for key, spec in self.editAttributes.items()}
 
+class KiteCircleLayer(QgsKiteLayer):
+    GEOMETRY_TYPE = Qgis.GeometryType.Point
 
 class KiteSymbolLayer(QgsKiteLayer):
+
+    GEOMETRY_TYPE = Qgis.GeometryType.Point
 
     def _call_style_update(self):
 
         assert self.style.main_props_mapping.paint_type == "text", "KiteSymbolLayer mapping should have 'text' paint type"
 
         self.style.set_labelling(self.style.main_props_mapping.mapping_options["key"])
+
+class KiteLabelLayer(QgsKiteLayer):
+    GEOMETRY_TYPE = Qgis.GeometryType.Point
+
+class KiteLineLayer(QgsKiteLayer):
+    GEOMETRY_TYPE = Qgis.GeometryType.Line
+
+class KiteFillLayer(QgsKiteLayer):
+    GEOMETRY_TYPE = Qgis.GeometryType.Polygon
 
 
 def create_layer(layer_data):
@@ -290,7 +303,7 @@ def create_layer(layer_data):
     if layer_class in LAYER_CLASSES:
         layer_constructor = LAYER_CLASSES[layer_class]
     else:
-        layer_constructor = LAYER_CLASSES["default"]
+        raise ValueError(f"Unsupported layer class '{layer_class}'")
 
     layer_instance = layer_constructor.__new__(layer_constructor)
     layer_instance.__init__(layer_data)
@@ -299,6 +312,9 @@ def create_layer(layer_data):
 
 
 LAYER_CLASSES = {
-    "default": QgsKiteLayer,
-    "KiteSymbolLayer": KiteSymbolLayer
+    "KiteCircleLayer": KiteCircleLayer,
+    "KiteSymbolLayer": KiteSymbolLayer,
+    "KiteLabelLayer": KiteLabelLayer,
+    "KiteLineLayer": KiteLineLayer,
+    "KiteFillLayer": KiteFillLayer
 }
