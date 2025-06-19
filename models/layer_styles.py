@@ -299,6 +299,9 @@ class PropsMapping(ABC):
     def get_label(self, **kwargs):
         return None
 
+    def signal_incompatible_paint(self, paint_type):
+        log(f"Cannot update paint '{paint_type}' using {self.__class__.__name__} class")
+
     def from_spec(key, spec):
         log(key)
         log(spec)
@@ -559,10 +562,30 @@ class ExponentialZoomInterpolationMapping(PropsMapping):
     mapping_type = "exp_zoom_interpolation"
 
     def _update_symbol_color(self, symbol: QgsSymbol, **kwargs):
-        set_symbol_data_defined_color(symbol, self._evaluate_paint_value())
+        self.signal_incompatible_paint("color")
 
     def _update_symbol_size(self, symbol: QgsSymbol, **kwargs):
         set_symbol_data_defined_size(symbol, self._evaluate_paint_value())
+
+    def _evaluate_paint_value(self):
+        key = self.mapping_options["key"]
+
+        if self.paint_type == "size":
+            expression =  f'scale_exponential(@zoom_level, 0, 20, 0,  50*sqrt((100*"{key}")/3.14), 2)'
+        else:
+            raise PaintTypeError
+
+        return QgsProperty.fromExpression(expression)
+
+class LinearZoomInterpolationMapping(PropsMapping):
+    mapping_type = "linear_zoom_interpolation"
+
+    def _update_symbol_color(self, symbol: QgsSymbol, **kwargs):
+        self.signal_incompatible_paint("color")
+
+    def _update_symbol_size(self, symbol: QgsSymbol, **kwargs):
+        pass
+        # set_symbol_data_defined_size(symbol, self._evaluate_paint_value())
 
     def _evaluate_paint_value(self):
         key = self.mapping_options["key"]
@@ -579,7 +602,7 @@ class EnumMapping(PropsMapping):
     mapping_type = "enum"
 
     def _evaluate_paint_value(self, **kwargs):
-        raise NotImplementedError
+        self.signal_incompatible_paint(self.paint_type)
 
 
 def set_symbol_data_defined_size(symbol: QgsSymbol, qgs_property: QgsProperty):
