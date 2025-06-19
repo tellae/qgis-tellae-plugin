@@ -47,7 +47,6 @@ class TellaeStore:
         self.network_debug = False if self.local_config is None else self.local_config.get("network_debug", False)
 
         # plugin dialogs
-        self.tellae_services = None
         self.main_dialog = None
         self.auth_dialog = None
 
@@ -68,8 +67,8 @@ class TellaeStore:
     def _init_layers_table(self):
 
         def common_handler():
-            self.tellae_services.create_theme_selector()
-            self.tellae_services.set_layers_table()
+            self.main_dialog.create_theme_selector()
+            self.main_dialog.set_layers_table()
 
         def layer_summary_handler(response):
             result = response["content"]
