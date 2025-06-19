@@ -212,8 +212,14 @@ class TellaeServices:
             # setup dialog reactions
             self.setup_dialog()
 
-        # show the dialog
-        self.dlg.show()
+            # show the dialog
+            self.dlg.show()
+
+            # try authentication with stored indents
+            self.auth.init_auth()
+        else:
+            # show the dialog
+            self.dlg.show()
 
         # # Run the dialog event loop
         # result = self.dlg.exec_()
