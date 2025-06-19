@@ -115,8 +115,7 @@ class SharkSource(GeojsonSource):
     def url(self):
         return f"/shark/layers/geojson/{self.layer.data}"
 
-    def download_geojson(self):
-        # make a request to whale and read the geojson result as bytes
+    def init_qgis_layer(self):
         TELLAE_STORE.request_whale(self.url, handler=self.on_download, to_json=False)
 
 
