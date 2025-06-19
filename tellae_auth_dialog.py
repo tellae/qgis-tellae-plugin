@@ -30,11 +30,12 @@ class TellaeAuthDialog(QtWidgets.QDialog, FORM_CLASS):
         self.setupUi(self)
         self.setup_dialog()
 
+    def init_auth(self):
         try:
             TELLAE_STORE.init_auth()
         except Exception as e:
             self.display_error_message(str(e))
-
+            self.show()
 
     def validate(self):
 
