@@ -35,7 +35,7 @@ class LayerStyle:
 
         self.main_props_mapping = None
         if self.layer.editAttributes:
-            self.main_props_mapping = self.infer_main_props_mapping()
+            self.main_props_mapping = self.layer.infer_main_props_mapping()
 
         self.secondary_mappings = [v for v in self.editAttributes.values() if v != self.main_props_mapping and v.paint]
 
@@ -43,43 +43,6 @@ class LayerStyle:
     @property
     def layer_renderer(self):
         return self.layer.qgis_layer.renderer()
-
-    def infer_main_props_mapping(self):
-
-        legend = None
-        non_constant = None
-        color = None
-
-        for key in self.editAttributes:
-            mapping = self.editAttributes[key]
-            if not mapping.paint:
-                continue
-
-            if mapping.legend:
-                if legend is not None:
-                    raise ValueError("Cannot have several 'legend' mappings")
-                legend = mapping
-
-            if mapping.mapping_type != "constant":
-                if non_constant is not None:
-                    raise ValueError("Cannot have several 'non-constant' mappings")
-                non_constant = mapping
-
-            if mapping.paint_type == "color":
-                if color is not None:
-                    raise ValueError("Cannot have several 'color' mappings")
-                color = mapping
-
-        if legend is not None:
-            return legend
-
-        if non_constant is not None:
-            return non_constant
-
-        if color is not None:
-            return color
-
-        raise ValueError("Could not infer main props mapping")
 
     def set_labelling(self, text_attribute):
         raise NotImplementedError
