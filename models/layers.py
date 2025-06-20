@@ -274,21 +274,60 @@ class QgsKiteLayer:
         if self.editAttributes is not None:
             self.editAttributes = {key: PropsMapping.from_spec(key, spec) for key, spec in self.editAttributes.items()}
 
+    def infer_main_props_mapping(self):
+
+        legend = None
+        non_constant = None
+        color = None
+
+        for key in self.editAttributes:
+            mapping = self.editAttributes[key]
+            if not mapping.paint:
+                continue
+
+            if mapping.legend:
+                if legend is not None:
+                    raise ValueError("Cannot have several 'legend' mappings")
+                legend = mapping
+
+            if mapping.mapping_type != "constant":
+                if non_constant is not None:
+                    raise ValueError("Cannot have several 'non-constant' mappings")
+                non_constant = mapping
+
+            if mapping.paint_type == "color":
+                if color is not None:
+                    raise ValueError("Cannot have several 'color' mappings")
+                color = mapping
+
+        if legend is not None:
+            return legend
+
+        if non_constant is not None:
+            return non_constant
+
+        if color is not None:
+            return color
+
+        raise ValueError("Could not infer main props mapping")
+
 class KiteCircleLayer(QgsKiteLayer):
     GEOMETRY_TYPE = Qgis.GeometryType.Point
 
-class KiteSymbolLayer(QgsKiteLayer):
-
-    GEOMETRY_TYPE = Qgis.GeometryType.Point
-
-    def _call_style_update(self):
-
-        assert self.style.main_props_mapping.paint_type == "text", "KiteSymbolLayer mapping should have 'text' paint type"
-
-        self.style.set_labelling(self.style.main_props_mapping.mapping_options["key"])
 
 class KiteLabelLayer(QgsKiteLayer):
     GEOMETRY_TYPE = Qgis.GeometryType.Point
+
+    def infer_main_props_mapping(self):
+
+        try:
+            return self.editAttributes["text"]
+        except KeyError:
+            raise ValueError("KiteSymbolLayer mapping should have 'text' paint type")
+
+    def _call_style_update(self):
+
+        self.style.set_labelling(self.style.main_props_mapping.mapping_options["key"])
 
 class KiteLineLayer(QgsKiteLayer):
     GEOMETRY_TYPE = Qgis.GeometryType.Line
@@ -318,7 +357,6 @@ def create_layer(layer_data):
 
 LAYER_CLASSES = {
     "KiteCircleLayer": KiteCircleLayer,
-    "KiteSymbolLayer": KiteSymbolLayer,
     "KiteLabelLayer": KiteLabelLayer,
     "KiteLineLayer": KiteLineLayer,
     "KiteFillLayer": KiteFillLayer
