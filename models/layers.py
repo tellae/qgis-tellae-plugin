@@ -11,7 +11,7 @@ Qgis
 
 from ..utils import log
 from ..tellae_store import TELLAE_STORE
-from .layer_styles import ClassicStyle, VectorTilesStyle
+from .layer_style import ClassicStyle, VectorTilesStyle
 from .props_mapping import PropsMapping
 
 class QgsLayerSource(ABC):
