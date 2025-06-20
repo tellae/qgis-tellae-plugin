@@ -4,8 +4,8 @@ import os
 
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
-
-from qgis.PyQt.QtWidgets import QDialogButtonBox
+from qgis.PyQt.QtWidgets import QDialogButtonBox, QDialog
+from qgis.PyQt.QtCore import Qt
 
 from .utils import log, create_auth_config, get_apikey_from_cache, AuthenticationError, AccessError, read_local_config, RequestError, get_apikey_from_cache
 from .tellae_store import TELLAE_STORE
@@ -35,12 +35,12 @@ class TellaeAuthDialog(QtWidgets.QDialog, FORM_CLASS):
             TELLAE_STORE.init_auth()
         except Exception as e:
             self.display_error_message(str(e))
-            self.show()
+            self.open()
 
     def validate(self):
-
         try:
             TELLAE_STORE.try_new_indents(self.keyEdit.text(), self.secretEdit.text())
+            self.done(QDialog.Accepted)
         except Exception as e:
             self.display_error_message(str(e))
 

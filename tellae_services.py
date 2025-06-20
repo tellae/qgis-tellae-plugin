@@ -203,7 +203,7 @@ class TellaeServices:
         if self.first_start:
             self.first_start = False
             self.dlg = TellaeServicesDialog()
-            self.auth = TellaeAuthDialog()
+            self.auth = TellaeAuthDialog(self.dlg)
 
             # store dialogs
             TELLAE_STORE.main_dialog = self.dlg

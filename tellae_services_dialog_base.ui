@@ -13,6 +13,9 @@
   <property name="windowTitle">
    <string>Tellae services</string>
   </property>
+  <property name="modal">
+   <bool>false</bool>
+  </property>
   <widget class="QTableWidget" name="tableWidget">
    <property name="geometry">
     <rect>
@@ -112,6 +115,9 @@
    </property>
    <property name="text">
     <string>Login</string>
+   </property>
+   <property name="autoDefault">
+    <bool>false</bool>
    </property>
   </widget>
  </widget>
