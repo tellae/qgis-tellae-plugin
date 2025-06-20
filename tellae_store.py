@@ -207,7 +207,7 @@ class TellaeStore:
                 message_from_request_error(result)
             )
             # show authentication dialog
-            self.auth_dialog.show()
+            self.auth_dialog.open()
 
         # make request to whale /auth/me service
         self.request_whale("/auth/me", handler=full_handler, error_handler=full_error_handler)
