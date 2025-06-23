@@ -6,6 +6,7 @@ from qgis.core import (
     QgsProperty,
     QgsSingleSymbolRenderer,
     QgsCategorizedSymbolRenderer,
+QgsGraduatedSymbolRenderer,
     QgsRendererCategory,
     qgsfunction,
     QgsMarkerSymbolLayer,
@@ -13,6 +14,8 @@ from qgis.core import (
     QgsFillSymbol,
 QgsMarkerSymbol,
 QgsLineSymbol,
+QgsRendererRange,
+QgsClassificationCustom
 )
 from PyQt5.QtGui import QColor
 
@@ -329,9 +332,46 @@ class ContinuousMapping(PropsMapping):
         else:
             raise PaintTypeError
 
-    def create_renderer(self, layer, geometry_type, secondary_mapping):
+    def create_renderer(self, layer, geometry_type, secondary_mappings):
 
-        raise NotImplementedError
+        intervals = self.mapping_options["intervals"]
+        range_list = []
+
+        for i in range(len(intervals)+1):
+            # create range symbol
+            symbol = create_default_symbol(geometry_type)
+
+            # update from mappings
+            self.update_symbol(symbol, interval=i)
+            for mapping in secondary_mappings:
+                mapping.update_symbol(symbol)
+
+            # evaluate range bounds
+            range_min = -100000 if i == 0 else intervals[i-1]
+            range_max = 100000 if i == len(intervals) else intervals[i]
+
+            # create range instance
+            renderer_range = QgsRendererRange(range_min, range_max, symbol, None)
+
+            range_list.append(renderer_range)
+
+        # create graduated renderer
+        renderer = QgsGraduatedSymbolRenderer(self.mapping_options["key"], range_list)
+
+        # set classification method and labels
+        classification_method = QgsClassificationCustom()
+
+        # label format and precision
+        label_format = "%1 à %2"
+        if "unit" in self.legend_options:
+            label_format += f" {self.legend_options['unit']}"
+        classification_method.setLabelFormat(label_format)
+        classification_method.setLabelPrecision(0)
+        renderer.setClassificationMethod(classification_method)
+        renderer.updateRangeLabels()
+
+
+        return renderer
 
     def create_vector_tile_styles(self, geometry_type):
         key = self.mapping_options["key"]
