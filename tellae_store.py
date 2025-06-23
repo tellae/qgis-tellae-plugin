@@ -47,6 +47,7 @@ class TellaeStore:
         self.network_debug = False if self.local_config is None else self.local_config.get("network_debug", False)
 
         # plugin dialogs
+        self.tellae_services = None
         self.main_dialog = None
         self.auth_dialog = None
 
