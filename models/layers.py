@@ -6,7 +6,8 @@ from qgis.core import (
     QgsProject,
     QgsVectorLayer,
     QgsVectorTileLayer,
-Qgis
+Qgis,
+QgsCoordinateTransform, QgsCoordinateReferenceSystem
 )
 
 from ..utils import log
@@ -44,6 +45,10 @@ class QgsLayerSource(ABC):
     def init_qgis_layer(self):
         raise NotImplementedError
 
+    @abstractmethod
+    def is_vector(self):
+        raise NotImplementedError
+
     def _set_qgis_layer(self):
         """
         Create and set a QGIS layer instance from the source data, then call the pipeline to add it.
@@ -73,6 +78,9 @@ class GeojsonSource(QgsLayerSource):
     @property
     def url(self):
         return self.layer.data
+
+    def is_vector(self):
+        return False
 
     def init_qgis_layer(self):
         # make a web request and read the geojson result as bytes
@@ -118,6 +126,66 @@ class SharkSource(GeojsonSource):
     def init_qgis_layer(self):
         TELLAE_STORE.request_whale(self.url, handler=self.on_download, to_json=False)
 
+
+class VectorTileGeojsonSource(GeojsonSource):
+
+    @property
+    def url(self) -> str:
+        # evaluate bbox
+        rect = TELLAE_STORE.tellae_services.iface.mapCanvas().extent()
+        bbox = [rect.xMinimum(), rect.yMinimum(), rect.xMaximum(), rect.yMaximum()]
+
+        # reproject if necessary
+        project = QgsProject.instance()
+        current_crs = project.crs()
+        if current_crs.authid() != "EPSG:4326":
+            transform = QgsCoordinateTransform(current_crs, QgsCoordinateReferenceSystem("EPSG:4326"), project)
+
+            minimum = transform.transform(rect.xMinimum(), rect.yMinimum())
+            maximum = transform.transform(rect.xMaximum(), rect.yMaximum())
+
+            bbox = [minimum.x(), minimum.y(), maximum.x(), maximum.y()]
+
+        # url parameters
+        params = {
+            "bbox": f"{','.join([str(coord) for coord in bbox])}"
+        }
+
+        # evaluate selected properties
+
+        # start with properties from dataProperties
+        select = list(self.layer.dataProperties.keys()) if self.layer.dataProperties is not None else []
+
+        # add edit attributes that read properties
+        edit_attributes = self.layer.editAttributes
+        if edit_attributes is None:
+            edit_attributes = dict()
+
+        for key in edit_attributes.keys():
+            edit_attribute = edit_attributes[key]
+            mapping_options = edit_attribute.mapping_options
+            if "key" in mapping_options and not mapping_options["key"] in select:
+                select.append(mapping_options["key"])
+
+        if len(select) > 0:
+            params["select"] = f"{','.join(select)}"
+
+        # evaluate features filter
+        if "filter" in self.layer.editAttributes:  # new way
+            filter_mapping = self.layer.editAttributes["filter"]
+            if filter_mapping.mapping_type != "enum":
+                raise ValueError("Vector tiles filter is expected to be of type 'enum'")
+            params["filter_key"] = filter_mapping.mapping_options["key"]
+            params["filter_values"] = f"{','.join(filter_mapping.mapping_options['values'])}"
+        elif "filter" in self.layer.mapboxProps:  # old way
+            mapbox_filter = self.layer.mapboxProps["filter"]
+            params["filter_key"] = mapbox_filter[1][1]
+            params["filter_values"] = f"{','.join(mapbox_filter[2][1])}"
+
+        return f"/shark/layers/geojson/{self.layer.data}?{urllib.parse.urlencode(params)}"
+
+    def init_qgis_layer(self):
+        TELLAE_STORE.request_whale(self.url, handler=self.on_download, to_json=False)
 
 class VectorTileSource(QgsLayerSource):
 
@@ -172,6 +240,9 @@ class VectorTileSource(QgsLayerSource):
 
         return uri
 
+    def is_vector(self):
+        return True
+
     def init_qgis_layer(self):
         # nothing to download, just create the instance with the correct vector tiles url
         self._set_qgis_layer()
@@ -220,7 +291,7 @@ class QgsKiteLayer:
 
     @property
     def is_vector(self):
-        return self.sourceType == "vector"
+        return self.source.is_vector()
 
     def _init_source(self) -> QgsLayerSource:
         if self.sourceType == "geojson":
@@ -228,7 +299,7 @@ class QgsKiteLayer:
         elif self.sourceType == "shark":
             return SharkSource(self)
         elif self.sourceType == "vector":
-            return VectorTileSource(self)
+            return VectorTileGeojsonSource(self)
         else:
             raise ValueError(f"Unsupported source type '{self.sourceType}'")
 

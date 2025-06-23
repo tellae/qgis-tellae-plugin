@@ -32,6 +32,7 @@ from qgis.PyQt.QtCore import Qt
 
 from .tellae_store import TELLAE_STORE
 from .models.layers import create_layer
+from .utils import log
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(

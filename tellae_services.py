@@ -206,6 +206,7 @@ class TellaeServices:
             self.auth = TellaeAuthDialog(self.dlg)
 
             # store dialogs
+            TELLAE_STORE.tellae_services = self
             TELLAE_STORE.main_dialog = self.dlg
             TELLAE_STORE.auth_dialog = self.auth
 
