@@ -14,6 +14,7 @@ from ..utils import log
 from ..tellae_store import TELLAE_STORE
 from .layer_style import ClassicStyle, VectorTilesStyle
 from .props_mapping import PropsMapping
+import traceback
 
 class QgsLayerSource(ABC):
 
@@ -335,6 +336,7 @@ class QgsKiteLayer:
 
             TELLAE_STORE.main_dialog.display_message(f"La couche '{self.name}' a été ajoutée avec succès !")
         except Exception as e:
+            log(str(e))
             TELLAE_STORE.main_dialog.display_message(f"Erreur lors de l'ajout de la couche '{self.name}': {str(e)}")
 
     def _add_to_project(self):
