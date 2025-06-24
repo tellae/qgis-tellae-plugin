@@ -254,11 +254,9 @@ class VectorTileSource(QgsLayerSource):
 
 
 class QgsKiteLayer:
+    GEOMETRY_TYPE = None
 
     def __init__(self, layer_data):
-
-
-
         self.id = layer_data["id"]
 
         self.layerClass = layer_data["layer_class"]
@@ -318,8 +316,9 @@ class QgsKiteLayer:
         self._call_style_update()
 
     def _call_style_update(self):
+        # update symbols if editAttributes are present
         if self.style.editAttributes:
-            self.style.update_layer()
+            self.style.update_layer_symbology()
 
     def add_to_qgis(self):
         self.source.init_qgis_layer()
@@ -337,6 +336,7 @@ class QgsKiteLayer:
             TELLAE_STORE.main_dialog.display_message(f"La couche '{self.name}' a été ajoutée avec succès !")
         except Exception as e:
             log(str(e))
+            log(str(traceback.format_exc()))
             TELLAE_STORE.main_dialog.display_message(f"Erreur lors de l'ajout de la couche '{self.name}': {str(e)}")
 
     def _add_to_project(self):
@@ -399,8 +399,10 @@ class KiteLabelLayer(QgsKiteLayer):
             raise ValueError("KiteSymbolLayer mapping should have 'text' paint type")
 
     def _call_style_update(self):
+        # KiteLabelLayer are displayed using labels and not symbols
+        self.style.update_layer_labelling(self.style.main_props_mapping.mapping_options["key"])
+        self.style.remove_symbology()
 
-        self.style.set_labelling(self.style.main_props_mapping.mapping_options["key"])
 
 class KiteLineLayer(QgsKiteLayer):
     GEOMETRY_TYPE = Qgis.GeometryType.Line

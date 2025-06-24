@@ -6,10 +6,13 @@ from qgis.core import (
     Qgis,
     QgsVectorTileBasicLabeling,
     QgsVectorTileBasicLabelingStyle,
+QgsVectorLayerSimpleLabeling,
     QgsPalLayerSettings,
     QgsTextFormat,
     QgsTextBufferSettings,
     QgsLabelPlacementSettings,
+QgsSymbol,
+QgsNullSymbolRenderer
 )
 
 
@@ -17,10 +20,14 @@ from PyQt5.QtGui import QColor
 
 
 class LayerStyle:
+    """
+    A class for updating the style of QGIS layers.
 
+    This class updates the layer symbology and/or labelling
+    according to the layer type (vector or vector tiles)
+    using the mappings contained in the layer's editAttributes.
+    """
     def __init__(self, layer):
-
-
         self.layer = layer
 
         self.originalRenderer = self.layer.qgis_layer.renderer()
@@ -44,33 +51,112 @@ class LayerStyle:
     def layer_renderer(self):
         return self.layer.qgis_layer.renderer()
 
-    def set_labelling(self, text_attribute):
+    def update_layer_symbology(self):
+        """
+        Set the symbols used to render the layer.
+        """
+        raise NotImplementedError
+
+    def update_layer_labelling(self, text_attribute: str):
+        """
+        Set the labels displayed on the layer.
+
+        :param text_attribute: property containing the text to display for each feature
+        """
+        raise NotImplementedError
+
+    def remove_symbology(self):
         raise NotImplementedError
 
 
+class ClassicStyle(LayerStyle):
+    """
+    A class for updating the style of classic QGIS vector layers.
+    """
+
+    def update_layer_symbology(self):
+        # create a new renderer that reflects the rendering behaviour of the main mapping (constant, category, continuous..)
+        renderer = self.main_props_mapping.create_renderer(self.layer, self.update_symbol_with_secondary_mappings)
+        self.layer.qgis_layer.setRenderer(renderer)
+
+    def update_symbol_with_secondary_mappings(self, symbol: QgsSymbol):
+        """
+        Update a symbol from the secondary mappings.
+
+        This method is used to update symbols of the main mapping (for instance
+        symbols of a QgsCategorizedSymbolRenderer) with other paint aspects.
+
+        :param symbol: QgsSymbol instance
+        """
+        for mapping in self.secondary_mappings:
+            mapping.update_symbol_as_secondary(symbol)
+
+    def update_layer_labelling(self, text_attribute: str):
+
+        # add a buffer around text
+        buffer_settings = QgsTextBufferSettings()
+        # enable buffer
+        buffer_settings.setEnabled(True)
+        # fill buffer interior
+        buffer_settings.setFillBufferInterior(True)
+        # set fill color to white
+        buffer_settings.setColor(QColor("white"))
+        # set buffer settings into text format
+        text_format = QgsTextFormat()
+        text_format.setBuffer(buffer_settings)
+
+        # placement settings
+        placement_settings = QgsLabelPlacementSettings()
+        # allow label overlap
+        placement_settings.setOverlapHandling(Qgis.LabelOverlapHandling.AllowOverlapIfRequired)
+
+        # create label settings and set values
+        label_settings = QgsPalLayerSettings()
+        label_settings.setFormat(text_format)
+        label_settings.setPlacementSettings(placement_settings)
+
+        # label value expression
+        label_settings.fieldName = text_attribute
+
+        # place labels over the point feature
+        label_settings.placement = Qgis.LabelPlacement.OverPoint
+
+        # enable labels
+        label_settings.enabled = True
+
+        labeling = QgsVectorLayerSimpleLabeling(label_settings)
+
+        self.layer.qgis_layer.setLabeling(labeling)
+        self.layer.qgis_layer.setLabelsEnabled(True)
+
+    def remove_symbology(self):
+        # use a QgsNullSymbolRenderer instance
+        renderer = QgsNullSymbolRenderer()
+        self.layer.qgis_layer.setRenderer(renderer)
+
+
 class VectorTilesStyle(LayerStyle):
+    """
+    A class for updating the style of QGIS vector tiles layers.
+    """
 
-    def update_layer(self):
-
-        styles = self.create_styles()
-
+    def update_layer_symbology(self):
+        # create vector tile styles
+        styles = self.create_vector_tiles_styles()
         self.layer_renderer.setStyles(styles)
 
-
-    def create_styles(self):
-
+    def create_vector_tiles_styles(self):
+        # create a set of styles (a rule + a symbol) that reflect the rendering behaviour of the main mapping
         styles = self.main_props_mapping.create_vector_tile_styles(self.geometry_type)
 
+        # update each style with the rest of the mappings
         for style in styles:
             for mapping in self.secondary_mappings:
-                if mapping.mapping_type != "constant":
-                    raise ValueError("Secondary mappings should have 'constant' type")
-
-                mapping.update_style_paint(style)
+                mapping.update_symbol_as_secondary(style.symbol())
 
         return styles
 
-    def set_labelling(self, text_attribute):
+    def update_layer_labelling(self, text_attribute):
 
         # add a buffer around text
         buffer_settings = QgsTextBufferSettings()
@@ -116,7 +202,7 @@ class VectorTilesStyle(LayerStyle):
         labeling.setStyles([labeling_style])
         self.layer.qgis_layer.setLabeling(labeling)
 
-
+    def remove_symbology(self):
         # disable default rendering styles of the layer
         rendering_styles = self.layer_renderer.styles()
         for style in rendering_styles:
@@ -124,61 +210,4 @@ class VectorTilesStyle(LayerStyle):
             style.setEnabled(False)
 
         self.layer_renderer.setStyles(rendering_styles)
-
-
-
-
-class ClassicStyle(LayerStyle):
-
-    def update_layer(self):
-
-
-
-        renderer = self.main_props_mapping.create_renderer(self.layer, self.geometry_type, self.secondary_mappings)
-
-        self.layer.qgis_layer.setRenderer(renderer)
-
-
-
-
-
-# def infer_symbol_prop(geometry_type: Qgis.GeometryType, paint_type: str):
-#     if geometry_type == Qgis.GeometryType.Line:
-#         if paint_type == "color":
-#             return QgsSymbolLayer.PropertyStrokeColor
-#         elif paint_type == "size":
-#             return QgsSymbolLayer.PropertyStrokeWidth
-#         else:
-#             raise PaintTypeError
-#     elif geometry_type == Qgis.GeometryType.Polygon:
-#         if paint_type == "color":
-#             return QgsSymbolLayer.PropertyFillColor
-#         elif paint_type == "size":
-#             log("Trying to use size paint on polygon layer")
-#             return None
-#         else:
-#             raise PaintTypeError
-#     elif geometry_type == Qgis.GeometryType.Point:
-#         if paint_type == "color":
-#             return QgsSymbolLayer.PropertyFillColor
-#         elif paint_type == "size":
-#             return QgsSymbolLayer.PropertySize
-#         else:
-#             raise PaintTypeError
-#     else:
-#         raise ValueError(f"Unsupported geometry type '{geometry_type}'")
-
-
-
-
-# from math import exp, sqrt
-#
-# def linear_zoom_interpolation(prop_value, context : QgsExpressionContext=None):
-#
-#     zoom_level = context.variable("zoom_level")
-#
-#
-#
-#
-#     result = 50 * sqrt(100 * prop_value / 3.14)
 
