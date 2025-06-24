@@ -70,7 +70,21 @@ class PropsMapping(ABC):
         self.legend_options = dict() if legend_options is None else legend_options
         self.editable = editable
 
-    def update_symbol(self, symbol: QgsSymbol, **kwargs):
+    # updating symbols
+
+    def update_symbol(self, symbol: QgsSymbol, **kwargs) -> str:
+        """
+        Update the given symbol according to the mapping context.
+
+        The mapping context describes what part of the mapping data is used to evaluate
+        the symbol paint. For instance, which interval of a graduated rendering, or which category
+        of a categorized rendering.
+
+        :param symbol: symbol to update
+        :param kwargs: additional parameters that define the mapping context
+
+        :return: eventual label associated to the context
+        """
 
         if self.paint_type == "opacity":
             self._update_symbol_opacity(symbol, **kwargs)
@@ -82,21 +96,32 @@ class PropsMapping(ABC):
         else:
             raise PaintTypeError
 
+        return self.get_label(**kwargs)
 
 
-    def _update_symbol_opacity(self, symbol: QgsSymbol, **kwargs):
-        if self.mapping_type != "constant":
-            raise ValueError("Opacity mapping should be of type 'constant'")
+    @abstractmethod
+    def update_symbol_as_secondary(self, symbol: QgsSymbol):
+        """
+        Update the given symbol as a secondary mapping.
 
-        # call symbol setOpacity method
-        symbol.setOpacity(self.mapping_options["value"])
+        This means that this mapping is not the style defining mapping,
+        and thus its rendering behaviour is not expressed by creating a
+        dedicated renderer (for vector layers) or styles (for vector styles).
+        Its style must then be expressed by setting properties of the renderer's
+        sub symbols.
+
+        The properties can still be set with values that describe a complex behaviour,
+        most often using QGIS expressions.
+
+        :param symbol: QgsSymbol instance to update
+        """
 
     def _update_symbol_color(self, symbol: QgsSymbol, **kwargs):
-        # call symbol setOpacity method
+        # call symbol setColor method
         symbol.setColor(self._evaluate_paint_value(**kwargs))
 
     def _update_symbol_size(self, symbol: QgsSymbol, **kwargs):
-
+        # call relevant size method
         if isinstance(symbol, QgsMarkerSymbol):
             symbol.setSize(self._evaluate_paint_value(**kwargs))
         elif isinstance(symbol, QgsLineSymbol):
@@ -108,7 +133,7 @@ class PropsMapping(ABC):
             raise ValueError(f"Unsupported symbol class '{symbol.__class__.__name__}'")
 
     def _update_symbol_size_unit(self, symbol: QgsSymbol):
-
+        # call relevant size unit method
         if isinstance(symbol, QgsMarkerSymbol):
             symbol.setSizeUnit(self.SYMBOL_SIZE_UNIT)
         elif isinstance(symbol, QgsLineSymbol):
@@ -119,12 +144,52 @@ class PropsMapping(ABC):
         else:
             raise ValueError(f"Unsupported symbol class '{symbol.__class__.__name__}'")
 
-    def update_style_paint(self, style, **kwargs):
-        self.update_symbol(style.symbol(), **kwargs)
+    def _update_symbol_opacity(self, symbol: QgsSymbol, **kwargs):
+        if self.mapping_type != "constant":
+            raise ValueError("Opacity mapping should be of type 'constant'")
+
+        # call symbol setOpacity method
+        symbol.setOpacity(self.mapping_options["value"])
+
 
     @abstractmethod
     def _evaluate_paint_value(self, **kwargs):
         raise NotImplementedError
+
+    def get_label(self, **kwargs) -> str:
+        return ""
+
+    # vector layer style
+
+    def create_renderer(self, layer, symbol_updater: callable):
+        """
+        Create a renderer that reflects the style described by the mapping class.
+
+        The returned object is an instance of a subclass of QgsFeatureRenderer,
+        which is used for QGIS vector layers.
+
+        This method can be overridden to return other rendering classes
+        in case it is more relevant for the mapping.
+
+        :param layer: QgsKiteLayer subclass instance
+        :param symbol_updater: function that updates a symbol with secondary mappings
+        :return: QgsFeatureRenderer subclass instance
+        """
+        # create a symbol matching the layer geometry
+        symbol = create_default_symbol(layer.GEOMETRY_TYPE)
+
+        # update the symbol using the mapping
+        self.update_symbol(symbol)
+
+        # update the symbol with secondary mappings
+        symbol_updater(symbol)
+
+        # create a QgsSingleSymbolRenderer from the symbol
+        renderer = QgsSingleSymbolRenderer(symbol)
+
+        return renderer
+
+    # vector tiles styles
 
     def create_vector_tile_styles(self, geometry_type):
         # create a single style
@@ -135,18 +200,10 @@ class PropsMapping(ABC):
 
         return [style]
 
-    def setRenderUnit(self, symbol: QgsSymbolLayer):
-        if isinstance(symbol, QgsMarkerSymbolLayer):
-            symbol.setSizeUnit(Qgis.RenderUnit.Points)
-        elif isinstance(symbol, QgsLineSymbolLayer):
-            symbol.setWidthUnit(Qgis.RenderUnit.Points)
+    def update_style_paint(self, style, **kwargs):
+        self.update_symbol(style.symbol(), **kwargs)
 
-    def create_renderer(self, layer, geometry_type, secondary_mappings):
-        return layer.qgis_layer.renderer()
-
-
-    def get_label(self, **kwargs):
-        return None
+    # utils
 
     def signal_incompatible_paint(self, paint_type):
         message = f"Cannot update paint '{paint_type}' using {self.__class__.__name__} class"
@@ -182,7 +239,13 @@ class PropsMapping(ABC):
 class ConstantMapping(PropsMapping):
     mapping_type = "constant"
 
+    def update_symbol_as_secondary(self, symbol: QgsSymbol):
+        self.update_symbol(symbol)
+
     def _evaluate_paint_value(self):
+        """
+        Fetch the paint constant value from the mapping options.
+        """
 
         if self.paint_type == "color":
             return QColor(self.mapping_options["value"])
@@ -194,25 +257,12 @@ class ConstantMapping(PropsMapping):
     def get_label(self, **kwargs):
         return self.mapping_options.get("label", None)
 
-    def create_renderer(self, layer, geometry_type, secondary_mappings):
-
-        symbol = create_default_symbol(geometry_type)
-
-        self.update_symbol(symbol)
-
-        for mapping in secondary_mappings:
-            mapping.update_symbol(symbol)
-
-        renderer = QgsSingleSymbolRenderer(symbol)
-
-        return renderer
-
-
-
-
 
 class DirectMapping(PropsMapping):
     mapping_type = "direct"
+
+    def update_symbol_as_secondary(self, symbol: QgsSymbol):
+        self.update_symbol(symbol)
 
     def _update_symbol_color(self, symbol: QgsSymbol, **kwargs):
         set_symbol_data_defined_color(symbol, self._evaluate_paint_value())
@@ -221,6 +271,9 @@ class DirectMapping(PropsMapping):
         set_symbol_data_defined_size(symbol, self._evaluate_paint_value())
 
     def _evaluate_paint_value(self):
+        """
+        Read the paint from a feature property.
+        """
         key = self.mapping_options["key"]
 
         if self.paint_type == "color":
@@ -232,20 +285,13 @@ class DirectMapping(PropsMapping):
 
         return QgsProperty.fromExpression(expression)
 
-    def create_renderer(self, layer, geometry_type, secondary_mappings):
-        symbol = create_default_symbol(geometry_type)
-        self.update_symbol(symbol)
-
-        for mapping in secondary_mappings:
-            mapping.update_symbol(symbol)
-
-        renderer = QgsSingleSymbolRenderer(symbol)
-
-        return renderer
-
 
 class CategoryMapping(PropsMapping):
     mapping_type = "category"
+
+    def update_symbol_as_secondary(self, symbol: QgsSymbol):
+        # implement this using CASE expression
+        raise NotImplementedError
 
     def _evaluate_paint_value(self, **kwargs):
         if "default" in kwargs and kwargs["default"]:
@@ -261,17 +307,22 @@ class CategoryMapping(PropsMapping):
         else:
             raise PaintTypeError
 
-    def create_renderer(self, layer, geometry_type, secondary_mappings):
+    def create_renderer(self, layer, symbol_updater) -> QgsCategorizedSymbolRenderer:
+        """
+        Create an instance of QgsCategorizedSymbolRenderer with the categories described by the mapping.
+
+        :param layer:
+        :param symbol_updater:
+        :return:
+        """
 
         categories = []
         for value, color in self.mapping_options["values_map"].items():
-            symbol = create_default_symbol(geometry_type)
-            self.update_symbol(symbol, value=value)
+            symbol = create_default_symbol(layer.GEOMETRY_TYPE)
+            label = self.update_symbol(symbol, value=value)
+            symbol_updater(symbol)
 
-            for mapping in secondary_mappings:
-                mapping.update_symbol(symbol)
-
-            category = QgsRendererCategory(value, symbol, self.get_label(value))
+            category = QgsRendererCategory(value, symbol, label)
 
             categories.append(category)
 
@@ -280,6 +331,12 @@ class CategoryMapping(PropsMapping):
         return renderer
 
     def create_vector_tile_styles(self, geometry_type):
+        """
+        Create styles matching the categories described by the mapping.
+
+        :param geometry_type:
+        :return:
+        """
         key = self.mapping_options["key"]
 
         styles = []
@@ -323,6 +380,10 @@ class ContinuousMapping(PropsMapping):
         if isinstance(self.mapping_options["values"], str):
             self.mapping_options["values"] = MAPPING_CONSTS[self.mapping_options["values"]]
 
+    def update_symbol_as_secondary(self, symbol: QgsSymbol):
+        # implement using CASE expression
+        raise NotImplementedError
+
     def _evaluate_paint_value(self, **kwargs):
         interval = kwargs["interval"]
         if self.paint_type == "color":
@@ -332,19 +393,26 @@ class ContinuousMapping(PropsMapping):
         else:
             raise PaintTypeError
 
-    def create_renderer(self, layer, geometry_type, secondary_mappings):
+    def create_renderer(self, layer, symbol_updater) -> QgsGraduatedSymbolRenderer:
+        """
+        Create an instance of QgsGraduatedSymbolRenderer with the intervals described by the mapping.
+
+        :param layer:
+        :param symbol_updater:
+        :return:
+        """
 
         intervals = self.mapping_options["intervals"]
         range_list = []
 
         for i in range(len(intervals)+1):
             # create range symbol
-            symbol = create_default_symbol(geometry_type)
+            symbol = create_default_symbol(layer.GEOMETRY_TYPE)
 
             # update from mappings
             self.update_symbol(symbol, interval=i)
-            for mapping in secondary_mappings:
-                mapping.update_symbol(symbol)
+
+            symbol_updater(symbol)
 
             # evaluate range bounds
             range_min = -100000 if i == 0 else intervals[i-1]
@@ -374,6 +442,12 @@ class ContinuousMapping(PropsMapping):
         return renderer
 
     def create_vector_tile_styles(self, geometry_type):
+        """
+        Create styles matching the intervals described by the mapping.
+
+        :param geometry_type:
+        :return:
+        """
         key = self.mapping_options["key"]
         intervals = self.mapping_options["intervals"]
 
@@ -422,6 +496,9 @@ class ContinuousMapping(PropsMapping):
 class ExponentialZoomInterpolationMapping(PropsMapping):
     mapping_type = "exp_zoom_interpolation"
 
+    def update_symbol_as_secondary(self, symbol: QgsSymbol):
+        self.update_symbol(symbol)
+
     def _update_symbol_color(self, symbol: QgsSymbol, **kwargs):
         self.signal_incompatible_paint("color")
 
@@ -442,18 +519,8 @@ class ExponentialZoomInterpolationMapping(PropsMapping):
 class LinearZoomInterpolationMapping(PropsMapping):
     mapping_type = "linear_zoom_interpolation"
 
-    def create_renderer(self, layer, geometry_type, secondary_mappings):
-
-        symbol = create_default_symbol(geometry_type)
-
+    def update_symbol_as_secondary(self, symbol: QgsSymbol):
         self.update_symbol(symbol)
-
-        for mapping in secondary_mappings:
-            mapping.update_symbol(symbol)
-
-        renderer = QgsSingleSymbolRenderer(symbol)
-
-        return renderer
 
     def _update_symbol_color(self, symbol: QgsSymbol, **kwargs):
         self.signal_incompatible_paint("color")
@@ -484,6 +551,9 @@ class LinearZoomInterpolationMapping(PropsMapping):
 
 class EnumMapping(PropsMapping):
     mapping_type = "enum"
+
+    def update_symbol_as_secondary(self, symbol: QgsSymbol):
+        raise self.signal_incompatible_paint(self.paint_type)
 
     def _evaluate_paint_value(self, **kwargs):
         raise self.signal_incompatible_paint(self.paint_type)
