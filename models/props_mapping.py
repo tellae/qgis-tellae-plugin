@@ -36,16 +36,26 @@ class PaintTypeError(ValueError):
         super().__init__("Paint type error")
 
 
-@qgsfunction(group='Custom', referenced_columns=[])
+@qgsfunction(group='Tellae', referenced_columns=[])
 def prefixed_color(color):
     """
-
+    Prepend # character to hex color if necessary
     """
     if color.startswith('#'):
         return color
     else:
         return "#" + color
 
+
+@qgsfunction(group='Tellae', referenced_columns=[])
+def r_g_b_color(color):
+    """
+    Convert 'r g b' string to 'r,g,b'
+    """
+    color_array = color.split(" ")
+    assert len(color_array) == 3, "String should with format 'r g b'"
+
+    return ",".join(color_array)
 
 class PropsMapping(ABC):
 
@@ -275,9 +285,16 @@ class DirectMapping(PropsMapping):
         Read the paint from a feature property.
         """
         key = self.mapping_options["key"]
+        value_format = self.mapping_options.get("format", None)
 
         if self.paint_type == "color":
-            expression =  f'prefixed_color("{key}")'
+            if value_format == "raw":
+                log("Format 'raw' is not implemented")
+                expression = '0,0,0'
+            elif value_format == "r g b":
+                expression = f'r_g_b_color("{key}")'
+            else:
+                expression =  f'prefixed_color("{key}")'
         elif self.paint_type == "size":
             expression =  f'"{key}"'
         else:
