@@ -32,8 +32,6 @@ class LayerStyle:
 
         self.originalRenderer = self.layer.qgis_layer.renderer()
 
-        self.geometry_type = self.layer.GEOMETRY_TYPE
-
         self.min_zoom_level = None
         if "minzoom" in self.layer.mapboxProps:
             self.min_zoom_level = self.layer.mapboxProps["minzoom"]
@@ -89,7 +87,7 @@ class ClassicStyle(LayerStyle):
         :param symbol: QgsSymbol instance
         """
         for mapping in self.secondary_mappings:
-            mapping.update_symbol_as_secondary(symbol)
+            mapping.update_symbol(symbol, self.layer)
 
     def update_layer_labelling(self, text_attribute: str):
 
@@ -147,12 +145,12 @@ class VectorTilesStyle(LayerStyle):
 
     def create_vector_tiles_styles(self):
         # create a set of styles (a rule + a symbol) that reflect the rendering behaviour of the main mapping
-        styles = self.main_props_mapping.create_vector_tile_styles(self.geometry_type)
+        styles = self.main_props_mapping.create_vector_tile_styles(self.layer)
 
         # update each style with the rest of the mappings
         for style in styles:
             for mapping in self.secondary_mappings:
-                mapping.update_symbol_as_secondary(style.symbol())
+                mapping.update_symbol(style.symbol(), self.layer)
 
         return styles
 

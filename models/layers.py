@@ -6,9 +6,11 @@ from qgis.core import (
     QgsProject,
     QgsVectorLayer,
     QgsVectorTileLayer,
-Qgis,
-QgsCoordinateTransform, QgsCoordinateReferenceSystem
+Qgis, QgsSymbolLayer, QgsSimpleFillSymbolLayer, QgsSimpleMarkerSymbolLayer, QgsVectorTileBasicRendererStyle,
+QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsSymbol, QgsFillSymbol, QgsLineSymbol, QgsMarkerSymbol, QgsProperty
 )
+from PyQt5.QtGui import QColor
+from qgis.PyQt.QtCore import Qt
 
 from ..utils import log
 from ..tellae_store import TELLAE_STORE
@@ -254,7 +256,7 @@ class VectorTileSource(QgsLayerSource):
 
 
 class QgsKiteLayer:
-    GEOMETRY_TYPE = None
+    ACCEPTED_GEOMETRY_TYPES = []
 
     def __init__(self, layer_data):
         self.id = layer_data["id"]
@@ -292,6 +294,12 @@ class QgsKiteLayer:
     def is_vector(self):
         return self.source.is_vector()
 
+    @property
+    def geometry_type(self) -> Qgis.GeometryType | None:
+        if self.qgis_layer is None:
+            return None
+        return self.qgis_layer.geometryType()
+
     def _init_source(self) -> QgsLayerSource:
         if self.sourceType == "geojson":
             return GeojsonSource(self)
@@ -304,6 +312,10 @@ class QgsKiteLayer:
 
     def _set_qgis_layer(self, qgis_layer):
         self.qgis_layer = qgis_layer
+
+        # check geometry type
+        if self.geometry_type not in self.ACCEPTED_GEOMETRY_TYPES:
+            raise ValueError(f"Unsupported geometry type '{self.geometry_type}' for layer class '{self.__class__.__name__}'")
 
     def _create_style(self):
         if self.is_vector:
@@ -343,7 +355,6 @@ class QgsKiteLayer:
         QgsProject.instance().addMapLayer(self.qgis_layer)
 
     def _read_edit_attributes(self):
-        log(self.editAttributes)
         if self.editAttributes is not None:
             self.editAttributes = {key: PropsMapping.from_spec(key, spec) for key, spec in self.editAttributes.items()}
 
@@ -384,12 +395,174 @@ class QgsKiteLayer:
 
         raise ValueError("Could not infer main props mapping")
 
+    # paint methods
+
+    def create_symbol(self):
+        return QgsSymbol.defaultSymbol(self.geometry_type)
+
+    def set_symbol_color(self, symbol: QgsSymbol, value, data_defined=False):
+        pass
+
+    def set_symbol_size(self, symbol: QgsSymbol, value, data_defined=False):
+        pass
+
+    def set_symbol_size_unit(self, symbol: QgsSymbol, value: Qgis.RenderUnit):
+        pass
+
+    def set_symbol_opacity(self, symbol: QgsSymbol, value: float):
+        symbol.setOpacity(value)
+
+    def create_vector_tile_style(self, label) -> QgsVectorTileBasicRendererStyle:
+        # create a QgsVectorTileBasicRendererStyle instance
+        style = QgsVectorTileBasicRendererStyle(label, None, self.geometry_type)
+
+        # create and set the style's symbol
+        symbol = self.create_symbol()
+        style.setSymbol(symbol)
+
+        return style
+
 class KiteCircleLayer(QgsKiteLayer):
-    GEOMETRY_TYPE = Qgis.GeometryType.Point
+    """
+    A class for displaying Point geometries as borderless circles.
+    """
+    ACCEPTED_GEOMETRY_TYPES = [Qgis.GeometryType.Point]
+
+    def create_symbol(self):
+        symbol = super().create_symbol()
+
+        symbol_layer = symbol.symbolLayer(0)
+        assert isinstance(symbol_layer, QgsSimpleMarkerSymbolLayer)
+
+        # KiteCircleLayer circles are drawn without border stroke
+        symbol_layer.setStrokeStyle(Qt.PenStyle.NoPen)
+
+        return symbol
+
+    def set_symbol_color(self, symbol: QgsMarkerSymbol, value: QColor | QgsProperty, data_defined=False):
+        if data_defined:
+            # set the FillColor property of the symbol layer
+            symbol_layer = symbol.symbolLayer(0)
+            symbol_layer.setDataDefinedProperty(
+                QgsSymbolLayer.Property.FillColor,
+                value
+            )
+        else:
+            symbol.setColor(value)
+
+    def set_symbol_size(self, symbol: QgsMarkerSymbol, value: int | float | QgsProperty, data_defined=False):
+        if data_defined:
+            symbol.setDataDefinedSize(value)
+        else:
+            symbol.setSize(value)
+
+    def set_symbol_size_unit(self, symbol: QgsMarkerSymbol, value: Qgis.RenderUnit):
+        symbol.setSizeUnit(value)
+
+
+class KiteFillLayer(QgsKiteLayer):
+    """
+    A class for displaying Polygon geometries with borderless filled polygons.
+    """
+    ACCEPTED_GEOMETRY_TYPES = [Qgis.GeometryType.Polygon]
+
+    def create_symbol(self):
+        symbol = super().create_symbol()
+
+        symbol_layer = symbol.symbolLayer(0)
+        assert isinstance(symbol_layer, QgsSimpleFillSymbolLayer)
+
+        # KiteFillLayer polygons are drawn without border stroke
+        symbol_layer.setStrokeStyle(Qt.PenStyle.NoPen)
+
+        return symbol
+
+    def set_symbol_color(self, symbol: QgsSymbol, value: QColor | QgsProperty, data_defined=False):
+        if data_defined:
+            # set the FillColor property of the symbol layer
+            symbol_layer = symbol.symbolLayer(0)
+            symbol_layer.setDataDefinedProperty(
+                QgsSymbolLayer.Property.FillColor,
+                value
+            )
+        else:
+            symbol.setColor(value)
+
+    def set_symbol_size(self, symbol: QgsSymbol, value, data_defined=False):
+        log("Trying to set size on KiteFillLayer")
+
+    def set_symbol_size_unit(self, symbol: QgsSymbol, value: Qgis.RenderUnit):
+        log("Trying to set size unit on KiteFillLayer")
+
+
+class KiteLineLayer(QgsKiteLayer):
+    """
+    A class for displaying LineString and Polygon geometries with solid lines.
+    """
+    ACCEPTED_GEOMETRY_TYPES = [Qgis.GeometryType.Line, Qgis.GeometryType.Polygon]
+
+    def create_symbol(self):
+        symbol = super().create_symbol()
+
+        if isinstance(symbol, QgsFillSymbol):
+            symbol_layer = symbol.symbolLayer(0)
+            assert isinstance(symbol_layer, QgsSimpleFillSymbolLayer)
+            # KiteLineLayer polygons are drawn without fill color
+            # and with a solid border stroke (as if it was a LineString)
+            symbol_layer.setBrushStyle(Qt.BrushStyle.NoBrush)
+            symbol_layer.setStrokeStyle(Qt.PenStyle.SolidLine)
+
+        return symbol
+
+    def set_symbol_color(self, symbol: QgsSymbol, value: QColor | QgsProperty, data_defined=False):
+        symbol_layer = symbol.symbolLayer(0)
+        if data_defined:
+            # set the StrokeColor property of the symbol layer
+            symbol_layer.setDataDefinedProperty(
+                QgsSymbolLayer.Property.StrokeColor,
+                value
+            )
+        else:
+            if isinstance(symbol, QgsFillSymbol):
+                # use setStrokeColor virtual method of QgsSymbolLayer
+                symbol_layer.setStrokeColor(value)
+            else:
+                symbol.setColor(value)
+
+    def set_symbol_size(self, symbol: QgsSymbol, value: int | float | QgsProperty, data_defined=False):
+        if data_defined:
+            if isinstance(symbol, QgsLineSymbol):
+                symbol.setDataDefinedWidth(value)
+            else:
+                # set the StrokeWidth property of the symbol layer
+                symbol_layer = symbol.symbolLayer(0)
+                symbol_layer.setDataDefinedProperty(
+                    QgsSymbolLayer.Property.StrokeWidth,
+                    value
+                )
+        else:
+            if isinstance(symbol, QgsLineSymbol):
+                symbol.setWidth(value)
+            else:
+                symbol_layer = symbol.symbolLayer(0)
+                # should be QgsSimpleFillSymbolLayer instance
+                assert isinstance(symbol_layer, QgsSimpleFillSymbolLayer)
+                symbol_layer.setStrokeWidth(value)
+
+    def set_symbol_size_unit(self, symbol: QgsMarkerSymbol, value: Qgis.RenderUnit):
+        if isinstance(symbol, QgsLineSymbol):
+            symbol.setWidthUnit(value)
+        else:
+            symbol_layer = symbol.symbolLayer(0)
+            assert isinstance(symbol_layer, QgsSimpleFillSymbolLayer)
+            symbol_layer.setStrokeWidthUnit(value)
 
 
 class KiteLabelLayer(QgsKiteLayer):
-    GEOMETRY_TYPE = Qgis.GeometryType.Point
+    """
+    A class for displaying Point geometries with text labels.
+    """
+    ACCEPTED_GEOMETRY_TYPES = [Qgis.GeometryType.Point]
 
     def infer_main_props_mapping(self):
 
@@ -403,12 +576,8 @@ class KiteLabelLayer(QgsKiteLayer):
         self.style.update_layer_labelling(self.style.main_props_mapping.mapping_options["key"])
         self.style.remove_symbology()
 
-
-class KiteLineLayer(QgsKiteLayer):
-    GEOMETRY_TYPE = Qgis.GeometryType.Line
-
-class KiteFillLayer(QgsKiteLayer):
-    GEOMETRY_TYPE = Qgis.GeometryType.Polygon
+    def set_symbol_opacity(self, symbol: QgsSymbol, value: float):
+        pass
 
 
 def create_layer(layer_data):
