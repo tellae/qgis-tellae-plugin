@@ -274,6 +274,11 @@ class TellaeStore:
         # make the request using the AWS authentication
         return self.request(whale_url, auth_cfg=self.authCfg, **kwargs)
 
+    # map utils
+
+    def get_current_scale(self):
+        return self.tellae_services.iface.mapCanvas().scale()
+
 
 def message_from_request_error(result):
     status = result["status"]

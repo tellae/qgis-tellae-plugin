@@ -138,6 +138,7 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
 
     def add_layer(self, index):
         layer_item = self.layers[index]
+        layer_name =  layer_item.get("name", dict()).get("fr", "Unnamed")
 
         try:
             qgs_kite_layer = create_layer(layer_item)
@@ -145,6 +146,5 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
 
         except Exception as e:
             log(str(traceback.format_exc()))
-            self.display_message(f"Erreur lors de l'ajout de la couche '{qgs_kite_layer.name}': {str(e)}")
-            raise e
+            self.display_message(f"Erreur lors de l'ajout de la couche '{layer_name}': {str(e)}")
 
