@@ -115,12 +115,14 @@ class TellaeStore:
     # AUTHENTICATION methods
 
     def init_auth(self):
-        if TELLAE_STORE.local_config is not None and "auth" in TELLAE_STORE.local_config and TELLAE_STORE.local_config[
+        if self.local_config is not None and "auth" in self.local_config and self.local_config[
             "auth"].get("use", True):
-            if "WHALE_ENDPOINT" in TELLAE_STORE.local_config["auth"]:
-                self.whale_endpoint = TELLAE_STORE.local_config["auth"]["WHALE_ENDPOINT"]
-            self._try_dev_indents()
-            return
+            if "WHALE_ENDPOINT" in self.local_config["auth"]:
+                self.whale_endpoint = self.local_config["auth"]["WHALE_ENDPOINT"]
+
+            if "WHALE_API_KEY_ID" in self.local_config:
+                self._try_dev_indents()
+                return
 
         # try to get existing auth config
         if not self._try_existing_indents():
