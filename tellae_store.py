@@ -16,6 +16,8 @@ class TellaeStore:
         # whale request manager
         self.whale_endpoint = "https://whale.tellae.fr"
 
+        self.request_retries = dict()
+
         # authentication
 
         self.authCfg = None
@@ -237,10 +239,24 @@ class TellaeStore:
 
             result = nam.httpResult()
             if result["ok"] and handler:
+                if url in self.request_retries:
+                    del self.request_retries[url]
                 # convert request result to json
                 if to_json:
                     result["content"] = json.loads(result["content"])
                 handler(result)
+            elif not result["ok"] and result["status_code"] == 401:
+                if url in self.request_retries:
+                    self.request_retries[url] += 1
+                else:
+                    self.request_retries[url] = 1
+
+                log(f"Requesting {url} failed with error 401, total: {self.request_retries[url]} fails")
+
+                if self.request_retries[url] < 3:
+                    log(f"Retry requesting {url}")
+                    self.request(url, method, body, handler, error_handler, auth_cfg, to_json)
+
             elif not result["ok"] and error_handler:
                 error_handler(result)
 
@@ -252,16 +268,17 @@ class TellaeStore:
             nam.reply.finished.connect(on_finished)
         except Exception as e:
             # call error handler on exception
-            error_handler({
-                "status": None,
-                "status_code": None,
-                "status_message": "Python error while making request",
-                "content": None,
-                "ok": False,
-                "headers": None,
-                "reason": "Python error while making request",
-                "exception": e
-            })
+            if error_handler:
+                error_handler({
+                    "status": None,
+                    "status_code": None,
+                    "status_message": "Python error while making request",
+                    "content": None,
+                    "ok": False,
+                    "headers": None,
+                    "reason": "Python error while making request",
+                    "exception": e
+                })
 
     def request_whale(self, url, **kwargs):
 
