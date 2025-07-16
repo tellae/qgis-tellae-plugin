@@ -8,9 +8,9 @@
 
 """
 
-__author__ = 'contact@tellae.fr'
-__date__ = '2025-04-02'
-__copyright__ = 'Copyright 2025, Tellae'
+__author__ = "contact@tellae.fr"
+__date__ = "2025-04-02"
+__copyright__ = "Copyright 2025, Tellae"
 
 import unittest
 
@@ -19,6 +19,7 @@ from qgis.PyQt.QtGui import QDialogButtonBox, QDialog
 from tellae_services_dialog import TellaeServicesDialog
 
 from utilities import get_qgis_app
+
 QGIS_APP = get_qgis_app()
 
 
@@ -48,8 +49,8 @@ class TellaeServicesDialogTest(unittest.TestCase):
         result = self.dialog.result()
         self.assertEqual(result, QDialog.Rejected)
 
+
 if __name__ == "__main__":
     suite = unittest.makeSuite(TellaeServicesDialogTest)
     runner = unittest.TextTestRunner(verbosity=2)
     runner.run(suite)
-

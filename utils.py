@@ -21,7 +21,7 @@ from qgis.core import (
     QgsRuleBasedRenderer,
     QgsRendererCategory,
     QgsSingleSymbolRenderer,
-    QgsNetworkReplyContent
+    QgsNetworkReplyContent,
 )
 
 AWS_REGION = "fr-north-1"
@@ -41,11 +41,13 @@ THEMES_TRANSLATION = {
     "car_sharing": "Autopartage",
     "bike": "Vélo",
     "car": "Voiture",
-    "walk": "Piéton"
+    "walk": "Piéton",
 }
+
 
 def log(message):
     QgsMessageLog.logMessage(str(message), "TellaeServices")
+
 
 def read_local_config(plugin_dir):
     config = None
@@ -161,6 +163,7 @@ def create_auth_config(config_name, api_key, api_secret):
 
     return config.id()
 
+
 def get_auth_config(config_name):
     auth_manager = QgsApplication.authManager()
     config_dict = auth_manager.availableAuthMethodConfigs()
@@ -169,6 +172,7 @@ def get_auth_config(config_name):
             return config.id()
     return None
 
+
 def remove_tellae_auth_config(cfg_name):
     auth_manager = QgsApplication.authManager()
     config_dict = auth_manager.availableAuthMethodConfigs()
@@ -176,7 +180,6 @@ def remove_tellae_auth_config(cfg_name):
         if config_dict[authConfig].name() == cfg_name:
             auth_manager.removeAuthenticationConfig(authConfig)
             break
-
 
 
 def get_apikey_from_cache(cfg_name):
@@ -263,6 +266,7 @@ def get_apikey_from_cache(cfg_name):
 #
 # def infer_color_property(layer):
 #     return QgsSymbolLayer.PropertyStrokeColor
+
 
 class RequestError(Exception):
     def __init__(self, reply: QgsNetworkReplyContent):

@@ -37,7 +37,6 @@ from .utils import log
 import os.path
 
 
-
 class TellaeServices:
     """QGIS Plugin Implementation."""
 
@@ -54,11 +53,8 @@ class TellaeServices:
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
         # initialize locale
-        locale = QSettings().value('locale/userLocale')[0:2]
-        locale_path = os.path.join(
-            self.plugin_dir,
-            'i18n',
-            'TellaeServices_{}.qm'.format(locale))
+        locale = QSettings().value("locale/userLocale")[0:2]
+        locale_path = os.path.join(self.plugin_dir, "i18n", "TellaeServices_{}.qm".format(locale))
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()
@@ -67,7 +63,7 @@ class TellaeServices:
 
         # Declare instance attributes
         self.actions = []
-        self.menu = self.tr(u'&Tellae Services')
+        self.menu = self.tr("&Tellae Services")
 
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads
@@ -93,8 +89,7 @@ class TellaeServices:
         :rtype: QString
         """
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
-        return QCoreApplication.translate('TellaeServices', message)
-
+        return QCoreApplication.translate("TellaeServices", message)
 
     def add_action(
         self,
@@ -106,7 +101,8 @@ class TellaeServices:
         add_to_toolbar=True,
         status_tip=None,
         whats_this=None,
-        parent=None):
+        parent=None,
+    ):
         """Add a toolbar icon to the toolbar.
 
         :param icon_path: Path to the icon for this action. Can be a resource
@@ -162,9 +158,7 @@ class TellaeServices:
             self.iface.addToolBarIcon(action)
 
         if add_to_menu:
-            self.iface.addPluginToMenu(
-                self.menu,
-                action)
+            self.iface.addPluginToMenu(self.menu, action)
 
         self.actions.append(action)
 
@@ -172,23 +166,21 @@ class TellaeServices:
 
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
-        icon_path = f'{self.plugin_dir}/tellae.png'
+        icon_path = f"{self.plugin_dir}/tellae.png"
         self.add_action(
             icon_path,
-            text=self.tr(u'Tellae services'),
+            text=self.tr("Tellae services"),
             callback=self.run,
-            parent=self.iface.mainWindow())
+            parent=self.iface.mainWindow(),
+        )
 
         # will be set False in run()
         self.first_start = True
 
-
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
-            self.iface.removePluginMenu(
-                self.tr(u'&Tellae Services'),
-                action)
+            self.iface.removePluginMenu(self.tr("&Tellae Services"), action)
             self.iface.removeToolBarIcon(action)
 
     def setup_dialog(self):
@@ -229,4 +221,3 @@ class TellaeServices:
         #     # Do something useful here - delete the line containing pass and
         #     # substitute with your code.
         #     pass
-

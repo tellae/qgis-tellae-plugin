@@ -6,8 +6,18 @@ from qgis.core import (
     QgsProject,
     QgsVectorLayer,
     QgsVectorTileLayer,
-Qgis, QgsSymbolLayer, QgsSimpleFillSymbolLayer, QgsSimpleMarkerSymbolLayer, QgsVectorTileBasicRendererStyle,
-QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsSymbol, QgsFillSymbol, QgsLineSymbol, QgsMarkerSymbol, QgsProperty
+    Qgis,
+    QgsSymbolLayer,
+    QgsSimpleFillSymbolLayer,
+    QgsSimpleMarkerSymbolLayer,
+    QgsVectorTileBasicRendererStyle,
+    QgsCoordinateTransform,
+    QgsCoordinateReferenceSystem,
+    QgsSymbol,
+    QgsFillSymbol,
+    QgsLineSymbol,
+    QgsMarkerSymbol,
+    QgsProperty,
 )
 from PyQt5.QtGui import QColor
 from qgis.PyQt.QtCore import Qt
@@ -17,6 +27,7 @@ from ..tellae_store import TELLAE_STORE
 from .layer_style import ClassicStyle, VectorTilesStyle
 from .props_mapping import PropsMapping
 import traceback
+
 
 class QgsLayerSource(ABC):
 
@@ -77,7 +88,6 @@ class GeojsonSource(QgsLayerSource):
         # store the layer data in a file (unused for now)
         self.path = ""
 
-
     @property
     def url(self):
         return self.layer.data
@@ -101,7 +111,9 @@ class GeojsonSource(QgsLayerSource):
 
     def on_download_error(self, response):
         exception = response["exception"]
-        TELLAE_STORE.main_dialog.display_message(f"Erreur lors de l'ajout de la couche '{self.layer_name}': {str(exception)}")
+        TELLAE_STORE.main_dialog.display_message(
+            f"Erreur lors de l'ajout de la couche '{self.layer_name}': {str(exception)}"
+        )
 
     def _new_qgis_layer_instance(self):
         try:
@@ -142,7 +154,9 @@ class VectorTileGeojsonSource(GeojsonSource):
         project = QgsProject.instance()
         current_crs = project.crs()
         if current_crs.authid() != "EPSG:4326":
-            transform = QgsCoordinateTransform(current_crs, QgsCoordinateReferenceSystem("EPSG:4326"), project)
+            transform = QgsCoordinateTransform(
+                current_crs, QgsCoordinateReferenceSystem("EPSG:4326"), project
+            )
 
             minimum = transform.transform(rect.xMinimum(), rect.yMinimum())
             maximum = transform.transform(rect.xMaximum(), rect.yMaximum())
@@ -150,14 +164,14 @@ class VectorTileGeojsonSource(GeojsonSource):
             bbox = [minimum.x(), minimum.y(), maximum.x(), maximum.y()]
 
         # url parameters
-        params = {
-            "bbox": f"{','.join([str(coord) for coord in bbox])}"
-        }
+        params = {"bbox": f"{','.join([str(coord) for coord in bbox])}"}
 
         # evaluate selected properties
 
         # start with properties from dataProperties
-        select = list(self.layer.dataProperties.keys()) if self.layer.dataProperties is not None else []
+        select = (
+            list(self.layer.dataProperties.keys()) if self.layer.dataProperties is not None else []
+        )
 
         # add edit attributes that read properties
         edit_attributes = self.layer.editAttributes
@@ -190,6 +204,7 @@ class VectorTileGeojsonSource(GeojsonSource):
     def init_qgis_layer(self):
         TELLAE_STORE.request_whale(self.url, handler=self.on_download, to_json=False)
 
+
 class VectorTileSource(QgsLayerSource):
 
     @property
@@ -197,14 +212,14 @@ class VectorTileSource(QgsLayerSource):
         whale_endpoint = TELLAE_STORE.whale_endpoint
         auth_cfg = TELLAE_STORE.authCfg
 
-        params = {
-            "table": self.layer.data
-        }
+        params = {"table": self.layer.data}
 
         # evaluate selected properties
 
         # start with properties from dataProperties
-        select = list(self.layer.dataProperties.keys()) if self.layer.dataProperties is not None else []
+        select = (
+            list(self.layer.dataProperties.keys()) if self.layer.dataProperties is not None else []
+        )
 
         # add edit attributes that read properties
         edit_attributes = self.layer.editAttributes
@@ -234,9 +249,11 @@ class VectorTileSource(QgsLayerSource):
             params["filter"] = f"[{','.join(mapbox_filter[2][1])}]"
 
         # build final url
-        martin_url = (whale_endpoint +
-                      "/martin/table_selection/{z}/{x}/{y}".replace("{", "%7B").replace("}", "%7D") +
-                      f"?{urllib.parse.urlencode(params, safe='[]').replace('&', '%26')}")
+        martin_url = (
+            whale_endpoint
+            + "/martin/table_selection/{z}/{x}/{y}".replace("{", "%7B").replace("}", "%7D")
+            + f"?{urllib.parse.urlencode(params, safe='[]').replace('&', '%26')}"
+        )
 
         # build final uri (with url type and auth config)
         uri = f"url={martin_url}&type=xyz&authcfg={auth_cfg}"
@@ -252,7 +269,6 @@ class VectorTileSource(QgsLayerSource):
 
     def _new_qgis_layer_instance(self):
         return QgsVectorTileLayer(self.url, self.layer_name)
-
 
 
 class QgsKiteLayer:
@@ -317,7 +333,9 @@ class QgsKiteLayer:
 
         # check geometry type
         if self.geometry_type not in self.ACCEPTED_GEOMETRY_TYPES:
-            raise ValueError(f"Unsupported geometry type '{self.geometry_type}' for layer class '{self.__class__.__name__}'")
+            raise ValueError(
+                f"Unsupported geometry type '{self.geometry_type}' for layer class '{self.__class__.__name__}'"
+            )
 
     def _create_style(self):
         if self.is_vector:
@@ -347,18 +365,24 @@ class QgsKiteLayer:
 
             self._add_to_project()
 
-            TELLAE_STORE.main_dialog.display_message(f"La couche '{self.name}' a été ajoutée avec succès !")
+            TELLAE_STORE.main_dialog.display_message(
+                f"La couche '{self.name}' a été ajoutée avec succès !"
+            )
         except Exception as e:
             log(str(e))
             log(str(traceback.format_exc()))
-            TELLAE_STORE.main_dialog.display_message(f"Erreur lors de l'ajout de la couche '{self.name}': {str(e)}")
+            TELLAE_STORE.main_dialog.display_message(
+                f"Erreur lors de l'ajout de la couche '{self.name}': {str(e)}"
+            )
 
     def _add_to_project(self):
         QgsProject.instance().addMapLayer(self.qgis_layer)
 
     def _read_edit_attributes(self):
         if self.editAttributes is not None:
-            self.editAttributes = {key: PropsMapping.from_spec(key, spec) for key, spec in self.editAttributes.items()}
+            self.editAttributes = {
+                key: PropsMapping.from_spec(key, spec) for key, spec in self.editAttributes.items()
+            }
 
     def infer_main_props_mapping(self):
 
@@ -424,10 +448,12 @@ class QgsKiteLayer:
 
         return style
 
+
 class KiteCircleLayer(QgsKiteLayer):
     """
     A class for displaying Point geometries as borderless circles.
     """
+
     ACCEPTED_GEOMETRY_TYPES = [Qgis.GeometryType.Point]
 
     def create_symbol(self):
@@ -441,18 +467,19 @@ class KiteCircleLayer(QgsKiteLayer):
 
         return symbol
 
-    def set_symbol_color(self, symbol: QgsMarkerSymbol, value: QColor | QgsProperty, data_defined=False):
+    def set_symbol_color(
+        self, symbol: QgsMarkerSymbol, value: QColor | QgsProperty, data_defined=False
+    ):
         if data_defined:
             # set the FillColor property of the symbol layer
             symbol_layer = symbol.symbolLayer(0)
-            symbol_layer.setDataDefinedProperty(
-                QgsSymbolLayer.Property.FillColor,
-                value
-            )
+            symbol_layer.setDataDefinedProperty(QgsSymbolLayer.Property.FillColor, value)
         else:
             symbol.setColor(value)
 
-    def set_symbol_size(self, symbol: QgsMarkerSymbol, value: int | float | QgsProperty, data_defined=False):
+    def set_symbol_size(
+        self, symbol: QgsMarkerSymbol, value: int | float | QgsProperty, data_defined=False
+    ):
         if data_defined:
             symbol.setDataDefinedSize(value)
         else:
@@ -466,6 +493,7 @@ class KiteFillLayer(QgsKiteLayer):
     """
     A class for displaying Polygon geometries with borderless filled polygons.
     """
+
     ACCEPTED_GEOMETRY_TYPES = [Qgis.GeometryType.Polygon]
 
     def create_symbol(self):
@@ -483,10 +511,7 @@ class KiteFillLayer(QgsKiteLayer):
         if data_defined:
             # set the FillColor property of the symbol layer
             symbol_layer = symbol.symbolLayer(0)
-            symbol_layer.setDataDefinedProperty(
-                QgsSymbolLayer.Property.FillColor,
-                value
-            )
+            symbol_layer.setDataDefinedProperty(QgsSymbolLayer.Property.FillColor, value)
         else:
             symbol.setColor(value)
 
@@ -501,6 +526,7 @@ class KiteLineLayer(QgsKiteLayer):
     """
     A class for displaying LineString and Polygon geometries with solid lines.
     """
+
     ACCEPTED_GEOMETRY_TYPES = [Qgis.GeometryType.Line, Qgis.GeometryType.Polygon]
 
     def create_symbol(self):
@@ -520,10 +546,7 @@ class KiteLineLayer(QgsKiteLayer):
         symbol_layer = symbol.symbolLayer(0)
         if data_defined:
             # set the StrokeColor property of the symbol layer
-            symbol_layer.setDataDefinedProperty(
-                QgsSymbolLayer.Property.StrokeColor,
-                value
-            )
+            symbol_layer.setDataDefinedProperty(QgsSymbolLayer.Property.StrokeColor, value)
         else:
             if isinstance(symbol, QgsFillSymbol):
                 # use setStrokeColor virtual method of QgsSymbolLayer
@@ -531,17 +554,16 @@ class KiteLineLayer(QgsKiteLayer):
             else:
                 symbol.setColor(value)
 
-    def set_symbol_size(self, symbol: QgsSymbol, value: int | float | QgsProperty, data_defined=False):
+    def set_symbol_size(
+        self, symbol: QgsSymbol, value: int | float | QgsProperty, data_defined=False
+    ):
         if data_defined:
             if isinstance(symbol, QgsLineSymbol):
                 symbol.setDataDefinedWidth(value)
             else:
                 # set the StrokeWidth property of the symbol layer
                 symbol_layer = symbol.symbolLayer(0)
-                symbol_layer.setDataDefinedProperty(
-                    QgsSymbolLayer.Property.StrokeWidth,
-                    value
-                )
+                symbol_layer.setDataDefinedProperty(QgsSymbolLayer.Property.StrokeWidth, value)
         else:
             if isinstance(symbol, QgsLineSymbol):
                 symbol.setWidth(value)
@@ -564,6 +586,7 @@ class KiteLabelLayer(QgsKiteLayer):
     """
     A class for displaying Point geometries with text labels.
     """
+
     ACCEPTED_GEOMETRY_TYPES = [Qgis.GeometryType.Point]
 
     def infer_main_props_mapping(self):
@@ -583,10 +606,7 @@ class KiteLabelLayer(QgsKiteLayer):
 
 
 def create_layer(layer_data):
-    layer_data = {
-        **layer_data,
-        **layer_data.get("additionalProperties", dict())
-    }
+    layer_data = {**layer_data, **layer_data.get("additionalProperties", dict())}
 
     layer_class = layer_data["layer_class"]
 
@@ -605,5 +625,5 @@ LAYER_CLASSES = {
     "KiteCircleLayer": KiteCircleLayer,
     "KiteLabelLayer": KiteLabelLayer,
     "KiteLineLayer": KiteLineLayer,
-    "KiteFillLayer": KiteFillLayer
+    "KiteFillLayer": KiteFillLayer,
 }

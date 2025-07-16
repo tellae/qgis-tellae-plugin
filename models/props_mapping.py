@@ -6,16 +6,16 @@ from qgis.core import (
     QgsProperty,
     QgsSingleSymbolRenderer,
     QgsCategorizedSymbolRenderer,
-QgsGraduatedSymbolRenderer,
+    QgsGraduatedSymbolRenderer,
     QgsRendererCategory,
     qgsfunction,
     QgsMarkerSymbolLayer,
     QgsLineSymbolLayer,
     QgsFillSymbol,
-QgsMarkerSymbol,
-QgsLineSymbol,
-QgsRendererRange,
-QgsClassificationCustom,
+    QgsMarkerSymbol,
+    QgsLineSymbol,
+    QgsRendererRange,
+    QgsClassificationCustom,
 )
 from PyQt5.QtGui import QColor
 
@@ -26,7 +26,15 @@ from ..utils import log
 
 
 MAPPING_CONSTS = {
-  "population_densities_colors": ["#EFE3CF", "#F7C99E", "#F9AF79", "#F79465", "#E8705D", "#D4495A", "#D03568"]
+    "population_densities_colors": [
+        "#EFE3CF",
+        "#F7C99E",
+        "#F9AF79",
+        "#F79465",
+        "#E8705D",
+        "#D4495A",
+        "#D03568",
+    ]
 }
 
 DEFAULT_LABEL_NAME = "Default"
@@ -34,23 +42,24 @@ DEFAULT_MAPPING_COLOR = "#bababa"
 DEFAULT_MAPPING_SIZE = 1
 DEFAULT_MAPPING_OPACITY = 1
 
+
 class PaintTypeError(ValueError):
     def __init__(self):
         super().__init__("Paint type error")
 
 
-@qgsfunction(group='Tellae', referenced_columns=[])
+@qgsfunction(group="Tellae", referenced_columns=[])
 def prefixed_color(color):
     """
     Prepend # character to hex color if necessary
     """
-    if color.startswith('#'):
+    if color.startswith("#"):
         return color
     else:
         return "#" + color
 
 
-@qgsfunction(group='Tellae', referenced_columns=[])
+@qgsfunction(group="Tellae", referenced_columns=[])
 def r_g_b_color(color):
     """
     Convert 'r g b' string to 'r,g,b'
@@ -60,13 +69,23 @@ def r_g_b_color(color):
 
     return ",".join(color_array)
 
+
 class PropsMapping(ABC):
 
     mapping_type = None
 
     SYMBOL_SIZE_UNIT = Qgis.RenderUnit.Points
 
-    def __init__(self, paint_type, mapping_options, paint=None, legend=False, legend_options=None, editable=True, **kwargs):
+    def __init__(
+        self,
+        paint_type,
+        mapping_options,
+        paint=None,
+        legend=False,
+        legend_options=None,
+        editable=True,
+        **kwargs,
+    ):
 
         self.paint_type = paint_type
         self.mapping_options = mapping_options if mapping_options is not None else dict()
@@ -266,13 +285,13 @@ class DirectMapping(PropsMapping):
         if self.paint_type == "color":
             if value_format == "raw":
                 log("Format 'raw' is not implemented")
-                expression = '0,0,0'
+                expression = "0,0,0"
             elif value_format == "r g b":
                 expression = f'r_g_b_color("{key}")'
             else:
-                expression =  f'prefixed_color("{key}")'
+                expression = f'prefixed_color("{key}")'
         elif self.paint_type == "size":
-            expression =  f'"{key}"'
+            expression = f'"{key}"'
         else:
             raise PaintTypeError
 
@@ -425,7 +444,7 @@ class ContinuousMapping(PropsMapping):
         intervals = self.mapping_options["intervals"]
         range_list = []
 
-        for i in range(len(intervals)+1):
+        for i in range(len(intervals) + 1):
             # create a symbol for each interval
             symbol = layer.create_symbol()
 
@@ -436,7 +455,7 @@ class ContinuousMapping(PropsMapping):
             symbol_updater(symbol)
 
             # evaluate interval bounds
-            range_min = -100000 if i == 0 else intervals[i-1]
+            range_min = -100000 if i == 0 else intervals[i - 1]
             range_max = 100000 if i == len(intervals) else intervals[i]
 
             # create QgsRendererRange instance
@@ -459,7 +478,6 @@ class ContinuousMapping(PropsMapping):
         renderer.setClassificationMethod(classification_method)
         renderer.updateRangeLabels()
 
-
         return renderer
 
     def create_vector_tile_styles(self, layer):
@@ -474,17 +492,17 @@ class ContinuousMapping(PropsMapping):
 
         styles = []
 
-        for i in range(len(intervals)+1):
+        for i in range(len(intervals) + 1):
             # create style
             style = layer.create_vector_tile_style(self.get_label(i))
 
             # evaluate expression defining the interval
             if i == 0:
-                filter_expression = f"\"{key}\" < {intervals[0]}"
+                filter_expression = f'"{key}" < {intervals[0]}'
             elif i == len(intervals):
-                filter_expression = f"\"{key}\" >= {intervals[-1]}"
+                filter_expression = f'"{key}" >= {intervals[-1]}'
             else:
-                filter_expression = f" ({intervals[i-1]} <= \"{key}\") AND (\"{key}\" < {intervals[i]})"
+                filter_expression = f' ({intervals[i-1]} <= "{key}") AND ("{key}" < {intervals[i]})'
             style.setFilterExpression(filter_expression)
 
             # update style paint
@@ -520,7 +538,6 @@ class ContinuousMapping(PropsMapping):
         return label
 
 
-
 class ExponentialZoomInterpolationMapping(PropsMapping):
     mapping_type = "exp_zoom_interpolation"
 
@@ -532,11 +549,14 @@ class ExponentialZoomInterpolationMapping(PropsMapping):
 
         if self.paint_type == "size":
             # exponential scale to max value 50*sqrt(100*PROP_VALUE/3.14)
-            expression =  f'scale_exponential(@zoom_level, 0, 20, 0,  50*sqrt((100*"{key}")/3.14), 2)'
+            expression = (
+                f'scale_exponential(@zoom_level, 0, 20, 0,  50*sqrt((100*"{key}")/3.14), 2)'
+            )
         else:
             raise self.signal_incompatible_paint(self.paint_type)
 
         return QgsProperty.fromExpression(expression), True
+
 
 class LinearZoomInterpolationMapping(PropsMapping):
     mapping_type = "linear_zoom_interpolation"
@@ -550,15 +570,21 @@ class LinearZoomInterpolationMapping(PropsMapping):
 
         if self.paint_type == "size":
             # manage values under of interpolation interval
-            expression = f"CASE WHEN @zoom_level < {interpolation_values[0]} THEN {paint_values[0]} "
+            expression = (
+                f"CASE WHEN @zoom_level < {interpolation_values[0]} THEN {paint_values[0]} "
+            )
 
-            for i in range(len(interpolation_values)-1):
+            for i in range(len(interpolation_values) - 1):
                 # perform a linear interpolation when zoom level is in an interpolation interval
-                expression += (f"WHEN @zoom_level BETWEEN {interpolation_values[i]} AND {interpolation_values[i+1]} "
-                               f"THEN scale_linear(@zoom_level, {interpolation_values[i]}, {interpolation_values[i+1]}, {paint_values[i]}, {paint_values[i+1]}) ")
+                expression += (
+                    f"WHEN @zoom_level BETWEEN {interpolation_values[i]} AND {interpolation_values[i+1]} "
+                    f"THEN scale_linear(@zoom_level, {interpolation_values[i]}, {interpolation_values[i+1]}, {paint_values[i]}, {paint_values[i+1]}) "
+                )
 
             # manage values up of interpolation interval
-            expression += f"WHEN @zoom_level > {interpolation_values[-1]} THEN {paint_values[-1]} END"
+            expression += (
+                f"WHEN @zoom_level > {interpolation_values[-1]} THEN {paint_values[-1]} END"
+            )
         else:
             raise self.signal_incompatible_paint(self.paint_type)
 
@@ -595,10 +621,8 @@ def repair_mapping_init(edit_key, mapping_init):
 
         mapping_init = {
             "type": "constant",
-            "mapping_options": {
-                "value": mapping_init
-            },
-            "paint_type": inferred_paint_type
+            "mapping_options": {"value": mapping_init},
+            "paint_type": inferred_paint_type,
         }
 
     # support deprecated 'mapping_data' field
@@ -621,7 +645,6 @@ def repair_mapping_init(edit_key, mapping_init):
     return mapping_init
 
 
-
 MAPPING_CLASSES = {
     ConstantMapping.mapping_type: ConstantMapping,
     DirectMapping.mapping_type: DirectMapping,
@@ -629,5 +652,5 @@ MAPPING_CLASSES = {
     ContinuousMapping.mapping_type: ContinuousMapping,
     ExponentialZoomInterpolationMapping.mapping_type: ExponentialZoomInterpolationMapping,
     LinearZoomInterpolationMapping.mapping_type: LinearZoomInterpolationMapping,
-    EnumMapping.mapping_type: EnumMapping
+    EnumMapping.mapping_type: EnumMapping,
 }

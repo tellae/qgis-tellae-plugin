@@ -1,5 +1,13 @@
-
-from .utils import log, AuthenticationError, read_local_config, get_apikey_from_cache, create_auth_config, get_auth_config, remove_tellae_auth_config, THEMES_TRANSLATION
+from .utils import (
+    log,
+    AuthenticationError,
+    read_local_config,
+    get_apikey_from_cache,
+    create_auth_config,
+    get_auth_config,
+    remove_tellae_auth_config,
+    THEMES_TRANSLATION,
+)
 import os
 import json
 from .network_access_manager import NetworkAccessManager
@@ -46,7 +54,9 @@ class TellaeStore:
         # local config
         self.local_config = None
         self.read_local_config()
-        self.network_debug = False if self.local_config is None else self.local_config.get("network_debug", False)
+        self.network_debug = (
+            False if self.local_config is None else self.local_config.get("network_debug", False)
+        )
 
         # plugin dialogs
         self.tellae_services = None
@@ -110,13 +120,20 @@ class TellaeStore:
         if selected_theme == "Tous":
             return self.layer_summary
         else:
-            return [layer for layer in self.layer_summary if selected_theme in [THEMES_TRANSLATION[theme] for theme in layer["themes"]]]
+            return [
+                layer
+                for layer in self.layer_summary
+                if selected_theme in [THEMES_TRANSLATION[theme] for theme in layer["themes"]]
+            ]
 
     # AUTHENTICATION methods
 
     def init_auth(self):
-        if self.local_config is not None and "auth" in self.local_config and self.local_config[
-            "auth"].get("use", True):
+        if (
+            self.local_config is not None
+            and "auth" in self.local_config
+            and self.local_config["auth"].get("use", True)
+        ):
             if "WHALE_ENDPOINT" in self.local_config["auth"]:
                 self.whale_endpoint = self.local_config["auth"]["WHALE_ENDPOINT"]
 
@@ -149,7 +166,6 @@ class TellaeStore:
 
     def get_current_indents(self):
         return get_apikey_from_cache(self.authName)
-
 
     def _try_dev_indents(self):
         # get indents from local config
@@ -208,9 +224,7 @@ class TellaeStore:
                 error_handler(result)
 
             # display error message in auth dialog
-            self.auth_dialog.display_error_message(
-                message_from_request_error(result)
-            )
+            self.auth_dialog.display_error_message(message_from_request_error(result))
             # show authentication dialog
             self.auth_dialog.open()
 
@@ -218,11 +232,7 @@ class TellaeStore:
         self.request_whale("/auth/me", handler=full_handler, error_handler=full_error_handler)
 
     def _create_or_update_auth_config(self, name, key, secret):
-        auth_cfg = create_auth_config(
-            name,
-            key,
-            secret
-        )
+        auth_cfg = create_auth_config(name, key, secret)
         self._set_auth_config(name, auth_cfg)
 
     def _set_auth_config(self, cfg_name, cfg_id):
@@ -231,7 +241,16 @@ class TellaeStore:
 
     # NETWORK REQUESTS METHODS
 
-    def request(self, url, method="GET", body=None, handler=None, error_handler=None, auth_cfg=None, to_json=True):
+    def request(
+        self,
+        url,
+        method="GET",
+        body=None,
+        handler=None,
+        error_handler=None,
+        auth_cfg=None,
+        to_json=True,
+    ):
 
         # create a network access manager instance
         nam = NetworkAccessManager(authid=auth_cfg, debug=self.network_debug)
@@ -253,7 +272,9 @@ class TellaeStore:
                 else:
                     self.request_retries[url] = 1
 
-                log(f"Requesting {url} failed with error 401, total: {self.request_retries[url]} fails")
+                log(
+                    f"Requesting {url} failed with error 401, total: {self.request_retries[url]} fails"
+                )
 
                 if self.request_retries[url] < 3:
                     log(f"Retry requesting {url}")
@@ -271,16 +292,18 @@ class TellaeStore:
         except Exception as e:
             # call error handler on exception
             if error_handler:
-                error_handler({
-                    "status": None,
-                    "status_code": None,
-                    "status_message": "Python error while making request",
-                    "content": None,
-                    "ok": False,
-                    "headers": None,
-                    "reason": "Python error while making request",
-                    "exception": e
-                })
+                error_handler(
+                    {
+                        "status": None,
+                        "status_code": None,
+                        "status_message": "Python error while making request",
+                        "content": None,
+                        "ok": False,
+                        "headers": None,
+                        "reason": "Python error while making request",
+                        "exception": e,
+                    }
+                )
 
     def request_whale(self, url, **kwargs):
 
@@ -306,5 +329,6 @@ def message_from_request_error(result):
     reason = result["reason"]
     log(str(result["exception"]))
     return str(result["exception"])
+
 
 TELLAE_STORE = TellaeStore()

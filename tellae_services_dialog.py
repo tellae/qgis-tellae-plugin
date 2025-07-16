@@ -35,8 +35,9 @@ from .models.layers import create_layer
 from .utils import log
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
-FORM_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'tellae_services_dialog_base.ui'))
+FORM_CLASS, _ = uic.loadUiType(
+    os.path.join(os.path.dirname(__file__), "tellae_services_dialog_base.ui")
+)
 
 
 class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
@@ -94,9 +95,20 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
         # total table length is 721, scroll bar is 16 => header width must total to 705
         headers = [
             {"text": "Nom", "value": lambda x: x["name"]["fr"], "width": 285},
-            {"text": "Date", "value": lambda x: TELLAE_STORE.datasets_summary[x["main_dataset"]].get("date", ""), "width": 80, "align": Qt.AlignCenter},
-            {"text": "Source", "value": lambda x: TELLAE_STORE.datasets_summary[x["main_dataset"]]["provider_name"], "width": 280},
-            {"text": "Actions", "value": "actions", "width": 60}
+            {
+                "text": "Date",
+                "value": lambda x: TELLAE_STORE.datasets_summary[x["main_dataset"]].get("date", ""),
+                "width": 80,
+                "align": Qt.AlignCenter,
+            },
+            {
+                "text": "Source",
+                "value": lambda x: TELLAE_STORE.datasets_summary[x["main_dataset"]][
+                    "provider_name"
+                ],
+                "width": 280,
+            },
+            {"text": "Actions", "value": "actions", "width": 60},
         ]
         table.setColumnCount(len(headers))
         table.setHorizontalHeaderLabels([header["text"] for header in headers])
@@ -138,7 +150,7 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
 
     def add_layer(self, index):
         layer_item = self.layers[index]
-        layer_name =  layer_item.get("name", dict()).get("fr", "Unnamed")
+        layer_name = layer_item.get("name", dict()).get("fr", "Unnamed")
 
         try:
             qgs_kite_layer = create_layer(layer_item)
@@ -147,4 +159,3 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
         except Exception as e:
             log(str(traceback.format_exc()))
             self.display_message(f"Erreur lors de l'ajout de la couche '{layer_name}': {str(e)}")
-
