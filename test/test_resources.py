@@ -8,14 +8,13 @@
 
 """
 
-__author__ = 'contact@tellae.fr'
-__date__ = '2025-04-02'
-__copyright__ = 'Copyright 2025, Tellae'
+__author__ = "contact@tellae.fr"
+__date__ = "2025-04-02"
+__copyright__ = "Copyright 2025, Tellae"
 
 import unittest
 
 from qgis.PyQt.QtGui import QIcon
-
 
 
 class TellaeServicesDialogTest(unittest.TestCase):
@@ -31,14 +30,12 @@ class TellaeServicesDialogTest(unittest.TestCase):
 
     def test_icon_png(self):
         """Test we can click OK."""
-        path = ':/plugins/TellaeServices/icon.png'
+        path = ":/plugins/TellaeServices/icon.png"
         icon = QIcon(path)
         self.assertFalse(icon.isNull())
+
 
 if __name__ == "__main__":
     suite = unittest.makeSuite(TellaeServicesResourcesTest)
     runner = unittest.TextTestRunner(verbosity=2)
     runner.run(suite)
-
-
-

@@ -7,14 +7,22 @@ from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtWidgets import QDialogButtonBox, QDialog
 from qgis.PyQt.QtCore import Qt
 
-from .utils import log, create_auth_config, get_apikey_from_cache, AuthenticationError, AccessError, read_local_config, RequestError, get_apikey_from_cache
+from .utils import (
+    log,
+    create_auth_config,
+    get_apikey_from_cache,
+    AuthenticationError,
+    AccessError,
+    read_local_config,
+    RequestError,
+    get_apikey_from_cache,
+)
 from .tellae_store import TELLAE_STORE
 import requests
 
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
-FORM_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'tellae_auth.ui'))
+FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "tellae_auth.ui"))
 
 
 class TellaeAuthDialog(QtWidgets.QDialog, FORM_CLASS):
@@ -43,7 +51,6 @@ class TellaeAuthDialog(QtWidgets.QDialog, FORM_CLASS):
             self.done(QDialog.Accepted)
         except Exception as e:
             self.display_error_message(str(e))
-
 
     # def try_authenticate(self, apikey, secret, endpoint=None):
     #     message = ""

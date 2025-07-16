@@ -1,18 +1,16 @@
-
 from ..utils import log
 
 from qgis.core import (
-
     Qgis,
     QgsVectorTileBasicLabeling,
     QgsVectorTileBasicLabelingStyle,
-QgsVectorLayerSimpleLabeling,
+    QgsVectorLayerSimpleLabeling,
     QgsPalLayerSettings,
     QgsTextFormat,
     QgsTextBufferSettings,
     QgsLabelPlacementSettings,
-QgsSymbol,
-QgsNullSymbolRenderer
+    QgsSymbol,
+    QgsNullSymbolRenderer,
 )
 
 
@@ -27,6 +25,7 @@ class LayerStyle:
     according to the layer type (vector or vector tiles)
     using the mappings contained in the layer's editAttributes.
     """
+
     def __init__(self, layer):
         self.layer = layer
 
@@ -42,8 +41,9 @@ class LayerStyle:
         if self.layer.editAttributes:
             self.main_props_mapping = self.layer.infer_main_props_mapping()
 
-        self.secondary_mappings = [v for v in self.editAttributes.values() if v != self.main_props_mapping and v.paint]
-
+        self.secondary_mappings = [
+            v for v in self.editAttributes.values() if v != self.main_props_mapping and v.paint
+        ]
 
     @property
     def layer_renderer(self):
@@ -74,7 +74,9 @@ class ClassicStyle(LayerStyle):
 
     def update_layer_symbology(self):
         # create a new renderer that reflects the rendering behaviour of the main mapping (constant, category, continuous..)
-        renderer = self.main_props_mapping.create_renderer(self.layer, self.update_symbol_with_secondary_mappings)
+        renderer = self.main_props_mapping.create_renderer(
+            self.layer, self.update_symbol_with_secondary_mappings
+        )
         self.layer.qgis_layer.setRenderer(renderer)
 
     def update_symbol_with_secondary_mappings(self, symbol: QgsSymbol):
@@ -208,4 +210,3 @@ class VectorTilesStyle(LayerStyle):
             style.setEnabled(False)
 
         self.layer_renderer.setStyles(rendering_styles)
-
