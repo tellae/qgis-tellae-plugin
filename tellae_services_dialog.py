@@ -55,6 +55,9 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
 
+        # progress bar starts hidden
+        self.progressBar.hide()
+
     def set_auth_button_text(self, user):
         if user is None:
             text = "Login"
@@ -65,6 +68,12 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
 
     def display_message(self, message: str):
         self.message.setText(message)
+
+    def set_progress_bar(self, visible: bool):
+        if visible:
+            self.progressBar.show()
+        else:
+            self.progressBar.hide()
 
     def create_theme_selector(self):
         # set list of layers

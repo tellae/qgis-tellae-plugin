@@ -353,6 +353,10 @@ class QgsKiteLayer:
             self.style.update_layer_symbology()
 
     def add_to_qgis(self):
+        TELLAE_STORE.main_dialog.display_message(
+            f"Téléchargement de la couche '{self.name}'..."
+        )
+        TELLAE_STORE.main_dialog.set_progress_bar(True)
         self.source.init_qgis_layer()
 
     def _add_to_qgis(self):
@@ -374,6 +378,8 @@ class QgsKiteLayer:
             TELLAE_STORE.main_dialog.display_message(
                 f"Erreur lors de l'ajout de la couche '{self.name}': {str(e)}"
             )
+        finally:
+            TELLAE_STORE.main_dialog.set_progress_bar(False)
 
     def _add_to_project(self):
         QgsProject.instance().addMapLayer(self.qgis_layer)
