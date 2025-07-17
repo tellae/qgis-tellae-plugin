@@ -322,6 +322,7 @@ class QgsKiteLayer:
         elif self.sourceType == "shark":
             return SharkSource(self)
         elif self.sourceType == "vector":
+            if TELLAE_STORE.get_current_scale() > 400000:
                 raise ValueError("You must zoom more to request vector tiles layers")
             return VectorTileGeojsonSource(self)
         else:
