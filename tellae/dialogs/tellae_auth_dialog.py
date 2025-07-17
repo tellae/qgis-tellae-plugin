@@ -7,18 +7,7 @@ from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtWidgets import QDialogButtonBox, QDialog
 from qgis.PyQt.QtCore import Qt
 
-from .utils import (
-    log,
-    create_auth_config,
-    get_apikey_from_cache,
-    AuthenticationError,
-    AccessError,
-    read_local_config,
-    RequestError,
-    get_apikey_from_cache,
-)
-from .tellae_store import TELLAE_STORE
-import requests
+from tellae.tellae_store import TELLAE_STORE
 
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer

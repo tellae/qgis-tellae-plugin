@@ -16,7 +16,7 @@ import unittest
 
 from qgis.PyQt.QtGui import QDialogButtonBox, QDialog
 
-from tellae.tellae_services_dialog import TellaeServicesDialog
+from tellae.dialogs.tellae_services_dialog import TellaeServicesDialog
 
 from utilities import get_qgis_app
 

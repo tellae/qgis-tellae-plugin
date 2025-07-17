@@ -29,9 +29,9 @@ from qgis.PyQt.QtWidgets import QAction
 # Import the code for the dialog
 
 # Tellae imports
-from .tellae_services_dialog import TellaeServicesDialog
-from .tellae_auth_dialog import TellaeAuthDialog
-from .tellae_store import TELLAE_STORE
+from tellae.dialogs.tellae_services_dialog import TellaeServicesDialog
+from tellae.dialogs.tellae_auth_dialog import TellaeAuthDialog
+from tellae.tellae_store import TELLAE_STORE
 
 import os.path
 

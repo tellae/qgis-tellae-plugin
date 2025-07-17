@@ -1,4 +1,4 @@
-from .utils import (
+from tellae.utils.utils import (
     log,
     AuthenticationError,
     read_local_config,
@@ -8,9 +8,9 @@ from .utils import (
     remove_tellae_auth_config,
     THEMES_TRANSLATION,
 )
+from tellae.utils.network_access_manager import NetworkAccessManager
 import os
 import json
-from .network_access_manager import NetworkAccessManager
 
 AWS_TELLAE_CONFIG = "AWS-Tellae"
 AWS_TELLAE_DEV_CONFIG = "AWS-Tellae-dev"
