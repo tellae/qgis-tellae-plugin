@@ -80,6 +80,10 @@ class TellaeStore:
     def _init_layers_table(self):
 
         def common_handler():
+            # sort layers table by name and date (desc)
+            self.layer_summary = sorted(self.layer_summary, key=lambda x: (x["name"]["fr"], -int(self.datasets_summary[x["main_dataset"]].get("date", 0))))
+
+            # fill UI using results
             self.main_dialog.create_theme_selector()
             self.main_dialog.set_layers_table()
 
@@ -87,9 +91,6 @@ class TellaeStore:
             result = response["content"]
             # filter visible layers
             layers = [layer for layer in result if layer["visible"]]
-
-            # sort layers by name
-            layers = sorted(layers, key=lambda x: x["name"]["fr"])
 
             # evaluate list of themes
             themes = list(set([theme for layer in layers for theme in layer["themes"]]))
