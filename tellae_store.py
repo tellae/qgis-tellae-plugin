@@ -279,6 +279,9 @@ class TellaeStore:
                 if self.request_retries[url] < 3:
                     log(f"Retry requesting {url}")
                     self.request(url, method, body, handler, error_handler, auth_cfg, to_json)
+                else:
+                    if error_handler:
+                        error_handler(result)
 
             elif not result["ok"] and error_handler:
                 error_handler(result)
