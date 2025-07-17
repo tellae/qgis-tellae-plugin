@@ -58,23 +58,6 @@ def read_local_config(plugin_dir):
 
     return config
 
-
-class CancelImportDialog(QtWidgets.QDialog):
-    def __init__(self):
-        super(CancelImportDialog, self).__init__()
-        ui_dir = os.path.dirname(os.path.abspath(__file__))
-        ui_path = os.path.join(ui_dir, "cancel_import.ui")
-        uic.loadUi(ui_path, self)
-
-        self.isCanceled = False
-        self.cancelButton.clicked.connect(self.cancelImport)
-
-        self.show()
-
-    def cancelImport(self):
-        self.isCanceled = True
-
-
 # def create_layer_instance(layer_id, layer_stream, path=""):
 #     try:
 #         file_path = path
