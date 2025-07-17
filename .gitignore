@@ -10,4 +10,4 @@
 tellae_client
 
 # local config file
-local.config.jsonc
+tellae/local.config.jsonc

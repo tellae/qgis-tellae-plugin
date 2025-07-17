@@ -22,8 +22,8 @@ from qgis.core import (
 from PyQt5.QtGui import QColor
 from qgis.PyQt.QtCore import Qt
 
-from ..utils import log
-from ..tellae_store import TELLAE_STORE
+from tellae.utils import log
+from tellae.tellae_store import TELLAE_STORE
 from .layer_style import ClassicStyle, VectorTilesStyle
 from .props_mapping import PropsMapping
 import traceback

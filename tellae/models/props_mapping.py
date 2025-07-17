@@ -1,19 +1,12 @@
 from qgis.core import (
-    QgsVectorTileBasicRendererStyle,
     Qgis,
     QgsSymbol,
-    QgsSymbolLayer,
     QgsProperty,
     QgsSingleSymbolRenderer,
     QgsCategorizedSymbolRenderer,
     QgsGraduatedSymbolRenderer,
     QgsRendererCategory,
     qgsfunction,
-    QgsMarkerSymbolLayer,
-    QgsLineSymbolLayer,
-    QgsFillSymbol,
-    QgsMarkerSymbol,
-    QgsLineSymbol,
     QgsRendererRange,
     QgsClassificationCustom,
 )
@@ -22,7 +15,7 @@ from PyQt5.QtGui import QColor
 from abc import ABC, abstractmethod
 import copy
 
-from ..utils import log
+from tellae.utils import log
 
 
 MAPPING_CONSTS = {

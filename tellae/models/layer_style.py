@@ -1,4 +1,4 @@
-from ..utils import log
+from tellae.utils import log
 
 from qgis.core import (
     Qgis,

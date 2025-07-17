@@ -21,7 +21,7 @@
  *                                                                         *
  ***************************************************************************/
 """
-from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
+from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
@@ -32,7 +32,6 @@ from qgis.PyQt.QtWidgets import QAction
 from .tellae_services_dialog import TellaeServicesDialog
 from .tellae_auth_dialog import TellaeAuthDialog
 from .tellae_store import TELLAE_STORE
-from .utils import log
 
 import os.path
 
