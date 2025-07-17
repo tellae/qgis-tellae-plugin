@@ -6,7 +6,7 @@
 name=Tellae Services
 qgisMinimumVersion=3.0
 description=Access Tellae services from QGIS
-version=0.1
+version=0.0.0
 author=Tellae
 email=contact@tellae.fr
 
