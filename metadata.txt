@@ -26,7 +26,6 @@ hasProcessingProvider=no
 tags=python
 
 homepage=https://github.com/tellae/qgis-tellae-plugin
-category=Plugins
 icon=tellae.png
 # experimental flag
 experimental=True
@@ -39,7 +38,7 @@ deprecated=False
 # Check the documentation for more information.
 
 Category of the plugin: Raster, Vector, Database or Web
-# category=
+category=Web
 
 # If the plugin can run on QGIS Server.
 server=False
