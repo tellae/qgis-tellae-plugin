@@ -4,5 +4,6 @@
       "type": "generic",
       "path": "tellae/metadata.txt"
     }
-  ]
+  ],
+  ".": "0.0.0"
 }
