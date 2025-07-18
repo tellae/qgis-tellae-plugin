@@ -16,9 +16,10 @@ It will be tagged as _Experimental_, so make sure to tick the "Display experimen
 
 ### Install from .zip file
 
-On the repository's main page, click on the <kbd>Code</kbd> button and select <kbd>Download ZIP</kbd>.
+First, [download the plugin ZIP](https://github.com/tellae/qgis-tellae-plugin/releases/latest/download/tellae_plugin.zip) from the latest release.
 
-Then, unzip the downloaded archive and copy the `tellae` folder in your plugin repository.
+Then, open QGIS and click on the menu item <kbd>Plugins ► Manage and Install Plugins</kbd>. Go to the `Install from ZIP` tab, select the .zip file
+from your file system and click the <kbd>Install plugin</kbd> button.
 
 ## Authentication
 
