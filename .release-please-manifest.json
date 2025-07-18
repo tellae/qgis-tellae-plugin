@@ -1,3 +1,6 @@
 {
-  "extra-files": ["metadata.txt"]
+  "extra-files": [
+    "metadata.txt"
+  ],
+  ".": "0.1.0"
 }
