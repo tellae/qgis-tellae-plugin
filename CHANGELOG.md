@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/tellae/qgis-tellae-plugin/compare/v0.1.1...v0.1.2) (2025-07-18)
+
+
+### Bug Fixes
+
+* update README.md install instruction ([#12](https://github.com/tellae/qgis-tellae-plugin/issues/12)) ([a586397](https://github.com/tellae/qgis-tellae-plugin/commit/a5863978e40f3ef8b79d8896be0ad28b950b941f))
+
 ## [0.1.1](https://github.com/tellae/qgis-tellae-plugin/compare/v0.1.0...v0.1.1) (2025-07-18)
 
 
