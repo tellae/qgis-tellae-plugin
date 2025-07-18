@@ -1,3 +1,9 @@
 {
-  "extra-files": ["metadata.txt"]
+  "extra-files": [
+    {
+      "type": "generic",
+      "path": "tellae/metadata.txt"
+    }
+  ],
+  ".": "0.0.0"
 }
