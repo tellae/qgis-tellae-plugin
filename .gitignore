@@ -1,0 +1,13 @@
+# PyCharm
+.idea/
+
+# virtual environment
+.venv/
+
+# development files and folders
+
+# simlink to tellae-client
+tellae_client
+
+# local config file
+tellae/local.config.jsonc
