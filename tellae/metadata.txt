@@ -6,7 +6,9 @@
 name=Tellae
 qgisMinimumVersion=3.0
 description=Access Tellae services from QGIS
+# x-release-please-start-version
 version=0.0.0
+# x-release-please-end
 author=Tellae
 email=contact@tellae.fr
 about=This plugin allows accessing Tellae services (for instance some of the tools available in https://kite.tellae.fr/) from QGIS. This mainly consists in access to mobility-related data in France and processing algorithms. You will need a Tellae user account to access the services.
