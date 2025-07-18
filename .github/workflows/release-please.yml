@@ -16,6 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Create release
+        id: release
         uses: googleapis/release-please-action@v4
         with:
           config-file: .github/release-please-config.json
