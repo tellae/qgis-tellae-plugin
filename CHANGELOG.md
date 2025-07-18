@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/tellae/qgis-tellae-plugin/compare/v0.1.2...v0.1.3) (2025-07-18)
+
+
+### Bug Fixes
+
+* add missing step id ([#14](https://github.com/tellae/qgis-tellae-plugin/issues/14)) ([988ea3d](https://github.com/tellae/qgis-tellae-plugin/commit/988ea3d89bda1f49a681e850e9a323f39a57d02b))
+
 ## [0.1.2](https://github.com/tellae/qgis-tellae-plugin/compare/v0.1.1...v0.1.2) (2025-07-18)
 
 
