@@ -11,6 +11,7 @@ from tellae.utils.utils import (
 from tellae.utils.network_access_manager import NetworkAccessManager
 import os
 import json
+from qgis.core import QgsNetworkAccessManager
 
 AWS_TELLAE_CONFIG = "AWS-Tellae"
 AWS_TELLAE_DEV_CONFIG = "AWS-Tellae-dev"
@@ -258,7 +259,7 @@ class TellaeStore:
     ):
 
         # create a network access manager instance
-        nam = NetworkAccessManager(authid=auth_cfg, debug=self.network_debug)
+        nam = NetworkAccessManager(authid=auth_cfg, debug=self.network_debug, timeout=0)
 
         # create callback function: call handler depending on request success
         def on_finished():
@@ -289,6 +290,7 @@ class TellaeStore:
                         error_handler(result)
 
             elif not result["ok"] and error_handler:
+                log("Call error handler")
                 error_handler(result)
 
         try:
@@ -314,7 +316,7 @@ class TellaeStore:
                 )
 
     def request_whale(self, url, **kwargs):
-
+        log(kwargs)
         if url.startswith("https://"):
             raise ValueError("Only the relative path of the Whale url should be provided")
 
