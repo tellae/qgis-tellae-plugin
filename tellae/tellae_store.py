@@ -148,7 +148,7 @@ class TellaeStore:
 
         # try to get existing auth config
         if not self._try_existing_indents():
-            log("NO EXISTING INDENTS FOUND")
+            log("No existing indents found, opening authentication dialog")
             # if no existing indents where found, show auth dialog to manually input new indents
             self.auth_dialog.show()
 
@@ -289,7 +289,6 @@ class TellaeStore:
                         error_handler(result)
 
             elif not result["ok"] and error_handler:
-                log("Call error handler")
                 error_handler(result)
 
         try:
@@ -315,7 +314,6 @@ class TellaeStore:
                 )
 
     def request_whale(self, url, **kwargs):
-        log(kwargs)
         if url.startswith("https://"):
             raise ValueError("Only the relative path of the Whale url should be provided")
 
@@ -332,12 +330,10 @@ class TellaeStore:
 
 
 def message_from_request_error(result):
-    log(result)
     status = result["status"]
     status_code = result["status_code"]
     status_message = result["status_message"]
     reason = result["reason"]
-    log(str(result["exception"]))
     return str(result["exception"])
 
 

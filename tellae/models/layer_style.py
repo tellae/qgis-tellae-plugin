@@ -206,7 +206,6 @@ class VectorTilesStyle(LayerStyle):
         # disable default rendering styles of the layer
         rendering_styles = self.layer_renderer.styles()
         for style in rendering_styles:
-            log(style)
             style.setEnabled(False)
 
         self.layer_renderer.setStyles(rendering_styles)

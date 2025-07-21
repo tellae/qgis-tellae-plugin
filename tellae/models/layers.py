@@ -234,7 +234,6 @@ class VectorTileSource(QgsLayerSource):
                 select.append(mapping_options["key"])
 
         if len(select) > 0:
-            log(select)
             params["select"] = f"[{','.join(select)}]"
 
         # evaluate features filter
