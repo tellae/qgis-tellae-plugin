@@ -1,6 +1,5 @@
 from tellae.utils.utils import (
     log,
-    AuthenticationError,
     read_local_config,
     get_apikey_from_cache,
     create_auth_config,
@@ -11,7 +10,6 @@ from tellae.utils.utils import (
 from tellae.utils.network_access_manager import NetworkAccessManager
 import os
 import json
-from qgis.core import QgsNetworkAccessManager
 
 AWS_TELLAE_CONFIG = "AWS-Tellae"
 AWS_TELLAE_DEV_CONFIG = "AWS-Tellae-dev"
@@ -80,7 +78,8 @@ class TellaeStore:
 
     def init_store(self):
         if not self.authenticated:
-            raise AuthenticationError("User need to be authenticated before the store is initiated")
+            log("Trying to initiate store without being authenticated")
+            return
 
         self._init_layers_table()
 

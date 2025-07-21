@@ -32,7 +32,7 @@ from qgis.PyQt.QtCore import Qt
 
 from tellae.tellae_store import TELLAE_STORE
 from tellae.models.layers import create_layer
-from tellae.utils import log
+from tellae.utils import *
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(
@@ -179,9 +179,22 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
         if exception is None:
             message = f"La couche '{layer_name}' a été ajoutée avec succès !"
         else:
-            log(str(exception))
-            log(str(traceback.format_exc()))
-            message = f"Erreur lors de l'ajout de la couche '{layer_name}': {str(exception)}"
+            log(f"An error occured during layer add: {exception.__repr__()}")
+            # log(str(traceback.format_exc()))
+            # evaluate message depending on exception type
+            try:
+                raise exception
+            # min zoom not respected
+            except MinZoomException:
+                message = f"Vous devez zoomer pour charger la couche '{layer_name}'"
+            # network error message
+            except RequestsException as e:
+                message = f"Erreur lors du téléchargement de la couche '{layer_name}'"
+            except NotImplementedError:
+                message = f"La couche '{layer_name}' nécessite des fonctionalités non implémentées pour le moment"
+            # generic error message
+            except Exception:
+                message = f"Erreur lors de l'ajout de la couche '{layer_name}'"
         self.display_message(message)
 
         # remove loader

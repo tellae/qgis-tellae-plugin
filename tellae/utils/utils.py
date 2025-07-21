@@ -249,21 +249,3 @@ def get_apikey_from_cache(cfg_name):
 #
 # def infer_color_property(layer):
 #     return QgsSymbolLayer.PropertyStrokeColor
-
-
-class RequestError(Exception):
-    def __init__(self, reply: QgsNetworkReplyContent):
-        super().__init__(reply.errorString())
-        self.code = reply.error()
-
-
-class AuthenticationError(Exception):
-    pass
-
-
-class AccessError(Exception):
-    pass
-
-
-class InternalError(Exception):
-    pass

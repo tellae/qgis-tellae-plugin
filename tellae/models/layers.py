@@ -22,7 +22,7 @@ from qgis.core import (
 from PyQt5.QtGui import QColor
 from qgis.PyQt.QtCore import Qt
 
-from tellae.utils import log
+from tellae.utils import log, MinZoomException, RequestsException
 from tellae.tellae_store import TELLAE_STORE
 from .layer_style import ClassicStyle, VectorTilesStyle
 from .props_mapping import PropsMapping
@@ -104,8 +104,7 @@ class GeojsonSource(QgsLayerSource):
             # store request response
             self.response = response["content"]
             if self.response is None:
-                log("Missing response for layer creation !")
-                raise ValueError(response)
+                raise RequestsException("Empty response")
 
             # call QGIS layer creation and add
             self._set_qgis_layer()
@@ -325,7 +324,7 @@ class QgsKiteLayer:
             return SharkSource(self)
         elif self.sourceType == "vector":
             if TELLAE_STORE.get_current_scale() > 400000:
-                raise ValueError("You must zoom more to request vector tiles layers")
+                raise MinZoomException
             return VectorTileGeojsonSource(self)
         else:
             raise ValueError(f"Unsupported source type '{self.sourceType}'")
