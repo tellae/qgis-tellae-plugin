@@ -51,7 +51,7 @@ def log(message):
 
 def read_local_config(plugin_dir):
     config = None
-    path = plugin_dir + "/local.config.jsonc"
+    path = plugin_dir + "/local.config.json"
     if os.path.exists(path):
         with open(path, "r") as local_config:
             config = json.load(local_config)
