@@ -97,23 +97,25 @@ class GeojsonSource(QgsLayerSource):
 
     def init_qgis_layer(self):
         # make a web request and read the geojson result as bytes
-        TELLAE_STORE.request(self.url, handler=self.on_download, to_json=False)
+        TELLAE_STORE.request(self.url, handler=self.on_download, error_handler=self.on_download_error, to_json=False)
 
     def on_download(self, response):
-        # store request response
-        self.response = response["content"]
+        try:
+            # store request response
+            self.response = response["content"]
+            if self.response is None:
+                log("Missing response for layer creation !")
+                raise ValueError(response)
 
-        if self.response is None:
-            log("Missing response for layer creation !")
-        else:
             # call QGIS layer creation and add
             self._set_qgis_layer()
 
+        except Exception as e:
+            TELLAE_STORE.main_dialog.signal_end_of_layer_add(self.layer_name, e)
+
     def on_download_error(self, response):
         exception = response["exception"]
-        TELLAE_STORE.main_dialog.display_message(
-            f"Erreur lors de l'ajout de la couche '{self.layer_name}': {str(exception)}"
-        )
+        TELLAE_STORE.main_dialog.signal_end_of_layer_add(self.layer_name, exception)
 
     def _new_qgis_layer_instance(self):
         try:
@@ -139,7 +141,7 @@ class SharkSource(GeojsonSource):
         return f"/shark/layers/geojson/{self.layer.data}"
 
     def init_qgis_layer(self):
-        TELLAE_STORE.request_whale(self.url, handler=self.on_download, to_json=False)
+        TELLAE_STORE.request_whale(self.url, handler=self.on_download, error_handler=self.on_download_error, to_json=False)
 
 
 class VectorTileGeojsonSource(GeojsonSource):
@@ -202,7 +204,7 @@ class VectorTileGeojsonSource(GeojsonSource):
         return f"/shark/layers/geojson/{self.layer.data}?{urllib.parse.urlencode(params)}"
 
     def init_qgis_layer(self):
-        TELLAE_STORE.request_whale(self.url, handler=self.on_download, to_json=False)
+        TELLAE_STORE.request_whale(self.url, handler=self.on_download, error_handler=self.on_download_error, to_json=False)
 
 
 class VectorTileSource(QgsLayerSource):
@@ -353,33 +355,22 @@ class QgsKiteLayer:
             self.style.update_layer_symbology()
 
     def add_to_qgis(self):
-        TELLAE_STORE.main_dialog.display_message(
-            f"Téléchargement de la couche '{self.name}'..."
-        )
-        TELLAE_STORE.main_dialog.set_progress_bar(True)
+        TELLAE_STORE.main_dialog.start_layer_download(self.name)
         self.source.init_qgis_layer()
 
     def _add_to_qgis(self):
-        log("_add_to_qgis")
+        # create a LayerStyle instance
+        self._create_style()
 
-        try:
-            self._create_style()
+        # update layer style
+        self._update_style()
 
-            self._update_style()
+        # add layer to QGIS
+        self._add_to_project()
 
-            self._add_to_project()
+        # signal successful add
+        TELLAE_STORE.main_dialog.signal_end_of_layer_add(self.name)
 
-            TELLAE_STORE.main_dialog.display_message(
-                f"La couche '{self.name}' a été ajoutée avec succès !"
-            )
-        except Exception as e:
-            log(str(e))
-            log(str(traceback.format_exc()))
-            TELLAE_STORE.main_dialog.display_message(
-                f"Erreur lors de l'ajout de la couche '{self.name}': {str(e)}"
-            )
-        finally:
-            TELLAE_STORE.main_dialog.set_progress_bar(False)
 
     def _add_to_project(self):
         QgsProject.instance().addMapLayer(self.qgis_layer)

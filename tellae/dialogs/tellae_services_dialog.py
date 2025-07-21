@@ -166,5 +166,25 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
             qgs_kite_layer.add_to_qgis()
 
         except Exception as e:
+            self.signal_end_of_layer_add(layer_name, e)
+
+    def start_layer_download(self, layer_name):
+        self.display_message(
+            f"Téléchargement de la couche '{layer_name}'..."
+        )
+        self.set_progress_bar(True)
+
+    def signal_end_of_layer_add(self, layer_name, exception=None):
+        # display result message
+        if exception is None:
+            message = f"La couche '{layer_name}' a été ajoutée avec succès !"
+        else:
+            log(str(exception))
             log(str(traceback.format_exc()))
-            self.display_message(f"Erreur lors de l'ajout de la couche '{layer_name}': {str(e)}")
+            message = f"Erreur lors de l'ajout de la couche '{layer_name}': {str(exception)}"
+        self.display_message(message)
+
+        # remove loader
+        self.set_progress_bar(False)
+
+
