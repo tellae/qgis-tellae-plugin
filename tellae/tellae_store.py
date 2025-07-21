@@ -1,6 +1,5 @@
 from tellae.utils.utils import (
     log,
-    AuthenticationError,
     read_local_config,
     get_apikey_from_cache,
     create_auth_config,
@@ -79,7 +78,8 @@ class TellaeStore:
 
     def init_store(self):
         if not self.authenticated:
-            raise AuthenticationError("User need to be authenticated before the store is initiated")
+            log("Trying to initiate store without being authenticated")
+            return
 
         self._init_layers_table()
 
@@ -148,7 +148,7 @@ class TellaeStore:
 
         # try to get existing auth config
         if not self._try_existing_indents():
-            log("NO EXISTING INDENTS FOUND")
+            log("No existing indents found, opening authentication dialog")
             # if no existing indents where found, show auth dialog to manually input new indents
             self.auth_dialog.show()
 
@@ -258,7 +258,7 @@ class TellaeStore:
     ):
 
         # create a network access manager instance
-        nam = NetworkAccessManager(authid=auth_cfg, debug=self.network_debug)
+        nam = NetworkAccessManager(authid=auth_cfg, debug=self.network_debug, timeout=0)
 
         # create callback function: call handler depending on request success
         def on_finished():
@@ -314,7 +314,6 @@ class TellaeStore:
                 )
 
     def request_whale(self, url, **kwargs):
-
         if url.startswith("https://"):
             raise ValueError("Only the relative path of the Whale url should be provided")
 
@@ -331,12 +330,10 @@ class TellaeStore:
 
 
 def message_from_request_error(result):
-    log(result)
     status = result["status"]
     status_code = result["status_code"]
     status_message = result["status_message"]
     reason = result["reason"]
-    log(str(result["exception"]))
     return str(result["exception"])
 
 

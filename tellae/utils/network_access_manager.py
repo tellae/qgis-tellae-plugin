@@ -64,6 +64,9 @@ class RequestsExceptionConnectionError(RequestsException):
 class RequestsExceptionUserAbort(RequestsException):
     pass
 
+class UnauthorizedError(RequestsException):
+    pass
+
 
 class Map(dict):
     """
@@ -353,7 +356,8 @@ class NetworkAccessManager(object):
                     self.http_call_result.exception = RequestsExceptionUserAbort(msg)
                 else:
                     self.http_call_result.exception = RequestsException(msg)
-
+            elif err == QNetworkReply.NetworkError.AuthenticationRequiredError:
+                self.http_call_result.exception = UnauthorizedError(msg)
             else:
                 self.http_call_result.exception = RequestsException(msg)
 

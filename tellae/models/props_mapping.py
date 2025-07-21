@@ -211,12 +211,9 @@ class PropsMapping(ABC):
 
     def signal_incompatible_paint(self, paint_type):
         message = f"Cannot update paint '{paint_type}' using {self.__class__.__name__} class"
-        log(message)
         return ValueError(message)
 
     def from_spec(key, spec):
-        log(key)
-        log(spec)
 
         # repair and add missing value in mapping init json
         spec = repair_mapping_init(key, spec)
