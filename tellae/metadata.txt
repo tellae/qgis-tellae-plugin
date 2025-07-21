@@ -20,7 +20,7 @@ repository=https://github.com/tellae/qgis-tellae-plugin
 
 hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
-# changelog=
+# changelog=https://github.com/tellae/qgis-tellae-plugin/blob/main/CHANGELOG.md
 
 # Tags are comma separated with spaces allowed
 tags=python
