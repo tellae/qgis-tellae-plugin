@@ -64,8 +64,16 @@ class TellaeStore:
         self.auth_dialog = None
 
     def read_local_config(self):
-        # store local configuration
-        self.local_config = read_local_config(self.plugin_dir)
+        # read local config
+        local_config = read_local_config(self.plugin_dir)
+
+        # store local configuration if "use" is True
+        if local_config is not None and local_config.get("use", True):
+            self.local_config = local_config
+
+        # set store attributes from local config
+        if self.local_config and "whale_endpoint" in self.local_config:
+            self.whale_endpoint = self.local_config["whale_endpoint"]
 
     # STORE ACTIONS
 
@@ -134,13 +142,9 @@ class TellaeStore:
             self.local_config is not None
             and "auth" in self.local_config
             and self.local_config["auth"].get("use", True)
-        ):
-            if "WHALE_ENDPOINT" in self.local_config["auth"]:
-                self.whale_endpoint = self.local_config["auth"]["WHALE_ENDPOINT"]
-
-            if "WHALE_API_KEY_ID" in self.local_config:
-                self._try_dev_indents()
-                return
+        ):  # try dev authentication if provided and not deactivated
+            self._try_dev_indents()
+            return
 
         # try to get existing auth config
         if not self._try_existing_indents():
@@ -171,8 +175,8 @@ class TellaeStore:
     def _try_dev_indents(self):
         # get indents from local config
         try:
-            api_key = self.local_config["auth"]["WHALE_API_KEY_ID"]
-            secret = self.local_config["auth"]["WHALE_SECRET_ACCESS_KEY"]
+            api_key = self.local_config["auth"]["apikey"]
+            secret = self.local_config["auth"]["secret"]
         except KeyError as e:
             raise ValueError(f"Erreur lors de l'authentification locale, clé manquante: {str(e)}")
 
@@ -327,6 +331,7 @@ class TellaeStore:
 
 
 def message_from_request_error(result):
+    log(result)
     status = result["status"]
     status_code = result["status_code"]
     status_message = result["status_message"]

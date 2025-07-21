@@ -69,21 +69,6 @@ class TellaeAuthDialog(QtWidgets.QDialog, FORM_CLASS):
     def display_error_message(self, message):
         self.errorMessage.setText(message)
 
-    # def _check_local_config_existence(self):
-    #     local_auth = False
-    #     if TELLAE_STORE.local_config is not None and "auth" in TELLAE_STORE.local_config and TELLAE_STORE.local_config["auth"].get("use", True):
-    #         local_auth = True
-    #         log("Authentication from local configuration")
-    #
-    #         try:
-    #             endpoint = TELLAE_STORE.local_config["auth"].get("WHALE_ENDPOINT", None)
-    #             self.try_authenticate(TELLAE_STORE.local_config["auth"]["WHALE_API_KEY_ID"], TELLAE_STORE.local_config["auth"]["WHALE_SECRET_ACCESS_KEY"], endpoint=endpoint)
-    #         except KeyError as e:
-    #             self.display_error_message(f"Erreur lors de l'authentification locale, clé manquante: {str(e)}")
-    #             return local_auth
-    #
-    #     return local_auth
-
     def set_indents_from_auth_config(self):
         apikey, secret = TELLAE_STORE.get_current_indents()
 
