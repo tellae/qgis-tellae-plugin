@@ -2,7 +2,7 @@
 
 This repository contains the code of the QGIS plugin **Tellae**.
 
-This plugin allows accessing _Tellae_ services (for instance some of the tools available in [Kite](https://kite.tellae.fr/)) from QGIS.
+This plugin allows accessing [_Tellae_](https://tellae.fr) services (for instance some of the tools available in [Kite](https://kite.tellae.fr/)) from QGIS.
 This mainly consists in access to mobility-related data in France and processing algorithms.
 
 You will need a _Tellae_ user account to use this plugin.
