@@ -18,6 +18,7 @@ from qgis.core import (
     QgsLineSymbol,
     QgsMarkerSymbol,
     QgsProperty,
+QgsFields,
 )
 from PyQt5.QtGui import QColor
 from qgis.PyQt.QtCore import Qt
@@ -289,7 +290,7 @@ class QgsKiteLayer:
 
         self.category = layer_data.get("category", None)
 
-        self.name = layer_data.get("name", dict()).get("fr", "Unnamed")
+        self.name = layer_data.get("name", dict()).get(TELLAE_STORE.locale, "Unnamed")
 
         self.datasets = layer_data.get("datasets", [])
         self.main_dataset = layer_data.get("main_dataset", None)
@@ -352,11 +353,29 @@ class QgsKiteLayer:
         if self.style.editAttributes:
             self.style.update_layer_symbology()
 
+    def _update_aliases(self):
+        for index in self.qgis_layer.attributeList():
+            key = self.qgis_layer.attributeDisplayName(index)
+            alias = None
+            if key in self.dataProperties:
+                if isinstance(self.dataProperties[key], dict):
+                    alias = self.dataProperties[key][TELLAE_STORE.locale]
+                elif isinstance(self.dataProperties[key], str):
+                    alias = self.dataProperties[key]
+                else:
+                    raise ValueError(f"Unsupported dataProperty type: {type(self.dataProperties[key])}")
+
+            if alias is not None:
+                self.qgis_layer.setFieldAlias(index, alias)
+
     def add_to_qgis(self):
         TELLAE_STORE.main_dialog.start_layer_download(self.name)
         self.source.init_qgis_layer()
 
     def _add_to_qgis(self):
+        # add layer aliases
+        self._update_aliases()
+
         # create a LayerStyle instance
         self._create_style()
 

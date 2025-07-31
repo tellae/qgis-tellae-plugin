@@ -103,7 +103,7 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
         # setup table headers
         # total table length is 721, scroll bar is 16 => header width must total to 705
         headers = [
-            {"text": "Nom", "value": lambda x: x["name"]["fr"], "width": 285},
+            {"text": "Nom", "value": lambda x: x["name"][TELLAE_STORE.locale], "width": 285},
             {
                 "text": "Date",
                 "value": lambda x: TELLAE_STORE.datasets_summary[x["main_dataset"]].get("date", ""),
@@ -159,7 +159,7 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
 
     def add_layer(self, index):
         layer_item = self.layers[index]
-        layer_name = layer_item.get("name", dict()).get("fr", "Unnamed")
+        layer_name = layer_item.get("name", dict()).get(TELLAE_STORE.locale, "Unnamed")
 
         try:
             qgs_kite_layer = create_layer(layer_item)
