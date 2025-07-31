@@ -25,10 +25,11 @@ jobs:
       - name: Checkout code
         if: ${{ steps.release.outputs.release_created }}
         uses: actions/checkout@v2
-      - name: Copy README.md to plugin folder
+      - name: Copy README.md and LICENSE files to plugin folder
         if: ${{ steps.release.outputs.release_created }}
         run: |
           cp README.md tellae/
+          cp LICENSE tellae/
       - name: Create a ZIP containing the Tellae plugin
         if: ${{ steps.release.outputs.release_created }}
         run: |
