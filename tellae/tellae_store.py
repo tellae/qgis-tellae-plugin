@@ -92,7 +92,7 @@ class TellaeStore:
 
         def common_handler():
             # sort layers table by name and date (desc)
-            self.layer_summary = sorted(self.layer_summary, key=lambda x: (x["name"]["fr"], -int(self.datasets_summary[x["main_dataset"]].get("date", 0))))
+            self.layer_summary = sorted(self.layer_summary, key=lambda x: (x["name"][self.locale], -int(self.datasets_summary[x["main_dataset"]].get("date", 0))))
 
             # fill UI using results
             self.main_dialog.create_theme_selector()

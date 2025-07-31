@@ -290,7 +290,7 @@ class QgsKiteLayer:
 
         self.category = layer_data.get("category", None)
 
-        self.name = layer_data.get("name", dict()).get("fr", "Unnamed")
+        self.name = layer_data.get("name", dict()).get(TELLAE_STORE.locale, "Unnamed")
 
         self.datasets = layer_data.get("datasets", [])
         self.main_dataset = layer_data.get("main_dataset", None)
