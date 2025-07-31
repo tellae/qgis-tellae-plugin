@@ -25,6 +25,9 @@ class TellaeStore:
 
         self.request_retries = dict()
 
+        # locale (translations)
+        self.locale = "fr"
+
         # authentication
 
         self.authCfg = None
