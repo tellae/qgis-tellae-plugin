@@ -1,18 +1,25 @@
 # Tellae QGIS plugin
 
-This repository contains the code of the QGIS plugin **Tellae**.
+This repository contains the code of the QGIS plugin **Tellae**. 
 
 This plugin allows accessing [_Tellae_](https://tellae.fr) services (for instance some of the tools available in [Kite](https://kite.tellae.fr/)) from QGIS.
 This mainly consists in access to mobility-related data in France and processing algorithms.
 
 You will need a _Tellae_ user account to use this plugin.
 
+You can find the **Tellae** plugin in the [QGIS plugins web portal](https://plugins.qgis.org/plugins/tellae/).
+
 ## Install
 
 ### Install from the QGIS plugin manager
 
-The _Tellae_ plugin will soon be available in the QGIS plugin manager ! 
-It will be tagged as _Experimental_, so make sure to tick the "Display experimental plugins" in your plugins manager parameters.
+Open QGIS and click on the menu item <kbd>Plugins ► Manage and Install Plugins</kbd>.
+
+**Since the plugin is tagged as _Experimental_, make sure to tick the "Display experimental plugins" in the `Parameters` tab.**
+
+In the `All` tab, type "Tellae" in the search bar, click on the **Tellae** plugin and then click on the <kbd>Install plugin</kbd> button.
+
+You're done ! QGIS will automatically display a popup when a new version is available.
 
 ### Install from .zip file
 
