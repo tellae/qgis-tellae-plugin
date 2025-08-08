@@ -49,7 +49,7 @@ jobs:
         run: pip3 install qgis-plugin-ci
       - name: Publish plugin
         if: ${{ steps.release.outputs.release_created }}
-        run: python publish_plugin.py
+        run: python .github/publish_plugin.py
         env:
           OSGEO_USERNAME: ${{ secrets.OSGEO_USERNAME }}
           OSGEO_PASSWORD: ${{ secrets.OSGEO_PASSWORD }}
