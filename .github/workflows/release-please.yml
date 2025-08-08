@@ -39,3 +39,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release upload ${{ steps.release.outputs.tag_name }} tellae_plugin.zip
+      - name: Set up Python 3.8
+        if: ${{ steps.release.outputs.release_created }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+      - name: Install qgis-plugin-ci
+        if: ${{ steps.release.outputs.release_created }}
+        run: pip3 install qgis-plugin-ci
+      - name: Publish plugin
+        if: ${{ steps.release.outputs.release_created }}
+        run: python publish_plugin.py
+        env:
+          OSGEO_USERNAME: ${{ secrets.OSGEO_USERNAME }}
+          OSGEO_PASSWORD: ${{ secrets.OSGEO_PASSWORD }}
+          ARCHIVE_FILENAME: tellae_plugin.zip
