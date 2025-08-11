@@ -15,7 +15,7 @@ You can find the **Tellae** plugin in the [QGIS plugins web portal](https://plug
 
 Open QGIS and click on the menu item <kbd>Plugins ► Manage and Install Plugins</kbd>.
 
-**Since the plugin is tagged as _Experimental_, make sure to tick the "Display experimental plugins" in the `Parameters` tab.**
+**Since the plugin is tagged as _Experimental_, make sure to tick "Display experimental plugins" in the `Parameters` tab.**
 
 In the `All` tab, type "Tellae" in the search bar, click on the **Tellae** plugin and then click on the <kbd>Install plugin</kbd> button.
 
@@ -54,7 +54,7 @@ Upon successful authentication, your identifiers will be safely stored using QGI
 authentication database system, where they will be protected by a master password.
 
 You can find the identifiers used by the **Tellae** plugin in the 
-<kbd>Authentication</kbd> tab of the <kbd>Preferences</kbd> menu, under the name `AWS-Tellae`.
+`Authentication` tab of the <kbd>Preferences</kbd> menu, under the name `AWS-Tellae`.
 
 ## Contact
 
