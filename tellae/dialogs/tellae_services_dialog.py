@@ -169,9 +169,7 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
             self.signal_end_of_layer_add(layer_name, e)
 
     def start_layer_download(self, layer_name):
-        self.display_message(
-            f"Téléchargement de la couche '{layer_name}'..."
-        )
+        self.display_message(f"Téléchargement de la couche '{layer_name}'...")
         self.set_progress_bar(True)
 
     def signal_end_of_layer_add(self, layer_name, exception=None):
@@ -199,5 +197,3 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
 
         # remove loader
         self.set_progress_bar(False)
-
-

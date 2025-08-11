@@ -64,6 +64,7 @@ class RequestsExceptionConnectionError(RequestsException):
 class RequestsExceptionUserAbort(RequestsException):
     pass
 
+
 class UnauthorizedError(RequestsException):
     pass
 

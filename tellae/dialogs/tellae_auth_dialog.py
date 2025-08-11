@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
-
+import webbrowser
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtWidgets import QDialogButtonBox, QDialog
@@ -62,9 +62,15 @@ class TellaeAuthDialog(QtWidgets.QDialog, FORM_CLASS):
     #     self.try_authenticate(self.keyEdit.text(), self.secretEdit.text())
 
     def setup_dialog(self):
-        # self.buttonBox.accepted.connect(self.validate)
+        self.helpButton.clicked.connect(self.open_help_page)
         self.cancelButton.clicked.connect(self.done)
         self.validateButton.clicked.connect(self.validate)
+
+    def open_help_page():
+        url = f"https://tellae.fr/#/blog/{TELLAE_STORE.locale}/kite_api_key"
+        webbrowser.open(url)
+
+    open_help_page = staticmethod(open_help_page)
 
     def display_error_message(self, message):
         self.errorMessage.setText(message)

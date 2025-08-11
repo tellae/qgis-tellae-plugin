@@ -18,7 +18,7 @@ from qgis.core import (
     QgsLineSymbol,
     QgsMarkerSymbol,
     QgsProperty,
-QgsFields,
+    QgsFields,
 )
 from PyQt5.QtGui import QColor
 from qgis.PyQt.QtCore import Qt
@@ -98,7 +98,9 @@ class GeojsonSource(QgsLayerSource):
 
     def init_qgis_layer(self):
         # make a web request and read the geojson result as bytes
-        TELLAE_STORE.request(self.url, handler=self.on_download, error_handler=self.on_download_error, to_json=False)
+        TELLAE_STORE.request(
+            self.url, handler=self.on_download, error_handler=self.on_download_error, to_json=False
+        )
 
     def on_download(self, response):
         try:
@@ -141,7 +143,9 @@ class SharkSource(GeojsonSource):
         return f"/shark/layers/geojson/{self.layer.data}"
 
     def init_qgis_layer(self):
-        TELLAE_STORE.request_whale(self.url, handler=self.on_download, error_handler=self.on_download_error, to_json=False)
+        TELLAE_STORE.request_whale(
+            self.url, handler=self.on_download, error_handler=self.on_download_error, to_json=False
+        )
 
 
 class VectorTileGeojsonSource(GeojsonSource):
@@ -204,7 +208,9 @@ class VectorTileGeojsonSource(GeojsonSource):
         return f"/shark/layers/geojson/{self.layer.data}?{urllib.parse.urlencode(params)}"
 
     def init_qgis_layer(self):
-        TELLAE_STORE.request_whale(self.url, handler=self.on_download, error_handler=self.on_download_error, to_json=False)
+        TELLAE_STORE.request_whale(
+            self.url, handler=self.on_download, error_handler=self.on_download_error, to_json=False
+        )
 
 
 class VectorTileSource(QgsLayerSource):
@@ -363,7 +369,9 @@ class QgsKiteLayer:
                 elif isinstance(self.dataProperties[key], str):
                     alias = self.dataProperties[key]
                 else:
-                    raise ValueError(f"Unsupported dataProperty type: {type(self.dataProperties[key])}")
+                    raise ValueError(
+                        f"Unsupported dataProperty type: {type(self.dataProperties[key])}"
+                    )
 
             if alias is not None:
                 self.qgis_layer.setFieldAlias(index, alias)
@@ -387,7 +395,6 @@ class QgsKiteLayer:
 
         # signal successful add
         TELLAE_STORE.main_dialog.signal_end_of_layer_add(self.name)
-
 
     def _add_to_project(self):
         QgsProject.instance().addMapLayer(self.qgis_layer)

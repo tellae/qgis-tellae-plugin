@@ -58,6 +58,7 @@ def read_local_config(plugin_dir):
 
     return config
 
+
 # def create_layer_instance(layer_id, layer_stream, path=""):
 #     try:
 #         file_path = path
