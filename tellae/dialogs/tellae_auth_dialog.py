@@ -69,6 +69,7 @@ class TellaeAuthDialog(QtWidgets.QDialog, FORM_CLASS):
     def open_help_page():
         url = f"https://tellae.fr/#/blog/{TELLAE_STORE.locale}/kite_api_key"
         webbrowser.open(url)
+
     open_help_page = staticmethod(open_help_page)
 
     def display_error_message(self, message):
