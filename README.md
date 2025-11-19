@@ -15,8 +15,6 @@ You can find the **Tellae** plugin in the [QGIS plugins web portal](https://plug
 
 Open QGIS and click on the menu item <kbd>Plugins ► Manage and Install Plugins</kbd>.
 
-**Since the plugin is tagged as _Experimental_, make sure to tick "Display experimental plugins" in the `Parameters` tab.**
-
 In the `All` tab, type "Tellae" in the search bar, click on the **Tellae** plugin and then click on the <kbd>Install plugin</kbd> button.
 
 You're done ! QGIS will automatically display a popup when a new version is available.
@@ -36,13 +34,14 @@ Upon your first use of the plugin, you will be presented with an authentication 
 
 ### API key creation
 
-Open [Kite](https://kite.tellae.fr/) and click <kbd>API keys</kbd> in the top right menu.
-Now click <kbd>Add a new API key</kbd>.
+Open [Kite](https://kite.tellae.fr/) and open the `Settings` dialog using the top right menu.
+Go to the `API keys` tab: you can see the list of your already created API keys. 
+To create a new one, click <kbd>Add a new API key</kbd>.
 
-The secret will be automatically copied to your clipboard. Paste it in the _Secret_ field of the
+The _secret_ will be automatically copied to your clipboard. Paste it in the _Secret_ field of the
 authentication window.
 
-Then, click on the underlined API key's identifier. This will copy it to your clipboard.
+Then, click on the underlined API key's _identifier_. This will copy it to your clipboard.
 You can then paste it in the _Identifiant_ field of the authentication window.
 
 Click <kbd>Ok</kbd>. If the authentication is successful, the authentication window should close and you should
