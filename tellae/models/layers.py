@@ -292,7 +292,7 @@ class QgsKiteLayer:
 
         self.mapboxProps = layer_data.get("layerProps", dict())
 
-        self.dataProperties = layer_data.get("dataProperties", None)
+        self.dataProperties = layer_data.get("dataProperties", dict())
 
         self.category = layer_data.get("category", None)
 
