@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.0.0](https://github.com/tellae/qgis-tellae-plugin/compare/v0.1.4...v1.0.0) (2025-11-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* remove experimental tag ([#29](https://github.com/tellae/qgis-tellae-plugin/issues/29))
+
+### Features
+
+* loosened the zoom requirement for loading layers ([#28](https://github.com/tellae/qgis-tellae-plugin/issues/28)) ([8d99cd1](https://github.com/tellae/qgis-tellae-plugin/commit/8d99cd135c882765d74b73f918c73df6d3a564ef))
+* set QGIS field aliases for better data readability ([#23](https://github.com/tellae/qgis-tellae-plugin/issues/23)) ([2668d5f](https://github.com/tellae/qgis-tellae-plugin/commit/2668d5fe1c420f341ee868353bdec88e0ddcf1cf))
+
+
+### Bug Fixes
+
+* fixed a loading error for layers without dataProperties field ([#27](https://github.com/tellae/qgis-tellae-plugin/issues/27)) ([2e86ac9](https://github.com/tellae/qgis-tellae-plugin/commit/2e86ac9fd61210a8b6690385b027434b9e0517ac))
+
+
+### Miscellaneous Chores
+
+* remove experimental tag ([#29](https://github.com/tellae/qgis-tellae-plugin/issues/29)) ([b7d7302](https://github.com/tellae/qgis-tellae-plugin/commit/b7d730288fa5d42e2a86722a71dc3a47d65f539c))
+
 ## [0.1.4](https://github.com/tellae/qgis-tellae-plugin/compare/v0.1.3...v0.1.4) (2025-07-21)
 
 
