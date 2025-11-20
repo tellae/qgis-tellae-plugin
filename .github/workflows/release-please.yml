@@ -41,7 +41,7 @@ jobs:
         run: gh release upload ${{ steps.release.outputs.tag_name }} tellae_plugin.zip
       - name: Set up Python 3.9
         if: ${{ steps.release.outputs.release_created }}
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v5
         with:
           python-version: 3.9.25
       - name: Install qgis-plugin-ci
