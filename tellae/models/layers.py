@@ -28,6 +28,7 @@ from tellae.tellae_store import TELLAE_STORE
 from .layer_style import ClassicStyle, VectorTilesStyle
 from .props_mapping import PropsMapping
 import traceback
+from tellae.utils.requests import request, request_whale
 
 
 class QgsLayerSource(ABC):
@@ -98,7 +99,7 @@ class GeojsonSource(QgsLayerSource):
 
     def init_qgis_layer(self):
         # make a web request and read the geojson result as bytes
-        TELLAE_STORE.request(
+        request(
             self.url, handler=self.on_download, error_handler=self.on_download_error, to_json=False
         )
 
@@ -143,7 +144,7 @@ class SharkSource(GeojsonSource):
         return f"/shark/layers/geojson/{self.layer.data}"
 
     def init_qgis_layer(self):
-        TELLAE_STORE.request_whale(
+        request_whale(
             self.url, handler=self.on_download, error_handler=self.on_download_error, to_json=False
         )
 
@@ -208,7 +209,7 @@ class VectorTileGeojsonSource(GeojsonSource):
         return f"/shark/layers/geojson/{self.layer.data}?{urllib.parse.urlencode(params)}"
 
     def init_qgis_layer(self):
-        TELLAE_STORE.request_whale(
+        request_whale(
             self.url, handler=self.on_download, error_handler=self.on_download_error, to_json=False
         )
 

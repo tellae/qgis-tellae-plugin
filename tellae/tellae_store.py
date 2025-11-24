@@ -7,7 +7,7 @@ from tellae.utils.utils import (
     remove_tellae_auth_config,
     THEMES_TRANSLATION,
 )
-from tellae.utils.network_access_manager import NetworkAccessManager
+from tellae.utils.requests import request, request_whale
 import os
 import json
 
@@ -120,7 +120,7 @@ class TellaeStore:
             if self.layer_summary and self.datasets_summary:
                 common_handler()
 
-        self.request_whale("/shark/layers/table", handler=layer_summary_handler)
+        request_whale("/shark/layers/table", handler=layer_summary_handler)
 
         def datasets_summary_handler(response):
             result = response["content"]
@@ -131,7 +131,7 @@ class TellaeStore:
             if self.layer_summary and self.datasets_summary:
                 common_handler()
 
-        self.request_whale("/shark/datasets/summary", handler=datasets_summary_handler)
+        request_whale("/shark/datasets/summary", handler=datasets_summary_handler)
 
     def get_filtered_layer_summary(self, selected_theme: str):
 
@@ -243,7 +243,7 @@ class TellaeStore:
             self.auth_dialog.open()
 
         # make request to whale /auth/me service
-        self.request_whale("/auth/me", handler=full_handler, error_handler=full_error_handler)
+        request_whale("/auth/me", handler=full_handler, error_handler=full_error_handler)
 
     def _create_or_update_auth_config(self, name, key, secret):
         auth_cfg = create_auth_config(name, key, secret)
@@ -252,85 +252,6 @@ class TellaeStore:
     def _set_auth_config(self, cfg_name, cfg_id):
         self.authCfg = cfg_id
         self.authName = cfg_name
-
-    # NETWORK REQUESTS METHODS
-
-    def request(
-        self,
-        url,
-        method="GET",
-        body=None,
-        handler=None,
-        error_handler=None,
-        auth_cfg=None,
-        to_json=True,
-    ):
-
-        # create a network access manager instance
-        nam = NetworkAccessManager(authid=auth_cfg, debug=self.network_debug, timeout=0)
-
-        # create callback function: call handler depending on request success
-        def on_finished():
-
-            result = nam.httpResult()
-            if result["ok"] and handler:
-                if url in self.request_retries:
-                    del self.request_retries[url]
-                # convert request result to json
-                if to_json:
-                    result["content"] = json.loads(result["content"])
-                handler(result)
-            elif not result["ok"] and result["status_code"] == 401:
-                if url in self.request_retries:
-                    self.request_retries[url] += 1
-                else:
-                    self.request_retries[url] = 1
-
-                log(
-                    f"Requesting {url} failed with error 401, total: {self.request_retries[url]} fails"
-                )
-
-                if self.request_retries[url] < 3:
-                    log(f"Retry requesting {url}")
-                    self.request(url, method, body, handler, error_handler, auth_cfg, to_json)
-                else:
-                    if error_handler:
-                        error_handler(result)
-
-            elif not result["ok"] and error_handler:
-                error_handler(result)
-
-        try:
-            # make async request
-            nam.request(url, method=method, body=body, blocking=False)
-
-            # add callback
-            nam.reply.finished.connect(on_finished)
-        except Exception as e:
-            # call error handler on exception
-            if error_handler:
-                error_handler(
-                    {
-                        "status": None,
-                        "status_code": None,
-                        "status_message": "Python error while making request",
-                        "content": None,
-                        "ok": False,
-                        "headers": None,
-                        "reason": "Python error while making request",
-                        "exception": e,
-                    }
-                )
-
-    def request_whale(self, url, **kwargs):
-        if url.startswith("https://"):
-            raise ValueError("Only the relative path of the Whale url should be provided")
-
-        # prepend whale endpoint
-        whale_url = self.whale_endpoint + url
-
-        # make the request using the AWS authentication
-        return self.request(whale_url, auth_cfg=self.authCfg, **kwargs)
 
     # map utils
 
