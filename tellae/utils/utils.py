@@ -23,6 +23,7 @@ from qgis.core import (
     QgsSingleSymbolRenderer,
     QgsNetworkReplyContent,
 )
+from qgis.PyQt.QtWidgets import QTableWidgetItem, QTableWidget
 
 AWS_REGION = "fr-north-1"
 
@@ -179,6 +180,60 @@ def get_apikey_from_cache(cfg_name):
             secret = aux_config.configMap()["password"]
     return apikey, secret
 
+
+def fill_table_widget(table_widget, headers, items):
+    # disable table edition
+    table_widget.setEditTriggers(QTableWidget.NoEditTriggers)
+
+    # set number of rows and columns
+    table_widget.setRowCount(len(items))
+    table_widget.setColumnCount(len(headers))
+
+    # setup headers
+    table_widget.setHorizontalHeaderLabels([header["text"] for header in headers])
+    for col, header in enumerate(headers):
+        if "width" in header:
+            table_widget.setColumnWidth(col, header["width"])
+
+    # populate table cells
+    for row, layer in enumerate(items):
+        for col, header in enumerate(headers):
+            # create a table cell
+            cell = QTableWidgetItem()
+
+            # evaluate its content depending on the row and column
+            if "slot" in header:
+                header["slot"](table_widget, row, col, layer, header)
+                continue
+            elif callable(header["value"]):
+                text = header["value"](layer)
+            else:
+                text = layer[header["value"]]
+
+            # set cell text and tooltip
+            cell.setText(text)
+            cell.setToolTip(text)
+
+            # set text alignment
+            if "align" in header:
+                cell.setTextAlignment(header["align"])
+
+            # put the cell in the table
+            table_widget.setItem(row, col, cell)
+
+
+def getBinaryName(binary, with_extension=True):
+    if "metadata" in binary and "name" in binary["metadata"]:
+        name = binary["metadata"]["name"]
+    elif "name" in binary:
+        name = binary["name"]
+    else:
+        name = binary.get("originalname", "Unnamed")
+
+    if not with_extension:
+        name = name.split(".")[0]
+
+    return name
 
 # def prepare_layer_style(layer, layer_info):
 #

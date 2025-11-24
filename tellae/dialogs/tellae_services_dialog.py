@@ -27,12 +27,13 @@ import traceback
 
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
-from qgis.PyQt.QtWidgets import QTableWidget, QTableWidgetItem, QPushButton
+from qgis.PyQt.QtWidgets import QPushButton
 from qgis.PyQt.QtCore import Qt
 
 from tellae.tellae_store import TELLAE_STORE
 from tellae.models.layers import create_layer
 from tellae.utils import *
+from tellae.utils.utils import fill_table_widget
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(
@@ -98,7 +99,14 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
 
         # get list of layers to display
         self.layers = TELLAE_STORE.get_filtered_layer_summary(self.selected_theme)
-        table.setRowCount(len(self.layers))
+
+        # action slot
+
+        def action_slot(table_widget, row_ix, col_ix, _, __):
+            btn = QPushButton(table)
+            btn.setText("Add")
+            btn.clicked.connect(lambda state, x=row_ix: self.add_layer(x))
+            table_widget.setCellWidget(row_ix, col_ix, btn)
 
         # setup table headers
         # total table length is 721, scroll bar is 16 => header width must total to 705
@@ -117,45 +125,11 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
                 ],
                 "width": 280,
             },
-            {"text": "Actions", "value": "actions", "width": 60},
+            {"text": "Actions", "value": "actions", "width": 60, "slot": action_slot},
         ]
-        table.setColumnCount(len(headers))
-        table.setHorizontalHeaderLabels([header["text"] for header in headers])
-        for col, header in enumerate(headers):
-            if "width" in header:
-                table.setColumnWidth(col, header["width"])
 
-        # populate table cells
-        for row, layer in enumerate(self.layers):
-            for col, header in enumerate(headers):
-                # create a table cell
-                cell = QTableWidgetItem()
+        fill_table_widget(table, headers, self.layers)
 
-                # evaluate its content depending on the row and column
-                if callable(header["value"]):
-                    text = header["value"](layer)
-                elif header["value"] == "actions":
-                    btn = QPushButton(table)
-                    btn.setText("Add")
-                    btn.clicked.connect(lambda state, x=row: self.add_layer(x))
-                    table.setCellWidget(row, col, btn)
-                    continue
-                else:
-                    text = layer[header["value"]]
-
-                # set cell text and tooltip
-                cell.setText(text)
-                cell.setToolTip(text)
-
-                # set text alignment
-                if "align" in header:
-                    cell.setTextAlignment(header["align"])
-
-                # put the cell in the table
-                table.setItem(row, col, cell)
-
-        # disable table edition
-        table.setEditTriggers(QTableWidget.NoEditTriggers)
 
     def add_layer(self, index):
         layer_item = self.layers[index]
