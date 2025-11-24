@@ -165,8 +165,9 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
             except NotImplementedError:
                 message = f"La couche '{layer_name}' nécessite des fonctionalités non implémentées pour le moment"
             # generic error message
-            except Exception:
+            except Exception as e:
                 message = f"Erreur lors de l'ajout de la couche '{layer_name}'"
+                raise e
         self.display_message(message)
 
         # remove loader

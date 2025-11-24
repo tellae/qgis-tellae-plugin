@@ -31,6 +31,8 @@ from qgis.PyQt.QtWidgets import QAction
 # Tellae imports
 from tellae.dialogs.tellae_services_dialog import TellaeServicesDialog
 from tellae.dialogs.tellae_auth_dialog import TellaeAuthDialog
+from tellae.dialogs.projects_dialog import ProjectsDialog
+
 from tellae.tellae_store import TELLAE_STORE
 
 import os.path
@@ -71,6 +73,7 @@ class TellaeServices:
         # dialogs
         self.dlg = None
         self.auth = None
+        self.projects_dlg = None
 
         # read local config if there is one
         # res = read_local_config(self.plugin_dir)
@@ -185,6 +188,8 @@ class TellaeServices:
     def setup_dialog(self):
         # open authentication dialog on authButton click
         self.dlg.authButton.clicked.connect(self.auth.open)
+        # open projects dialog on projectsButton click
+        self.dlg.projectsButton.clicked.connect(self.projects_dlg.open)
 
     def run(self):
         """Run method that performs all the real work"""
@@ -195,11 +200,10 @@ class TellaeServices:
             self.first_start = False
             self.dlg = TellaeServicesDialog()
             self.auth = TellaeAuthDialog(self.dlg)
+            self.projects_dlg = ProjectsDialog(self.dlg)
 
             # store dialogs
-            TELLAE_STORE.tellae_services = self
-            TELLAE_STORE.main_dialog = self.dlg
-            TELLAE_STORE.auth_dialog = self.auth
+            TELLAE_STORE.set_dialogs(self)
 
             # setup dialog reactions
             self.setup_dialog()

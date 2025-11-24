@@ -154,6 +154,22 @@
     <bool>false</bool>
    </property>
   </widget>
+  <widget class="QPushButton" name="projectsButton">
+   <property name="geometry">
+    <rect>
+     <x>350</x>
+     <y>10</y>
+     <width>88</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="focusPolicy">
+    <enum>Qt::NoFocus</enum>
+   </property>
+   <property name="text">
+    <string>Projects</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>

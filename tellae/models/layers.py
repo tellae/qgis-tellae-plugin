@@ -99,9 +99,14 @@ class GeojsonSource(QgsLayerSource):
 
     def init_qgis_layer(self):
         # make a web request and read the geojson result as bytes
-        request(
-            self.url, handler=self.on_download, error_handler=self.on_download_error, to_json=False
-        )
+        if isinstance(self.layer.data, str):
+            request(
+                self.url, handler=self.on_download, error_handler=self.on_download_error, to_json=False
+            )
+        else:
+            self.on_download({
+                "content": self.layer.data
+            })
 
     def on_download(self, response):
         try:
@@ -297,7 +302,14 @@ class QgsKiteLayer:
 
         self.category = layer_data.get("category", None)
 
-        self.name = layer_data.get("name", dict()).get(TELLAE_STORE.locale, "Unnamed")
+        if "name" in layer_data:
+            name = layer_data["name"]
+            if isinstance(name, dict):
+                self.name = name[TELLAE_STORE.locale]
+            else:
+                self.name = name
+        else:
+            self.name = "Unnamed"
 
         self.datasets = layer_data.get("datasets", [])
         self.main_dataset = layer_data.get("main_dataset", None)
@@ -305,7 +317,7 @@ class QgsKiteLayer:
         # TODO: what data structure
         self.filter = layer_data.get("filter", None)
 
-        self.editAttributes = layer_data.get("editAttributes", None)
+        self.editAttributes = layer_data.get("editAttributes", dict())
         self._read_edit_attributes()
 
         self.qgis_layer = None
@@ -641,6 +653,30 @@ def create_layer(layer_data):
     layer_instance.__init__(layer_data)
 
     return layer_instance
+
+
+def create_custom_layer(geojson, name):
+
+    layer_data = {
+        "id": f"customlayer:{TELLAE_STORE.nb_custom_layers}",
+        "layer_class": "KiteLineLayer",
+        "data": geojson,
+        "name": name
+    }
+    TELLAE_STORE.increment_nb_custom_layers()
+
+    layer_class = layer_data["layer_class"]
+
+    if layer_class in LAYER_CLASSES:
+        layer_constructor = LAYER_CLASSES[layer_class]
+    else:
+        raise ValueError(f"Unsupported layer class '{layer_class}'")
+
+    layer_instance = layer_constructor.__new__(layer_constructor)
+    layer_instance.__init__(layer_data)
+
+    return layer_instance
+
 
 
 LAYER_CLASSES = {

@@ -1,19 +1,8 @@
 from tellae.utils.utils import (
-    log,
     read_local_config,
-    get_apikey_from_cache,
-    create_auth_config,
-    get_auth_config,
-    remove_tellae_auth_config,
     THEMES_TRANSLATION,
 )
-from tellae.utils.requests import request, request_whale
 import os
-import json
-
-AWS_TELLAE_CONFIG = "AWS-Tellae"
-AWS_TELLAE_DEV_CONFIG = "AWS-Tellae-dev"
-AWS_TELLAE_TMP_CONFIG = "AWS-Tellae-tmp"
 
 
 class TellaeStore:
@@ -45,6 +34,9 @@ class TellaeStore:
         # authenticated user
         self.user = {}
 
+        # current project
+        self.current_project = None
+
         # full layer summary
         self.layer_summary = []
 
@@ -52,6 +44,9 @@ class TellaeStore:
 
         # data datasets summary
         self.datasets_summary = {}
+
+        # number of custom layers
+        self.nb_custom_layers = 0
 
         # local config
         self.local_config = None
@@ -64,6 +59,14 @@ class TellaeStore:
         self.tellae_services = None
         self.main_dialog = None
         self.auth_dialog = None
+        self.projects_dialog = None
+
+    @property
+    def current_project_name(self):
+        if self.current_project is None:
+            return ""
+        else:
+            return self.current_project.get("name", "Main")
 
     def read_local_config(self):
         # read local config
@@ -79,59 +82,12 @@ class TellaeStore:
 
     # STORE ACTIONS
 
-    def init_store(self):
-        if not self.authenticated:
-            log("Trying to initiate store without being authenticated")
-            return
+    def set_dialogs(self, tellae_services):
+        self.tellae_services = self
+        self.main_dialog = tellae_services.dlg
+        self.auth_dialog = tellae_services.auth
+        self.projects_dialog = tellae_services.projects_dlg
 
-        self._init_layers_table()
-
-        self.store_initiated = True
-
-    def _init_layers_table(self):
-
-        def common_handler():
-            # sort layers table by name and date (desc)
-            self.layer_summary = sorted(
-                self.layer_summary,
-                key=lambda x: (
-                    x["name"][self.locale],
-                    -int(self.datasets_summary[x["main_dataset"]].get("date", 0)),
-                ),
-            )
-
-            # fill UI using results
-            self.main_dialog.create_theme_selector()
-            self.main_dialog.set_layers_table()
-
-        def layer_summary_handler(response):
-            result = response["content"]
-            # filter visible layers
-            layers = [layer for layer in result if layer["visible"]]
-
-            # evaluate list of themes
-            themes = list(set([theme for layer in layers for theme in layer["themes"]]))
-            themes = [THEMES_TRANSLATION[theme] for theme in themes]
-
-            # update store
-            self.layer_summary = layers
-            self.themes = sorted(themes)
-
-            if self.layer_summary and self.datasets_summary:
-                common_handler()
-
-        request_whale("/shark/layers/table", handler=layer_summary_handler)
-
-        def datasets_summary_handler(response):
-            result = response["content"]
-            datasets = {dataset["id"]: dataset for dataset in result}
-
-            self.datasets_summary = datasets
-
-            if self.layer_summary and self.datasets_summary:
-                common_handler()
-
-        request_whale("/shark/datasets/summary", handler=datasets_summary_handler)
 
     def get_filtered_layer_summary(self, selected_theme: str):
 
@@ -144,127 +100,29 @@ class TellaeStore:
                 if selected_theme in [THEMES_TRANSLATION[theme] for theme in layer["themes"]]
             ]
 
+    def increment_nb_custom_layers(self):
+        self.nb_custom_layers += 1
+
     # AUTHENTICATION methods
 
-    def init_auth(self):
-        if (
-            self.local_config is not None
-            and "auth" in self.local_config
-            and self.local_config["auth"].get("use", True)
-        ):  # try dev authentication if provided and not deactivated
-            self._try_dev_indents()
-            return
+    def set_user(self, user):
+        self.user = user
+        self.authenticated = True
 
-        # try to get existing auth config
-        if not self._try_existing_indents():
-            log("No existing indents found, opening authentication dialog")
-            # if no existing indents where found, show auth dialog to manually input new indents
-            self.auth_dialog.show()
-
-    def try_new_indents(self, key, secret):
-
-        # create a temporary config with new indents
-        self._create_or_update_auth_config(AWS_TELLAE_TMP_CONFIG, key, secret)
-
-        def handler(_):
-            # if the login was successful, remove temporary config and update main config
-            remove_tellae_auth_config(AWS_TELLAE_TMP_CONFIG)
-            self._create_or_update_auth_config(AWS_TELLAE_CONFIG, key, secret)
-
-        def on_error(_):
-            # if the login failed, just remove the temporary config
-            remove_tellae_auth_config(AWS_TELLAE_TMP_CONFIG)
-
-        # try to login
-        self._login(handler=handler, error_handler=on_error)
-
-    def get_current_indents(self):
-        return get_apikey_from_cache(self.authName)
-
-    def _try_dev_indents(self):
-        # get indents from local config
-        try:
-            api_key = self.local_config["auth"]["apikey"]
-            secret = self.local_config["auth"]["secret"]
-        except KeyError as e:
-            raise ValueError(f"Erreur lors de l'authentification locale, clé manquante: {str(e)}")
-
-        # create or update DEV auth config
-        self._create_or_update_auth_config(AWS_TELLAE_DEV_CONFIG, api_key, secret)
-
-        # try to login
-        self._login(set_indents=True)
-
-    def _try_existing_indents(self):
-        # check for an existing auth config
-        cfg_id = get_auth_config(AWS_TELLAE_CONFIG)
-
-        if cfg_id is not None:
-            # set auth config
-            self._set_auth_config(AWS_TELLAE_CONFIG, cfg_id)
-
-            # try to login
-            self._login(set_indents=True)
-
-            return True
-
-        return False
-
-    def _login(self, handler=None, error_handler=None, set_indents=False):
-
-        # create full success callback
-        def full_handler(result):
-            if handler:
-                handler(result)
-
-            # set user in store
-            self.user = result["content"]
-
-            # update login button
-            self.main_dialog.set_auth_button_text(self.user)
-
-            # tag store as authenticated
-            self.authenticated = True
-
-            # if store is not initiated, do it now
-            if not self.store_initiated:
-                self.init_store()
-
-            if set_indents:
-                self.auth_dialog.set_indents_from_auth_config()
-
-        def full_error_handler(result):
-            if error_handler:
-                error_handler(result)
-
-            # display error message in auth dialog
-            self.auth_dialog.display_error_message(message_from_request_error(result))
-            # show authentication dialog
-            self.auth_dialog.open()
-
-        # make request to whale /auth/me service
-        request_whale("/auth/me", handler=full_handler, error_handler=full_error_handler)
-
-    def _create_or_update_auth_config(self, name, key, secret):
-        auth_cfg = create_auth_config(name, key, secret)
-        self._set_auth_config(name, auth_cfg)
-
-    def _set_auth_config(self, cfg_name, cfg_id):
+    def set_auth_config(self, cfg_name, cfg_id):
         self.authCfg = cfg_id
         self.authName = cfg_name
+
+    # PROJECTS ACTIONS
+
+    def set_current_project(self, project):
+        self.current_project = project
 
     # map utils
 
     def get_current_scale(self):
         return self.tellae_services.iface.mapCanvas().scale()
 
-
-def message_from_request_error(result):
-    status = result["status"]
-    status_code = result["status_code"]
-    status_message = result["status_message"]
-    reason = result["reason"]
-    return str(result["exception"])
 
 
 TELLAE_STORE = TellaeStore()

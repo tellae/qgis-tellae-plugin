@@ -1,31 +1,11 @@
 import os
 import json
-
-import tempfile
-
-import requests
-from PyQt5 import QtWidgets, uic
-from PyQt5.QtCore import QCoreApplication, QElapsedTimer
 from qgis.core import (
-    QgsApplication,
-    QgsAuthMethodConfig,
-    QgsProject,
-    QgsVectorLayer,
-    QgsDataSourceUri,
-    QgsVectorTileLayer,
     QgsMessageLog,
-    QgsSymbolLayer,
-    QgsSymbol,
-    QgsProperty,
-    QgsCategorizedSymbolRenderer,
-    QgsRuleBasedRenderer,
-    QgsRendererCategory,
-    QgsSingleSymbolRenderer,
-    QgsNetworkReplyContent,
 )
 from qgis.PyQt.QtWidgets import QTableWidgetItem, QTableWidget
 
-AWS_REGION = "fr-north-1"
+
 
 THEMES_TRANSLATION = {
     "carpooling": "Covoiturage",
@@ -120,65 +100,6 @@ def read_local_config(plugin_dir):
 # def create_vector_layer_instance(layer_name, url):
 #
 #     return QgsVectorTileLayer(url, layer_name)
-
-
-def create_auth_config(config_name, api_key, api_secret):
-    config = None
-
-    auth_manager = QgsApplication.authManager()
-    config_dict = auth_manager.availableAuthMethodConfigs()
-    for existing_config in config_dict.values():
-        if existing_config.name() == config_name:
-            config = existing_config
-
-    if config is not None:
-        config.setConfig("region", AWS_REGION)
-        config.setConfig("username", api_key)
-        config.setConfig("password", api_secret)
-        auth_manager.updateAuthenticationConfig(config)
-    else:
-        auth_manager = QgsApplication.authManager()
-        config = QgsAuthMethodConfig()
-        config.setName(config_name)
-        config.setMethod("AWSS3")
-        config.setConfig("region", AWS_REGION)
-        config.setConfig("username", api_key)
-        config.setConfig("password", api_secret)
-        auth_manager.storeAuthenticationConfig(config)
-
-    return config.id()
-
-
-def get_auth_config(config_name):
-    auth_manager = QgsApplication.authManager()
-    config_dict = auth_manager.availableAuthMethodConfigs()
-    for config in config_dict.values():
-        if config.name() == config_name:
-            return config.id()
-    return None
-
-
-def remove_tellae_auth_config(cfg_name):
-    auth_manager = QgsApplication.authManager()
-    config_dict = auth_manager.availableAuthMethodConfigs()
-    for authConfig in config_dict.keys():
-        if config_dict[authConfig].name() == cfg_name:
-            auth_manager.removeAuthenticationConfig(authConfig)
-            break
-
-
-def get_apikey_from_cache(cfg_name):
-    auth_manager = QgsApplication.authManager()
-    config_dict = auth_manager.availableAuthMethodConfigs()
-    apikey = None
-    secret = None
-    for config in config_dict.values():
-        if config.name() == cfg_name:
-            aux_config = QgsAuthMethodConfig()
-            auth_manager.loadAuthenticationConfig(config.id(), aux_config, True)
-            apikey = aux_config.configMap()["username"]
-            secret = aux_config.configMap()["password"]
-    return apikey, secret
 
 
 def fill_table_widget(table_widget, headers, items):

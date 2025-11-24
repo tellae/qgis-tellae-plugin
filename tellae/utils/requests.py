@@ -77,3 +77,11 @@ def request_whale(url, **kwargs):
 
     # make the request using the AWS authentication
     return request(whale_url, auth_cfg=TELLAE_STORE.authCfg, **kwargs)
+
+
+def message_from_request_error(result):
+    status = result["status"]
+    status_code = result["status_code"]
+    status_message = result["status_message"]
+    reason = result["reason"]
+    return str(result["exception"])
