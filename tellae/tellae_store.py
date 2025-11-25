@@ -83,7 +83,7 @@ class TellaeStore:
     # STORE ACTIONS
 
     def set_dialogs(self, tellae_services):
-        self.tellae_services = self
+        self.tellae_services = tellae_services
         self.main_dialog = tellae_services.dlg
         self.auth_dialog = tellae_services.auth
         self.projects_dialog = tellae_services.projects_dlg
