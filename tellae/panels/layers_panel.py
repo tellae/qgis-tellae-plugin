@@ -119,7 +119,7 @@ class LayersPanel(BasePanel):
 
         def action_slot(table_widget, row_ix, col_ix, _, __):
             btn = QPushButton(table_widget)
-            btn.setText("Add")
+            btn.setIcon(self.dlg.style().standardIcon(QStyle.SP_DialogSaveButton))
             btn.clicked.connect(lambda state, x=row_ix: self.add_spatial_data(x))
             table_widget.setCellWidget(row_ix, col_ix, btn)
 
