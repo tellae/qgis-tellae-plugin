@@ -2,7 +2,7 @@ from tellae.tellae_store import TELLAE_STORE
 from tellae.utils import log
 from tellae.utils.requests import request_whale, message_from_request_error
 from tellae.services.project import select_project
-from tellae.services.startup import init_store
+from tellae.services.layers import init_layers_table
 from qgis.core import (
     QgsApplication,
     QgsAuthMethodConfig,
@@ -114,10 +114,10 @@ def _on_login(user):
     TELLAE_STORE.set_user(user)
 
     # update login button
-    TELLAE_STORE.main_dialog.set_auth_button_text(user)
+    TELLAE_STORE.main_dialog.config_panel.set_auth_button_text(user)
 
     # update project list
-    TELLAE_STORE.main_dialog.setup_project_selector()
+    TELLAE_STORE.main_dialog.config_panel.fill_project_selector()
 
     # select project
     select_project(user["kite"]["project"])
@@ -191,3 +191,16 @@ def get_apikey_from_cache(cfg_name):
             apikey = aux_config.configMap()["username"]
             secret = aux_config.configMap()["password"]
     return apikey, secret
+
+
+def init_store():
+    """
+    Initialise the plugin store with static data from Whale.
+    """
+    if not TELLAE_STORE.authenticated:
+        log("Trying to initiate store without being authenticated")
+        return
+
+    init_layers_table()
+
+    TELLAE_STORE.store_initiated = True

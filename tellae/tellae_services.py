@@ -27,12 +27,10 @@ from qgis.PyQt.QtWidgets import QAction
 
 # Initialize Qt resources from file resources.py
 # Import the code for the dialog
-
-# Tellae imports
 from tellae.dialogs.tellae_services_dialog import TellaeServicesDialog
 from tellae.dialogs.tellae_auth_dialog import TellaeAuthDialog
-
 from tellae.tellae_store import TELLAE_STORE
+from tellae.services.auth import init_auth
 
 import os.path
 
@@ -68,10 +66,6 @@ class TellaeServices:
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads
         self.first_start = None
-
-        # dialogs
-        self.dlg = None
-        self.auth = None
 
         # read local config if there is one
         # res = read_local_config(self.plugin_dir)
@@ -183,9 +177,21 @@ class TellaeServices:
             self.iface.removePluginMenu(self.tr("&Tellae Services"), action)
             self.iface.removeToolBarIcon(action)
 
-    def setup_dialog(self):
-        # open authentication dialog on authButton click
-        self.dlg.authButton.clicked.connect(self.auth.open)
+    def _init_dialogs():
+        """
+        Create the plugin dialogs, call their setup methods, and display the main dialog.
+        """
+        # store dialogs
+        TELLAE_STORE.main_dialog = TellaeServicesDialog()
+        TELLAE_STORE.auth_dialog = TellaeAuthDialog(TELLAE_STORE.main_dialog)
+
+        # setup dialogs
+        TELLAE_STORE.main_dialog.setup()
+        TELLAE_STORE.auth_dialog.setup()
+
+        # show the main dialog
+        TELLAE_STORE.main_dialog.show()
+    _init_dialogs = staticmethod(_init_dialogs)
 
     def run(self):
         """Run method that performs all the real work"""
@@ -194,23 +200,21 @@ class TellaeServices:
         # Only create GUI ONCE in callback, so that it will only load when the plugin is started
         if self.first_start:
             self.first_start = False
-            self.dlg = TellaeServicesDialog()
-            self.auth = TellaeAuthDialog(self.dlg)
 
-            # store dialogs
-            TELLAE_STORE.set_dialogs(self)
-
-            # setup dialog reactions
-            self.setup_dialog()
-
-            # show the dialog
-            self.dlg.show()
+            # setup dialogs
+            self._init_dialogs()
 
             # try authentication with stored indents
-            self.auth.init_auth()
+            # this will trigger the initialisation of the store
+            try:
+                init_auth()
+            except Exception as e:
+                # if the authentication fails, display a message and open the auth dialog
+                TELLAE_STORE.auth_dialog.display_error_message(str(e))
+                TELLAE_STORE.auth_dialog.open()
         else:
             # show the dialog
-            self.dlg.show()
+            TELLAE_STORE.main_dialog.show()
 
         # # Run the dialog event loop
         # result = self.dlg.exec_()

@@ -18,8 +18,8 @@ def init_layers_table():
         )
 
         # fill UI using results
-        TELLAE_STORE.main_dialog.create_theme_selector()
-        TELLAE_STORE.main_dialog.set_layers_table()
+        TELLAE_STORE.main_dialog.layers_panel.fill_theme_selector()
+        TELLAE_STORE.main_dialog.layers_panel.fill_layers_table()
 
     def layer_summary_handler(response):
         result = response["content"]

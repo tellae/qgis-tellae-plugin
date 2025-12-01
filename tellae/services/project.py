@@ -20,7 +20,7 @@ def select_project(uuid: str):
         main_dialog = TELLAE_STORE.main_dialog
 
         # update project data tables
-        main_dialog.set_project_spatial_data_table()
+        main_dialog.layers_panel.fill_project_spatial_data_table()
 
         # update project info
         main_dialog.projectDescription.setText(project.get("description", ""))

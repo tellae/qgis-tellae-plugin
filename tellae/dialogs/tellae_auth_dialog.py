@@ -26,14 +26,6 @@ class TellaeAuthDialog(QtWidgets.QDialog, FORM_CLASS):
         # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
-        self.setup_dialog()
-
-    def init_auth(self):
-        try:
-            init_auth()
-        except Exception as e:
-            self.display_error_message(str(e))
-            self.open()
 
     def validate(self):
         try:
@@ -62,7 +54,7 @@ class TellaeAuthDialog(QtWidgets.QDialog, FORM_CLASS):
     # def try_authenticate_from_inputs(self):
     #     self.try_authenticate(self.keyEdit.text(), self.secretEdit.text())
 
-    def setup_dialog(self):
+    def setup(self):
         self.helpButton.clicked.connect(self.open_help_page)
         self.cancelButton.clicked.connect(self.done)
         self.validateButton.clicked.connect(self.validate)
