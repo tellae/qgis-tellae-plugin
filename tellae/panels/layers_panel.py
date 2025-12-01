@@ -107,6 +107,11 @@ class LayersPanel(BasePanel):
 
     # project tab
 
+    def update_selected_project(self):
+        self.dlg.projectNameLayersPanel.setText(f"Projet: {self.store.current_project_name}")
+        self.fill_project_spatial_data_table()
+
+
     def fill_project_spatial_data_table(self):
         table = self.dlg.projectLayersTable
 

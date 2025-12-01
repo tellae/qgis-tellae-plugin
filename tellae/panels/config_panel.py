@@ -38,3 +38,7 @@ class ConfigPanel(BasePanel):
             raise ValueError(f"Could not find the project with name {project_name}")
 
         select_project(self.store.user["_ownedProjects"][index]["uuid"])
+
+    def update_selected_project(self):
+        self.dlg.projectDescription.setText(self.store.current_project.get("description", ""))
+        self.dlg.projectSelector.setCurrentText(self.store.current_project["uuid"])

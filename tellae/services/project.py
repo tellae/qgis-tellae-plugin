@@ -16,15 +16,11 @@ def select_project(uuid: str):
         # update store
         TELLAE_STORE.set_current_project(project)
 
-        # update dialog
-        main_dialog = TELLAE_STORE.main_dialog
-
         # update project data tables
-        main_dialog.layers_panel.fill_project_spatial_data_table()
+        TELLAE_STORE.main_dialog.layers_panel.update_selected_project()
 
         # update project info
-        main_dialog.projectDescription.setText(project.get("description", ""))
-        main_dialog.projectSelector.setCurrentText(uuid)
+        TELLAE_STORE.main_dialog.config_panel.update_selected_project()
 
     request_whale(f"/projects/{uuid}", handler=handler)
 
