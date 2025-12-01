@@ -117,7 +117,7 @@ def _on_login(user):
     TELLAE_STORE.main_dialog.set_auth_button_text(user)
 
     # update project list
-    TELLAE_STORE.projects_dialog.setup_project_selector()
+    TELLAE_STORE.main_dialog.setup_project_selector()
 
     # select project
     select_project(user["kite"]["project"])

@@ -1,0 +1,548 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ui_main_window</class>
+ <widget class="QDialog" name="ui_main_window">
+  <property name="windowModality">
+   <enum>Qt::WindowModal</enum>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>990</width>
+    <height>849</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="windowTitle">
+   <string notr="true">Tellae</string>
+  </property>
+  <layout class="QHBoxLayout" name="horizontalLayout_2">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <item>
+    <widget class="QListWidget" name="menu_widget">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>100</width>
+       <height>200</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>153</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QListWidget{
+	background-color: rgb(69, 69, 69, 220);
+	outline: 0;
+}
+QListWidget::item {
+	color: white;
+	padding: 3px;
+}
+QListWidget::item::selected {
+	color: black;
+	background-color:palette(Window);
+    padding-right: 0px;
+}</string>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::Box</enum>
+     </property>
+     <property name="lineWidth">
+      <number>0</number>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>50</width>
+       <height>50</height>
+      </size>
+     </property>
+     <property name="flow">
+      <enum>QListView::TopToBottom</enum>
+     </property>
+     <property name="isWrapping" stdset="0">
+      <bool>false</bool>
+     </property>
+     <property name="layoutMode">
+      <enum>QListView::Batched</enum>
+     </property>
+     <property name="viewMode">
+      <enum>QListView::ListMode</enum>
+     </property>
+     <property name="uniformItemSizes">
+      <bool>true</bool>
+     </property>
+     <property name="currentRow">
+      <number>-1</number>
+     </property>
+     <item>
+      <property name="text">
+       <string>Calques</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Parameters</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item>
+    <layout class="QVBoxLayout" name="content_widget">
+     <item>
+      <widget class="QgsMessageBar" name="message_bar">
+       <property name="frameShape">
+        <enum>QFrame::StyledPanel</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Raised</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QScrollArea" name="main_scroll">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="widgetResizable">
+        <bool>true</bool>
+       </property>
+       <widget class="QWidget" name="main_scroll_inside">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>827</width>
+          <height>776</height>
+         </rect>
+        </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>783</width>
+          <height>0</height>
+         </size>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_5">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QStackedWidget" name="stacked_panels_widget">
+           <property name="currentIndex">
+            <number>0</number>
+           </property>
+           <widget class="QWidget" name="layers">
+            <widget class="QWidget" name="verticalLayoutWidget">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>10</y>
+               <width>811</width>
+               <height>771</height>
+              </rect>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout">
+              <item>
+               <widget class="QTabWidget" name="add_layers_tab">
+                <property name="currentIndex">
+                 <number>0</number>
+                </property>
+                <widget class="QWidget" name="database">
+                 <attribute name="title">
+                  <string>Base de données</string>
+                 </attribute>
+                 <widget class="QLabel" name="label">
+                  <property name="geometry">
+                   <rect>
+                    <x>10</x>
+                    <y>10</y>
+                    <width>66</width>
+                    <height>19</height>
+                   </rect>
+                  </property>
+                  <property name="text">
+                   <string>Thème :</string>
+                  </property>
+                 </widget>
+                 <widget class="QComboBox" name="themeSelector">
+                  <property name="geometry">
+                   <rect>
+                    <x>10</x>
+                    <y>30</y>
+                    <width>241</width>
+                    <height>27</height>
+                   </rect>
+                  </property>
+                  <property name="accessibleName">
+                   <string/>
+                  </property>
+                  <property name="editable">
+                   <bool>false</bool>
+                  </property>
+                  <property name="currentText">
+                   <string/>
+                  </property>
+                  <property name="frame">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                 <widget class="QTableWidget" name="tableWidget">
+                  <property name="geometry">
+                   <rect>
+                    <x>10</x>
+                    <y>70</y>
+                    <width>791</width>
+                    <height>661</height>
+                   </rect>
+                  </property>
+                  <property name="toolTip">
+                   <string/>
+                  </property>
+                  <property name="autoFillBackground">
+                   <bool>false</bool>
+                  </property>
+                  <property name="verticalScrollBarPolicy">
+                   <enum>Qt::ScrollBarAlwaysOn</enum>
+                  </property>
+                  <property name="alternatingRowColors">
+                   <bool>true</bool>
+                  </property>
+                  <property name="selectionMode">
+                   <enum>QAbstractItemView::NoSelection</enum>
+                  </property>
+                  <attribute name="verticalHeaderVisible">
+                   <bool>false</bool>
+                  </attribute>
+                 </widget>
+                </widget>
+                <widget class="QWidget" name="project">
+                 <attribute name="title">
+                  <string>Projet</string>
+                 </attribute>
+                 <widget class="QTableWidget" name="projectLayersTable">
+                  <property name="geometry">
+                   <rect>
+                    <x>10</x>
+                    <y>70</y>
+                    <width>791</width>
+                    <height>661</height>
+                   </rect>
+                  </property>
+                  <property name="alternatingRowColors">
+                   <bool>true</bool>
+                  </property>
+                  <property name="selectionMode">
+                   <enum>QAbstractItemView::NoSelection</enum>
+                  </property>
+                  <attribute name="verticalHeaderVisible">
+                   <bool>false</bool>
+                  </attribute>
+                 </widget>
+                 <widget class="QLabel" name="label_2">
+                  <property name="geometry">
+                   <rect>
+                    <x>10</x>
+                    <y>10</y>
+                    <width>61</width>
+                    <height>19</height>
+                   </rect>
+                  </property>
+                  <property name="text">
+                   <string>Projet :</string>
+                  </property>
+                 </widget>
+                 <widget class="QLabel" name="label_3">
+                  <property name="geometry">
+                   <rect>
+                    <x>80</x>
+                    <y>10</y>
+                    <width>61</width>
+                    <height>19</height>
+                   </rect>
+                  </property>
+                  <property name="text">
+                   <string>TODO</string>
+                  </property>
+                 </widget>
+                </widget>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </widget>
+           <widget class="QWidget" name="parameters">
+            <widget class="QPushButton" name="authButton">
+             <property name="geometry">
+              <rect>
+               <x>270</x>
+               <y>40</y>
+               <width>271</width>
+               <height>27</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>Login</string>
+             </property>
+             <property name="autoDefault">
+              <bool>false</bool>
+             </property>
+            </widget>
+            <widget class="QLabel" name="label_4">
+             <property name="geometry">
+              <rect>
+               <x>160</x>
+               <y>40</y>
+               <width>101</width>
+               <height>19</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>Logged in as</string>
+             </property>
+            </widget>
+            <widget class="QWidget" name="verticalLayoutWidget_2">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>480</y>
+               <width>821</width>
+               <height>291</height>
+              </rect>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_2">
+              <item>
+               <widget class="QLabel" name="label_6">
+                <property name="text">
+                 <string>TextLabel</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_5">
+                <property name="text">
+                 <string>TextLabel</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_7">
+                <property name="text">
+                 <string>TextLabel</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="Line" name="line">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>90</y>
+               <width>811</width>
+               <height>20</height>
+              </rect>
+             </property>
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+            </widget>
+            <widget class="QLabel" name="label_9">
+             <property name="geometry">
+              <rect>
+               <x>320</x>
+               <y>120</y>
+               <width>211</width>
+               <height>31</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>15</pointsize>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>Projet séléctionné</string>
+             </property>
+            </widget>
+            <widget class="Line" name="line_2">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>420</y>
+               <width>811</width>
+               <height>20</height>
+              </rect>
+             </property>
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+            </widget>
+            <widget class="QLabel" name="label_10">
+             <property name="geometry">
+              <rect>
+               <x>250</x>
+               <y>440</y>
+               <width>321</width>
+               <height>31</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>15</pointsize>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>À propos de Tellae et de ce plugin</string>
+             </property>
+            </widget>
+            <widget class="QLabel" name="projectName">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>170</y>
+               <width>101</width>
+               <height>19</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>Nom du projet</string>
+             </property>
+            </widget>
+            <widget class="QLabel" name="projectDescription">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>210</y>
+               <width>801</width>
+               <height>201</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur consequat, elit quis commodo posuere, nisl eros eleifend tellus, non lacinia elit est eget risus. Praesent aliquet diam quis diam viverra, vitae lobortis arcu imperdiet. Quisque laoreet, nulla ac commodo sagittis, nisi purus cursus nisi, sed tristique tortor erat at odio. Cras vel leo magna. Praesent lacinia dolor vitae fermentum egestas. Aliquam erat volutpat. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. In et placerat felis. Aenean auctor leo vel dolor rhoncus, ut pellentesque erat sagittis. Praesent ornare mauris purus, a finibus metus aliquet et. Pellentesque nunc erat, pulvinar nec aliquet nec, pellentesque sit amet lacus. Curabitur id quam feugiat, sollicitudin justo eget, pharetra purus. Aliquam id magna in sem scelerisque cursus at a ipsum. Vestibulum molestie metus et condimentum dapibus. Nam interdum tortor id purus porta commodo a nec eros. Vestibulum tortor urna, convallis eget pharetra at, efficitur vitae velit. </string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignJustify|Qt::AlignVCenter</set>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+            </widget>
+            <widget class="QComboBox" name="projectSelector">
+             <property name="geometry">
+              <rect>
+               <x>130</x>
+               <y>170</y>
+               <width>681</width>
+               <height>27</height>
+              </rect>
+             </property>
+            </widget>
+           </widget>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="progress_box">
+       <property name="bottomMargin">
+        <number>4</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="progress_text">
+         <property name="text">
+          <string notr="true">progress text</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QProgressBar" name="progress_bar">
+         <property name="minimum">
+          <number>0</number>
+         </property>
+         <property name="maximum">
+          <number>100</number>
+         </property>
+         <property name="value">
+          <number>0</number>
+         </property>
+         <property name="textVisible">
+          <bool>false</bool>
+         </property>
+         <property name="invertedAppearance">
+          <bool>false</bool>
+         </property>
+         <property name="format">
+          <string>%p%</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QgsMessageBar</class>
+   <extends>QFrame</extends>
+   <header>qgis.gui</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>main_scroll</tabstop>
+  <tabstop>menu_widget</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

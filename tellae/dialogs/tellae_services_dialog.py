@@ -29,15 +29,18 @@ from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtWidgets import QPushButton
 from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtGui import QIcon, QPixmap
+from PyQt5.QtWidgets import QStyle
 
 from tellae.tellae_store import TELLAE_STORE
-from tellae.models.layers import create_layer
+from tellae.models.layers import create_layer, create_custom_layer
 from tellae.utils import *
-from tellae.utils.utils import fill_table_widget
+from tellae.utils.utils import fill_table_widget, getBinaryName
+from tellae.services.project import *
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(
-    os.path.join(os.path.dirname(__file__), "tellae_services_dialog_base.ui")
+    os.path.join(os.path.dirname(__file__), "main_window.ui")
 )
 
 
@@ -57,7 +60,35 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
         self.setupUi(self)
 
         # progress bar starts hidden
-        self.progressBar.hide()
+        self.set_progress_bar(False)
+
+        self.progress_text.setText('')
+
+        # tab management
+        self.menu_widget.setCurrentRow(0)
+        self.stacked_panels_widget.setCurrentIndex(0)
+        self.menu_widget.currentRowChanged['int'].connect(
+            TELLAE_STORE.set_tab)
+
+        self.set_menu_icons()
+
+    def set_menu_icons(self):
+        return
+        item = self.menu_widget.item(0)
+        path = os.path.dirname(__file__) + "/../santa.svg"
+        icon = QIcon(path)
+        item.setIcon(icon)
+        return
+        item = self.menu_widget.item(1)
+        item.setIcon(QIcon(resources_path('icons', 'quick.png')))
+        item = self.menu_widget.item(2)
+        item.setIcon(QIcon(resources_path('icons', 'edit.png')))
+        item = self.menu_widget.item(3)
+        item.setIcon(QIcon(resources_path('icons', 'open.png')))
+        item = self.menu_widget.item(4)
+        item.setIcon(QIcon(resources_path('icons', 'general.svg')))
+        item = self.menu_widget.item(5)
+        item.setIcon(QIcon(resources_path('icons', 'info.png')))
 
     def set_auth_button_text(self, user):
         if user is None:
@@ -68,13 +99,15 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
         self.authButton.setText(text)
 
     def display_message(self, message: str):
-        self.message.setText(message)
+        self.progress_text.setText(message)
 
     def set_progress_bar(self, visible: bool):
         if visible:
-            self.progressBar.show()
+            self.progress_bar.setRange(0, -0)
+            self.progress_bar.setValue(-1)
         else:
-            self.progressBar.hide()
+            self.progress_bar.setRange(0, 100)
+            self.progress_bar.setValue(0)
 
     def create_theme_selector(self):
         # set list of layers
@@ -104,14 +137,14 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
 
         def action_slot(table_widget, row_ix, col_ix, _, __):
             btn = QPushButton(table)
-            btn.setText("Add")
+            btn.setIcon(self.style().standardIcon(QStyle.SP_DialogSaveButton))
             btn.clicked.connect(lambda state, x=row_ix: self.add_layer(x))
             table_widget.setCellWidget(row_ix, col_ix, btn)
 
         # setup table headers
-        # total table length is 721, scroll bar is 16 => header width must total to 705
+        # total table length is 791, scroll bar is 16 => header width must total to 775
         headers = [
-            {"text": "Nom", "value": lambda x: x["name"][TELLAE_STORE.locale], "width": 285},
+            {"text": "Nom", "value": lambda x: x["name"][TELLAE_STORE.locale], "width": 355},
             {
                 "text": "Date",
                 "value": lambda x: TELLAE_STORE.datasets_summary[x["main_dataset"]].get("date", ""),
@@ -172,3 +205,50 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
 
         # remove loader
         self.set_progress_bar(False)
+
+    def setup_project_selector(self):
+        project_names = [project.get("uuid") for project in TELLAE_STORE.user["_ownedProjects"]]
+
+        # set list of layers
+        self.projectSelector.addItems(project_names)
+
+        # add listener on update event
+        self.projectSelector.currentTextChanged.connect(select_project)
+
+
+    def set_project_spatial_data_table(self):
+        table = self.projectLayersTable
+
+        spatial_data = TELLAE_STORE.current_project["spatial_data"]
+
+        def action_slot(table_widget, row_ix, col_ix, _, __):
+            btn = QPushButton(table_widget)
+            btn.setText("Add")
+            btn.clicked.connect(lambda state, x=row_ix: self.add_spatial_data(x))
+            table_widget.setCellWidget(row_ix, col_ix, btn)
+
+        # setup table headers
+        # total table length is 721, scroll bar is 16 => header width must total to 705
+        headers = [
+            {"text": "Nom", "value": lambda x: getBinaryName(x, with_extension=False), "width": 729},
+            {"text": "Actions", "value": "actions", "width": 60, "slot": action_slot},
+        ]
+
+        fill_table_widget(table, headers, spatial_data)
+
+    def add_spatial_data(self, row_idx):
+        binary = TELLAE_STORE.current_project["spatial_data"][row_idx]
+        name = getBinaryName(binary, with_extension=False)
+
+        def handler(result):
+            try:
+                qgs_kite_layer = create_custom_layer(result["content"], name)
+                qgs_kite_layer.add_to_qgis()
+
+            except Exception as e:
+                log(e)
+                # TELLAE_STORE.main_dialog.signal_end_of_layer_add(name, e)
+                raise e
+
+
+        get_project_binary_from_hash(binary["hash"], "spatial_data", handler, to_json=False)

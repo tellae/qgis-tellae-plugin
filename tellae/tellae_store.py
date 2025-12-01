@@ -5,6 +5,9 @@ from tellae.utils.utils import (
 import os
 
 
+TABS = ["layers", "config"]
+
+
 class TellaeStore:
 
     def __init__(self):
@@ -16,6 +19,10 @@ class TellaeStore:
 
         # locale (translations)
         self.locale = "fr"
+
+        # UX variables
+
+        self.tab = None
 
         # authentication
 
@@ -59,7 +66,6 @@ class TellaeStore:
         self.tellae_services = None
         self.main_dialog = None
         self.auth_dialog = None
-        self.projects_dialog = None
 
     @property
     def current_project_name(self):
@@ -86,7 +92,6 @@ class TellaeStore:
         self.tellae_services = tellae_services
         self.main_dialog = tellae_services.dlg
         self.auth_dialog = tellae_services.auth
-        self.projects_dialog = tellae_services.projects_dlg
 
 
     def get_filtered_layer_summary(self, selected_theme: str):
@@ -102,6 +107,19 @@ class TellaeStore:
 
     def increment_nb_custom_layers(self):
         self.nb_custom_layers += 1
+
+    def set_tab(self, index_or_name):
+        if isinstance(index_or_name, int):
+            index = index_or_name
+            name = TABS[index]
+        elif isinstance(index_or_name, str):
+            index = TABS.index(index_or_name)
+            name = index_or_name
+        else:
+            raise ValueError("Unknown tab value")
+
+        self.main_dialog.stacked_panels_widget.setCurrentIndex(index)
+        self.tab = name
 
     # AUTHENTICATION methods
 
