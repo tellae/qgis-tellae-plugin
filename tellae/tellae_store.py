@@ -72,7 +72,7 @@ class TellaeStore:
         if self.current_project is None:
             return ""
         else:
-            return self.current_project.get("name", "Main")
+            return self.current_project.get("name", "Mon projet")
 
     def read_local_config(self):
         # read local config
