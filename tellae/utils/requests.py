@@ -1,4 +1,4 @@
-from tellae.utils.network_access_manager import NetworkAccessManager
+from tellae.utils.network_access_manager import NetworkAccessManager, RequestsException
 from tellae.utils.utils import log
 from tellae.tellae_store import TELLAE_STORE
 import json
@@ -13,6 +13,7 @@ def request(
         auth_cfg=None,
         to_json=True,
         blocking=False,
+        raise_exception=True
 ):
     """
     Make a network request using a NetworkAccessManager instance.
@@ -24,7 +25,8 @@ def request(
     :param error_handler: handler called on request fail
     :param auth_cfg: Qgis authentication config (used to request with auth headers)
     :param to_json: convert response content to json
-    :param blocking: whether the request is blocking (ie synchrone) or not
+    :param blocking: whether the request is blocking (ie synchronous) or not
+    :param raise_exception: whether to raise an exception on failed blocking requests
 
     :return:
     """
@@ -67,7 +69,10 @@ def request(
         if call_result["ok"]:
             return process_call_result(call_result, to_json=to_json)
         else:
-            raise BlockingRequestError(call_result)
+            if raise_exception:
+                raise call_result["exception"]
+            else:
+                return call_result
     else:
         return None
 

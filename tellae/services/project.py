@@ -1,7 +1,7 @@
 
 from tellae.tellae_store import TELLAE_STORE
 from tellae.utils import log
-from tellae.utils.requests import request_whale, BlockingRequestError
+from tellae.utils.requests import request_whale, RequestsException
 from tellae.services.whale import download_from_binaries
 
 def select_project(uuid: str):
@@ -22,8 +22,8 @@ def select_project(uuid: str):
 
         # update project info
         TELLAE_STORE.main_dialog.config_panel.update_selected_project()
-    except BlockingRequestError as e:
-        log(f"An error occurred while trying to get project {uuid}: {e.message()}")
+    except RequestsException as e:
+        log(f"An error occurred while trying to get project {uuid}: {e}")
 
 
 def get_project_binary_from_hash(binary_hash, attribute, handler, to_json=True):
