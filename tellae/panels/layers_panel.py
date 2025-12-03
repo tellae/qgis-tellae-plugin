@@ -32,7 +32,7 @@ class LayersPanel(BasePanel):
         self.fill_layers_table()
 
     def add_spatial_data(self, row_idx):
-        binary = self.store.current_project["spatial_data"][row_idx]
+        binary = self.store.get_project_data("spatial_data")[row_idx]
         name = getBinaryName(binary, with_extension=False)
 
         def handler(result):
@@ -115,7 +115,7 @@ class LayersPanel(BasePanel):
     def fill_project_spatial_data_table(self):
         table = self.dlg.projectLayersTable
 
-        spatial_data = self.store.current_project["spatial_data"]
+        spatial_data = self.store.get_project_data("spatial_data")
 
         def action_slot(table_widget, row_ix, col_ix, _, __):
             btn = QPushButton(table_widget)

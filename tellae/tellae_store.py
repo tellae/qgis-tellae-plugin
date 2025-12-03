@@ -2,6 +2,7 @@ from tellae.utils.utils import (
     read_local_config,
     THEMES_TRANSLATION,
     log,
+    getBinaryName
 )
 import os
 from enum import IntEnum
@@ -109,6 +110,24 @@ class TellaeStore:
                 for layer in self.layer_summary
                 if selected_theme in [THEMES_TRANSLATION[theme] for theme in layer["themes"]]
             ]
+
+    def get_project_data(self, attribute):
+        """
+        Get the sorted list of binaries for the given attribute.
+
+        :param attribute: project property, one of ["spatial_data", "flows", "gtfs"]
+
+        :return: sorted list of binaries
+        """
+        data = self.current_project[attribute]
+
+        sorted_data = sorted(
+            data,
+            key=lambda x: getBinaryName(x, with_extension=False),
+        )
+
+        return sorted_data
+
 
     def increment_nb_custom_layers(self):
         self.nb_custom_layers += 1

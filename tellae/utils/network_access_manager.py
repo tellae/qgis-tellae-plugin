@@ -213,7 +213,6 @@ class NetworkAccessManager(object):
         self.blocking_mode = blocking
         req = QNetworkRequest()
         # Avoid double quoting form QUrl
-        log(url)
         url = urllib.parse.unquote(url)
         req.setUrl(QUrl(url))
         if headers is not None:
