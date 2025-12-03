@@ -184,9 +184,9 @@ QListWidget::item::selected {
              <property name="geometry">
               <rect>
                <x>10</x>
-               <y>10</y>
+               <y>50</y>
                <width>811</width>
-               <height>771</height>
+               <height>731</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout">
@@ -240,7 +240,7 @@ QListWidget::item::selected {
                     <x>10</x>
                     <y>70</y>
                     <width>791</width>
-                    <height>661</height>
+                    <height>621</height>
                    </rect>
                   </property>
                   <property name="toolTip">
@@ -303,6 +303,19 @@ QListWidget::item::selected {
                </widget>
               </item>
              </layout>
+            </widget>
+            <widget class="QLabel" name="label_2">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>10</y>
+               <width>811</width>
+               <height>31</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>Cartographiez les données territoriales sur votre carte </string>
+             </property>
             </widget>
            </widget>
            <widget class="QWidget" name="parameters">
