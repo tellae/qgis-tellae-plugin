@@ -19,6 +19,9 @@ class LayersPanel(BasePanel):
         self.layers = []
 
     def setup(self):
+        # set default tab to 0
+        self.dlg.add_layers_tab.setCurrentIndex(0)
+
         # add listener on theme update
         self.dlg.themeSelector.currentTextChanged.connect(self.update_theme)
 

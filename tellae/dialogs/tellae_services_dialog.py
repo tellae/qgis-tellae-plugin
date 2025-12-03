@@ -61,7 +61,7 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
     def setup(self):
 
         # progress bar starts hidden with no message
-        self.set_progress_bar(False)
+        self.set_progress_bar(True)
         self.progress_text.setText('')
 
         # tabs management
@@ -113,12 +113,11 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
             except Exception as e:
                 message = f"Erreur lors de l'ajout de la couche '{layer_name}'"
                 self.display_message(message)
-                raise e
-            finally:
-                # remove loader
                 self.set_progress_bar(False)
+                raise e
 
         self.display_message(message)
+        self.set_progress_bar(False)
 
     # primitives
 

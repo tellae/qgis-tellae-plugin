@@ -126,6 +126,8 @@ def _on_login(user):
     if not TELLAE_STORE.store_initiated:
         init_store()
 
+    TELLAE_STORE.main_dialog.set_progress_bar(False)
+
 
 def _create_or_update_auth_config(name, key, secret):
     auth_cfg = create_auth_config(name, key, secret)
