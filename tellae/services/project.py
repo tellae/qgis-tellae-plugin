@@ -1,17 +1,18 @@
 
 from tellae.tellae_store import TELLAE_STORE
 from tellae.utils import log
-from tellae.utils.requests import request_whale
+from tellae.utils.requests import request_whale, BlockingRequestError
 from tellae.services.whale import download_from_binaries
 
 def select_project(uuid: str):
-    project_uuids = [project.get("uuid") for project in TELLAE_STORE.user["_ownedProjects"]]
-    index = project_uuids.index(uuid)
-    if index == -1:
-        raise ValueError(f"Could not find a project matching the uuid {uuid}")
+    # check existence
+    # project_uuids = [project.get("uuid") for project in TELLAE_STORE.user["_ownedProjects"]]
+    # index = project_uuids.index(uuid)
+    # if index == -1:
+    #     raise ValueError(f"Could not find a project matching the uuid {uuid}")
 
-    def handler(result):
-        project = result["content"]
+    try:
+        project = request_whale(f"/projects/{uuid}", blocking=True)["content"]
 
         # update store
         TELLAE_STORE.set_current_project(project)
@@ -21,9 +22,8 @@ def select_project(uuid: str):
 
         # update project info
         TELLAE_STORE.main_dialog.config_panel.update_selected_project()
-
-    request_whale(f"/projects/{uuid}", handler=handler)
-
+    except BlockingRequestError as e:
+        log(f"An error occurred while trying to get project {uuid}: {e.message()}")
 
 
 def get_project_binary_from_hash(binary_hash, attribute, handler, to_json=True):

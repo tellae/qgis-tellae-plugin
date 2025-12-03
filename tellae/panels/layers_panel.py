@@ -1,7 +1,7 @@
 from tellae.panels.base_panel import BasePanel
 from tellae.utils import *
 from tellae.utils.utils import fill_table_widget, get_binary_name, log
-from tellae.models.layers import create_layer, create_custom_layer
+from tellae.models.layers import add_custom_layer, add_database_layer
 from tellae.services.project import get_project_binary_from_hash
 
 from qgis.PyQt.QtWidgets import QPushButton
@@ -36,27 +36,17 @@ class LayersPanel(BasePanel):
         name = get_binary_name(binary, with_extension=False)
 
         def handler(result):
-            try:
-                qgs_kite_layer = create_custom_layer(result["content"], name)
-                qgs_kite_layer.add_to_qgis()
-
-            except Exception as e:
-                log(e)
-                # TELLAE_STORE.main_dialog.signal_end_of_layer_add(name, e)
-                raise e
+            add_custom_layer(result["content"], name)
 
         get_project_binary_from_hash(binary["hash"], "spatial_data", handler, to_json=False)
 
-    def add_layer(self, index):
+    def add_database_layer(self, index):
+
         layer_item = self.layers[index]
         layer_name = layer_item.get("name", dict()).get(self.store.locale, "Unnamed")
 
-        try:
-            qgs_kite_layer = create_layer(layer_item)
-            qgs_kite_layer.add_to_qgis()
+        add_database_layer(layer_item)
 
-        except Exception as e:
-            self.dlg.signal_end_of_layer_add(layer_name, e)
 
     # database tab
 
@@ -80,7 +70,7 @@ class LayersPanel(BasePanel):
         def action_slot(table_widget, row_ix, col_ix, _, __):
             btn = QPushButton(table)
             btn.setIcon(self.dlg.style().standardIcon(QStyle.SP_DialogSaveButton))
-            btn.clicked.connect(lambda state, x=row_ix: self.add_layer(x))
+            btn.clicked.connect(lambda state, x=row_ix: self.add_database_layer(x))
             table_widget.setCellWidget(row_ix, col_ix, btn)
 
         # setup table headers

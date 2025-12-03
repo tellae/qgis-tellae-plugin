@@ -119,9 +119,6 @@ def fill_table_widget(table_widget, headers, items):
     # populate table cells
     for row, layer in enumerate(items):
         for col, header in enumerate(headers):
-            # create a table cell
-            cell = QTableWidgetItem()
-
             # evaluate its content depending on the row and column
             if "slot" in header:
                 header["slot"](table_widget, row, col, layer, header)
@@ -131,8 +128,12 @@ def fill_table_widget(table_widget, headers, items):
             else:
                 text = layer[header["value"]]
 
+
+            # create a table cell
+            cell = QTableWidgetItem(text)
+
             # set cell text and tooltip
-            cell.setText(text)
+            # cell.setText(text)
             cell.setToolTip(text)
 
             # set text alignment

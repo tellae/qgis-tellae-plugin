@@ -638,24 +638,13 @@ class KiteLabelLayer(QgsKiteLayer):
     def set_symbol_opacity(self, symbol: QgsSymbol, value: float):
         pass
 
+def add_database_layer(layer_info):
+    layer_data = {**layer_info, **layer_info.get("additionalProperties", dict())}
 
-def create_layer(layer_data):
-    layer_data = {**layer_data, **layer_data.get("additionalProperties", dict())}
-
-    layer_class = layer_data["layer_class"]
-
-    if layer_class in LAYER_CLASSES:
-        layer_constructor = LAYER_CLASSES[layer_class]
-    else:
-        raise ValueError(f"Unsupported layer class '{layer_class}'")
-
-    layer_instance = layer_constructor.__new__(layer_constructor)
-    layer_instance.__init__(layer_data)
-
-    return layer_instance
+    add_layer(layer_data)
 
 
-def create_custom_layer(geojson, name):
+def add_custom_layer(geojson, name):
 
     layer_data = {
         "id": f"customlayer:{TELLAE_STORE.nb_custom_layers}",
@@ -663,15 +652,50 @@ def create_custom_layer(geojson, name):
         "data": geojson,
         "name": name
     }
+
     TELLAE_STORE.increment_nb_custom_layers()
 
-    layer_class = layer_data["layer_class"]
+    add_layer(layer_data)
 
+
+def add_layer(layer_data):
+
+    message = "La couche '{layer_name}' a été ajoutée avec succès !"
+    layer_name = "Unnamed"
+    try:
+        # create the layer instance
+        layer_instance = create_layer(layer_data)
+        layer_name = layer_instance.name
+        # add the layer to Qgis
+        layer_instance.add_to_qgis()
+    # min zoom not respected
+    except MinZoomException:
+        message = "Vous devez zoomer pour charger la couche '{layer_name}'"
+    # network error message
+    except RequestsException as e:
+        message = "Erreur lors du téléchargement de la couche '{layer_name}'"
+    except NotImplementedError:
+        message = "La couche '{layer_name}' nécessite des fonctionalités non implémentées pour le moment"
+    # generic error message
+    except Exception as e:
+        log(f"An error occured during layer add: {str(traceback.format_exc())}")
+        message = "Erreur lors de l'ajout de la couche '{layer_name}'"
+    finally:
+        # display message
+        TELLAE_STORE.main_dialog.display_message(message.format(layer_name=layer_name))
+        # remove loader
+        TELLAE_STORE.main_dialog.set_progress_bar(False)
+
+
+def create_layer(layer_data) -> QgsKiteLayer:
+    # get layer constructor
+    layer_class = layer_data["layer_class"]
     if layer_class in LAYER_CLASSES:
         layer_constructor = LAYER_CLASSES[layer_class]
     else:
         raise ValueError(f"Unsupported layer class '{layer_class}'")
 
+    # create and initialise layer instance
     layer_instance = layer_constructor.__new__(layer_constructor)
     layer_instance.__init__(layer_data)
 

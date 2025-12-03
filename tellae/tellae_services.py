@@ -177,11 +177,12 @@ class TellaeServices:
             self.iface.removePluginMenu(self.tr("&Tellae Services"), action)
             self.iface.removeToolBarIcon(action)
 
-    def _init_dialogs():
+    def _init_dialogs(self):
         """
         Create the plugin dialogs, call their setup methods, and display the main dialog.
         """
         # store dialogs
+        TELLAE_STORE.tellae_services = self
         TELLAE_STORE.main_dialog = TellaeServicesDialog()
         TELLAE_STORE.auth_dialog = TellaeAuthDialog(TELLAE_STORE.main_dialog)
 
@@ -191,7 +192,6 @@ class TellaeServices:
 
         # show the main dialog
         TELLAE_STORE.main_dialog.show()
-    _init_dialogs = staticmethod(_init_dialogs)
 
     def run(self):
         """Run method that performs all the real work"""
