@@ -1,6 +1,6 @@
 from tellae.panels.base_panel import BasePanel
 from tellae.utils import *
-from tellae.utils.utils import fill_table_widget, getBinaryName, log
+from tellae.utils.utils import fill_table_widget, get_binary_name, log
 from tellae.models.layers import create_layer, create_custom_layer
 from tellae.services.project import get_project_binary_from_hash
 
@@ -33,7 +33,7 @@ class LayersPanel(BasePanel):
 
     def add_spatial_data(self, row_idx):
         binary = self.store.get_project_data("spatial_data")[row_idx]
-        name = getBinaryName(binary, with_extension=False)
+        name = get_binary_name(binary, with_extension=False)
 
         def handler(result):
             try:
@@ -126,7 +126,7 @@ class LayersPanel(BasePanel):
         # setup table headers
         # total table length is 721, scroll bar is 16 => header width must total to 705
         headers = [
-            {"text": "Nom", "value": lambda x: getBinaryName(x, with_extension=False), "width": 729},
+            {"text": "Nom", "value": lambda x: get_binary_name(x, with_extension=False), "width": 729},
             {"text": "Actions", "value": "actions", "width": 60, "slot": action_slot},
         ]
 

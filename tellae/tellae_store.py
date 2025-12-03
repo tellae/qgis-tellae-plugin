@@ -2,7 +2,7 @@ from tellae.utils.utils import (
     read_local_config,
     THEMES_TRANSLATION,
     log,
-    getBinaryName
+    get_binary_name
 )
 import os
 from enum import IntEnum
@@ -123,7 +123,7 @@ class TellaeStore:
 
         sorted_data = sorted(
             data,
-            key=lambda x: getBinaryName(x, with_extension=False),
+            key=lambda x: get_binary_name(x, with_extension=False),
         )
 
         return sorted_data

@@ -143,7 +143,7 @@ def fill_table_widget(table_widget, headers, items):
             table_widget.setItem(row, col, cell)
 
 
-def getBinaryName(binary, with_extension=True):
+def get_binary_name(binary, with_extension=True):
     if "metadata" in binary and "name" in binary["metadata"]:
         name = binary["metadata"]["name"]
     elif "name" in binary:
