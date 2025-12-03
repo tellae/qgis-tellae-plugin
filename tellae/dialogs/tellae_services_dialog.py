@@ -32,8 +32,7 @@ from qgis.PyQt.QtGui import QIcon, QPixmap
 from tellae.tellae_store import TELLAE_STORE
 from tellae.utils import *
 
-from tellae.panels.layers_panel import LayersPanel
-from tellae.panels.config_panel import ConfigPanel
+from tellae.panels import LayersPanel, ConfigPanel, AboutPanel
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(
@@ -55,6 +54,7 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
 
         self.layers_panel = LayersPanel(self)
         self.config_panel = ConfigPanel(self)
+        self.about_panel = AboutPanel(self)
 
     # dialog setup
 
@@ -76,6 +76,7 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
         # panels setup
         self.layers_panel.setup()
         self.config_panel.setup()
+        self.about_panel.setup()
 
     def set_menu_icons(self):
         # item = self.menu_widget.item(0)

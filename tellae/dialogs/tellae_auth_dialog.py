@@ -75,3 +75,11 @@ class TellaeAuthDialog(QtWidgets.QDialog, FORM_CLASS):
             # fill the text fields
             self.keyEdit.setText(apikey)
             self.secretEdit.setText(secret)
+
+    def change_page_and_show(self):
+        # change page to config
+        TELLAE_STORE.set_tab(TELLAE_STORE.Tabs.config, update_menu_widget=True)
+
+        # show dialog
+        self.show()
+

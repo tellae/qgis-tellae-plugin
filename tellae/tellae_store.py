@@ -1,14 +1,19 @@
 from tellae.utils.utils import (
     read_local_config,
     THEMES_TRANSLATION,
+    log,
 )
 import os
-
-
-TABS = ["layers", "config"]
+from enum import IntEnum
 
 
 class TellaeStore:
+
+    # tab values enumeration (number corresponds to page number)
+    class Tabs(IntEnum):
+        layers = 0
+        config = 1
+        about = 2
 
     def __init__(self):
 
@@ -108,17 +113,22 @@ class TellaeStore:
     def increment_nb_custom_layers(self):
         self.nb_custom_layers += 1
 
-    def set_tab(self, index_or_name):
+    def set_tab(self, index_or_name, update_menu_widget=False):
         if isinstance(index_or_name, int):
             index = index_or_name
-            name = TABS[index]
-        elif isinstance(index_or_name, str):
-            index = TABS.index(index_or_name)
+            name = self.Tabs(index_or_name)
+        elif isinstance(index_or_name, self.Tabs):
+            index = index_or_name.value
             name = index_or_name
         else:
             raise ValueError("Unknown tab value")
 
+        # update widgets
+        if update_menu_widget:
+            self.main_dialog.menu_widget.setCurrentRow(index)
         self.main_dialog.stacked_panels_widget.setCurrentIndex(index)
+
+        # update store
         self.tab = name
 
     # AUTHENTICATION methods

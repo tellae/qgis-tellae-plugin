@@ -31,7 +31,7 @@ def init_auth():
     if not _try_existing_indents():
         log("No existing indents found, opening authentication dialog")
         # if no existing indents where found, show auth dialog to manually input new indents
-        TELLAE_STORE.auth_dialog.show()
+        TELLAE_STORE.auth_dialog.change_page_and_show()
 
 
 def try_new_indents(key, secret):
@@ -103,7 +103,7 @@ def _login(handler=None, error_handler=None, set_indents=False):
         # display error message in auth dialog
         TELLAE_STORE.auth_dialog.display_error_message(message_from_request_error(result))
         # show authentication dialog
-        TELLAE_STORE.auth_dialog.open()
+        TELLAE_STORE.auth_dialog.change_page_and_show()
 
     # make request to whale /auth/me service
     request_whale("/auth/me", handler=full_handler, error_handler=full_error_handler)

@@ -110,6 +110,11 @@ QListWidget::item::selected {
        <string>Parameters</string>
       </property>
      </item>
+     <item>
+      <property name="text">
+       <string>About</string>
+      </property>
+     </item>
     </widget>
    </item>
    <item>
@@ -172,7 +177,7 @@ QListWidget::item::selected {
          <item>
           <widget class="QStackedWidget" name="stacked_panels_widget">
            <property name="currentIndex">
-            <number>0</number>
+            <number>2</number>
            </property>
            <widget class="QWidget" name="layers">
             <widget class="QWidget" name="verticalLayoutWidget">
@@ -188,7 +193,7 @@ QListWidget::item::selected {
               <item>
                <widget class="QTabWidget" name="add_layers_tab">
                 <property name="currentIndex">
-                 <number>1</number>
+                 <number>0</number>
                 </property>
                 <widget class="QWidget" name="database">
                  <attribute name="title">
@@ -330,39 +335,6 @@ QListWidget::item::selected {
               <string>Logged in as</string>
              </property>
             </widget>
-            <widget class="QWidget" name="verticalLayoutWidget_2">
-             <property name="geometry">
-              <rect>
-               <x>0</x>
-               <y>480</y>
-               <width>821</width>
-               <height>291</height>
-              </rect>
-             </property>
-             <layout class="QVBoxLayout" name="verticalLayout_2">
-              <item>
-               <widget class="QLabel" name="label_6">
-                <property name="text">
-                 <string>TextLabel</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="label_5">
-                <property name="text">
-                 <string>TextLabel</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="label_7">
-                <property name="text">
-                 <string>TextLabel</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
             <widget class="Line" name="line">
              <property name="geometry">
               <rect>
@@ -396,39 +368,6 @@ QListWidget::item::selected {
               <string>Projet séléctionné</string>
              </property>
             </widget>
-            <widget class="Line" name="line_2">
-             <property name="geometry">
-              <rect>
-               <x>10</x>
-               <y>420</y>
-               <width>811</width>
-               <height>20</height>
-              </rect>
-             </property>
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-            </widget>
-            <widget class="QLabel" name="label_10">
-             <property name="geometry">
-              <rect>
-               <x>250</x>
-               <y>440</y>
-               <width>321</width>
-               <height>31</height>
-              </rect>
-             </property>
-             <property name="font">
-              <font>
-               <pointsize>15</pointsize>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>À propos de Tellae et de ce plugin</string>
-             </property>
-            </widget>
             <widget class="QLabel" name="projectName">
              <property name="geometry">
               <rect>
@@ -452,10 +391,10 @@ QListWidget::item::selected {
               </rect>
              </property>
              <property name="text">
-              <string>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur consequat, elit quis commodo posuere, nisl eros eleifend tellus, non lacinia elit est eget risus. Praesent aliquet diam quis diam viverra, vitae lobortis arcu imperdiet. Quisque laoreet, nulla ac commodo sagittis, nisi purus cursus nisi, sed tristique tortor erat at odio. Cras vel leo magna. Praesent lacinia dolor vitae fermentum egestas. Aliquam erat volutpat. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. In et placerat felis. Aenean auctor leo vel dolor rhoncus, ut pellentesque erat sagittis. Praesent ornare mauris purus, a finibus metus aliquet et. Pellentesque nunc erat, pulvinar nec aliquet nec, pellentesque sit amet lacus. Curabitur id quam feugiat, sollicitudin justo eget, pharetra purus. Aliquam id magna in sem scelerisque cursus at a ipsum. Vestibulum molestie metus et condimentum dapibus. Nam interdum tortor id purus porta commodo a nec eros. Vestibulum tortor urna, convallis eget pharetra at, efficitur vitae velit. </string>
+              <string>Description du projet</string>
              </property>
              <property name="alignment">
-              <set>Qt::AlignJustify|Qt::AlignVCenter</set>
+              <set>Qt::AlignJustify|Qt::AlignTop</set>
              </property>
              <property name="wordWrap">
               <bool>true</bool>
@@ -470,6 +409,79 @@ QListWidget::item::selected {
                <height>27</height>
               </rect>
              </property>
+            </widget>
+           </widget>
+           <widget class="QWidget" name="page">
+            <widget class="QWidget" name="verticalLayoutWidget_3">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>10</y>
+               <width>801</width>
+               <height>481</height>
+              </rect>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_3">
+              <item>
+               <widget class="QLabel" name="label_10">
+                <property name="font">
+                 <font>
+                  <pointsize>15</pointsize>
+                  <weight>75</weight>
+                  <bold>true</bold>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>À propos de Tellae et de ce plugin</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+                <property name="wordWrap">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_6">
+                <property name="text">
+                 <string>About this plugin</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignJustify|Qt::AlignTop</set>
+                </property>
+                <property name="wordWrap">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_7">
+                <property name="text">
+                 <string>Kite (prononcer [kït]) fait référence au Milan, un rapace à la vue perçante qui est aisément observable dans les Pyrénées. Kite a initialement été développé pour visualiser les données du simulateur multi-agents Starling. Que ce soit les données d'entrées (population synthétique des déplacements), et les données de sortie (traces dynamiques et KPI). Kite a ensuite évolué pour fournir un environnement plus complet de visualisation et d'analyse des données de mobilité et des systèmes de transport.</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignJustify|Qt::AlignTop</set>
+                </property>
+                <property name="wordWrap">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="about_plugin">
+                <property name="text">
+                 <string>About Tellae</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignJustify|Qt::AlignTop</set>
+                </property>
+                <property name="wordWrap">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+             </layout>
             </widget>
            </widget>
           </widget>
