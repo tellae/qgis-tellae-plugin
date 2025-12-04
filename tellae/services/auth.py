@@ -110,7 +110,7 @@ def _login(handler=None, error_handler=None, set_indents=False):
 
 
 def _on_login(user):
-    TELLAE_STORE.main_dialog.set_progress_bar(True)
+    TELLAE_STORE.main_dialog.start_progress("Téléchargement des données Tellae")
 
     # update user in store (also tags store as authenticated)
     TELLAE_STORE.set_user(user)
@@ -128,7 +128,7 @@ def _on_login(user):
     if not TELLAE_STORE.store_initiated:
         init_store()
 
-    TELLAE_STORE.main_dialog.set_progress_bar(False)
+    TELLAE_STORE.main_dialog.end_progress()
 
 
 def _create_or_update_auth_config(name, key, secret):

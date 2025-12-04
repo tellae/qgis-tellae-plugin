@@ -26,13 +26,13 @@ def select_project(uuid: str):
         log(f"An error occurred while trying to get project {uuid}: {e}")
 
 
-def get_project_binary_from_hash(binary_hash, attribute, handler, to_json=True):
+def get_project_binary_from_hash(binary_hash, attribute, handler, error_handler=None, to_json=True):
     project_uuid = TELLAE_STORE.current_project["uuid"]
     index = get_binary_index_from_hash(binary_hash, attribute)
     if index == -1:
         raise ValueError("Error while to get project binary info")
 
-    download_from_binaries(f"projects/{project_uuid}/{attribute}/{index}", handler=handler, to_json=to_json)
+    download_from_binaries(f"projects/{project_uuid}/{attribute}/{index}", handler=handler, error_handler=error_handler, to_json=to_json)
 
 
 def get_binary_index_from_hash(binary_hash, attribute):

@@ -27,7 +27,7 @@ from tellae.utils import log, MinZoomException, RequestsException
 from tellae.tellae_store import TELLAE_STORE
 from .layer_style import ClassicStyle, VectorTilesStyle
 from .props_mapping import PropsMapping
-import traceback
+from tellae.services.layers import LayerDownloadContext
 from tellae.utils.requests import request, request_whale
 import json
 
@@ -123,12 +123,21 @@ class GeojsonSource(QgsLayerSource):
     def prepare(self):
         if isinstance(self.layer.data, str):
             # if the data is an url, make a web request
-            request(self.layer.data, handler=self.on_request_success, error_handler=lambda x: self.error_handler(x["exception"]), to_json=False)
+            self.make_layer_request()
         elif isinstance(self.layer.data, dict):
             # if the data is a dict
             self.store_geojson_data(json.dumps(self.layer.data).encode("utf-8"))
         else:
             raise ValueError(f"Unsupported type for GeojsonSource data: {type(self.layer.data)}")
+
+    def make_layer_request(self):
+        with LayerDownloadContext(self.layer_name, self.on_request_success) as ctx:
+            request(
+                self.layer.data,
+                handler=ctx.handler,
+                error_handler=ctx.error_handler,
+                to_json=False
+            )
 
     def on_request_success(self, result):
         try:
@@ -181,9 +190,13 @@ class SharkSource(GeojsonSource):
         return f"/shark/layers/geojson/{self.layer.data}"
 
     def prepare(self):
-        request_whale(
-            self.get_url(), handler=self.on_request_success, error_handler=lambda x: self.error_handler(x["exception"]), to_json=False
-        )
+        with LayerDownloadContext(self.layer_name, self.on_request_success) as ctx:
+            request_whale(
+                self.get_url(),
+                handler=ctx.handler,
+                error_handler=ctx.error_handler,
+                to_json=False
+            )
 
 
 class VectorTileGeojsonSource(SharkSource):
@@ -442,7 +455,6 @@ class QgsKiteLayer:
                 self.qgis_layer.setFieldAlias(index, alias)
 
     def add_to_qgis(self):
-        TELLAE_STORE.main_dialog.start_layer_download(self.name)
         self.source.prepare()
 
     def _add_to_qgis(self):

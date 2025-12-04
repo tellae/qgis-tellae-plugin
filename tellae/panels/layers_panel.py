@@ -3,7 +3,7 @@ from tellae.utils import *
 from tellae.utils.utils import fill_table_widget, get_binary_name, log
 from tellae.models.layers import add_custom_layer, add_database_layer
 from tellae.services.project import get_project_binary_from_hash
-
+from tellae.services.layers import LayerDownloadContext
 from qgis.PyQt.QtWidgets import QPushButton
 from PyQt5.QtWidgets import QStyle
 from qgis.PyQt.QtCore import Qt
@@ -41,7 +41,14 @@ class LayersPanel(BasePanel):
         def handler(result):
             add_custom_layer(result["content"], name)
 
-        get_project_binary_from_hash(binary["hash"], "spatial_data", handler, to_json=True)
+        with LayerDownloadContext(name, handler) as ctx:
+            get_project_binary_from_hash(
+                binary["hash"],
+                "spatial_data",
+                handler=ctx.handler,
+                error_handler=ctx.error_handler,
+                to_json=True
+            )
 
     def add_database_layer(self, index):
 

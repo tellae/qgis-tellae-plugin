@@ -28,6 +28,7 @@ import traceback
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtGui import QIcon, QPixmap
+from qgis.core import Qgis
 
 from tellae.tellae_store import TELLAE_STORE
 from tellae.utils import *
@@ -56,12 +57,14 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
         self.config_panel = ConfigPanel(self)
         self.about_panel = AboutPanel(self)
 
+        self.progress_count = 0
+
     # dialog setup
 
     def setup(self):
 
         # progress bar starts hidden with no message
-        self.set_progress_bar(False)
+        self._set_progress_bar(False)
         self.progress_text.setText('')
 
         # tabs management
@@ -87,22 +90,21 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
         # item.setIcon(QIcon(resources_path('icons', 'quick.png')))
         pass
 
-    def start_layer_download(self, layer_name):
-        self.display_message(f"Téléchargement de la couche '{layer_name}'...")
-        self.set_progress_bar(True)
-
     def signal_end_of_layer_add(self, layer_name, exception=None):
         # display result message
         if exception is None:
             message = f"La couche '{layer_name}' a été ajoutée avec succès !"
+            level = Qgis.MessageLevel.Success
         else:
-            log(f"An error occured during layer add: {exception.__repr__()}")
-            # log(str(traceback.format_exc()))
+            # log(f"An error occurred during layer add: {exception.__repr__()}")
+            level = Qgis.MessageLevel.Critical
+
             # evaluate message depending on exception type
             try:
                 raise exception
             # min zoom not respected
             except MinZoomException:
+                level = Qgis.MessageLevel.Warning
                 message = f"Vous devez zoomer pour charger la couche '{layer_name}'"
             # network error message
             except RequestsException as e:
@@ -110,21 +112,98 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
             except NotImplementedError:
                 message = f"La couche '{layer_name}' nécessite des fonctionalités non implémentées pour le moment"
             # generic error message
-            except Exception as e:
+            except Exception:
                 message = f"Erreur lors de l'ajout de la couche '{layer_name}'"
-                self.display_message(message)
-                self.set_progress_bar(False)
-                raise e
+                log(f"An error occured during layer add:\n{str(traceback.format_exc())}")
 
-        self.display_message(message)
-        self.set_progress_bar(False)
+        self.display_message_bar(message, level=level)
 
     # primitives
 
-    def display_message(self, message: str):
+    def display_message_bar(
+            self,
+            title: str,
+            message: str = None,
+            level: Qgis.MessageLevel = Qgis.MessageLevel.Info,
+            duration: int = 5,
+            # more_details: str = None,
+            # open_logs: bool = False
+    ):
+        """Display a message.
+
+        :param title: Title of the message.
+        :type title: basestring
+
+        :param message: The message.
+        :type message: basestring
+
+        :param level: A QGIS error level.
+
+        :param duration: Duration in second.
+        :type duration: int
+
+        :param open_logs: If we need to add a button for the log panel.
+        :type open_logs: bool
+
+        :param more_details: The message to display in the "More button".
+        :type more_details: basestring
+        """
+        widget = self.message_bar.createMessage(title, message)
+
+        # if more_details or open_logs:
+        #     # Adding the button
+        #     button = QtWidgets.QPushButton(widget)
+        #     widget.layout().addWidget(button)
+        #
+        #     if open_logs:
+        #         button.setText('Open log panel')
+        #         # noinspection PyUnresolvedReferences
+        #         button.pressed.connect(
+        #             lambda: open_log_panel())
+        #     else:
+        #         button.setText(tr('More details'))
+        #         # noinspection PyUnresolvedReferences
+        #         button.pressed.connect(
+        #             lambda: QMessageBox.information(None, title, more_details))
+
+        self.message_bar.pushWidget(widget, level, duration)
+
+    def start_progress(self, message):
+        """
+        Start a progress display with the given message.
+
+        :param message: message to display on top of the progress bar
+        """
+        # update count
+        self.progress_count += 1
+
+        # activate progress bar
+        self._set_progress_bar(True)
+
+        # set progress text
         self.progress_text.setText(message)
 
-    def set_progress_bar(self, visible: bool):
+    def end_progress(self):
+        """
+        End a progress and update progress bar.
+        """
+        # update count
+        self.progress_count -= 1
+
+        if self.progress_count == 0:
+
+            # deactivate progress bar
+            self._set_progress_bar(False)
+
+            # set progress text
+            self.progress_text.setText("")
+
+    def _set_progress_bar(self, visible: bool):
+        """
+        Direct management of the progress bar.
+
+        :param visible: progress bar boolean
+        """
         if visible:
             self.progress_bar.setRange(0, -0)
             self.progress_bar.setValue(-1)
