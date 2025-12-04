@@ -607,7 +607,7 @@ class MultipleGeometryLayer(QgsKiteLayer):
 
     def _add_to_project(self):
         root = QgsProject.instance().layerTreeRoot()
-        group = root.addGroup(self.name)
+        group = root.insertGroup(0, self.name)
 
         for layer in self.qgis_layer:
             # do not add the layer to the legend as it will already be added when linking group
