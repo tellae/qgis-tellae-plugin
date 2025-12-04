@@ -61,7 +61,7 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
     def setup(self):
 
         # progress bar starts hidden with no message
-        self.set_progress_bar(True)
+        self.set_progress_bar(False)
         self.progress_text.setText('')
 
         # tabs management

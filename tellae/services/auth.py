@@ -110,6 +110,8 @@ def _login(handler=None, error_handler=None, set_indents=False):
 
 
 def _on_login(user):
+    TELLAE_STORE.main_dialog.set_progress_bar(True)
+
     # update user in store (also tags store as authenticated)
     TELLAE_STORE.set_user(user)
 
