@@ -37,14 +37,7 @@ class QgsLayerSource(ABC):
 
         self.layer: QgsKiteLayer = layer
 
-    @property
-    def url(self) -> str:
-        """
-        Url requested by the source to get the layer contents.
-
-        Ways of requesting the url may request from one source type to another.
-        """
-        raise NotImplementedError
+        self.is_ready = False
 
     @property
     def layer_name(self) -> str:
@@ -54,78 +47,86 @@ class QgsLayerSource(ABC):
         return self.layer.name
 
     @abstractmethod
-    def _new_qgis_layer_instance(self):
-        raise NotImplementedError
-
-    @abstractmethod
-    def init_qgis_layer(self):
-        raise NotImplementedError
-
-    @abstractmethod
     def is_vector(self):
         raise NotImplementedError
 
-    def _set_qgis_layer(self):
+    @abstractmethod
+    def prepare(self):
         """
-        Create and set a QGIS layer instance from the source data, then call the pipeline to add it.
+        Prepare the source for the creation of Qgis layers.
+        """
+        raise NotImplementedError
+
+    def _ready(self):
+        # mark source as ready
+        self.is_ready = True
+
+        # signal layer that source is ready and trigger following steps
+        self.layer.on_source_ready()
+
+    def create_qgis_layer_instance(self):
         """
 
-        # create a new QGIS layer instance
-        qgis_layer = self._new_qgis_layer_instance()
+        :return:
+        """
+        if not self.is_ready:
+            raise RuntimeError("Calling method create_qgis_layer_instance on unprepared source")
 
-        # set the QGIS layer instance in the QgsKiteLayer object
-        self.layer._set_qgis_layer(qgis_layer)
+        return self._create_qgis_layer_instance()
 
-        # call the pipeline to add the layer to QGIS
-        self.layer._add_to_qgis()
+    @abstractmethod
+    def _create_qgis_layer_instance(self):
+        raise NotImplementedError
 
 
 class GeojsonSource(QgsLayerSource):
 
     def __init__(self, layer):
         super().__init__(layer)
-        # store the request response
-        self.response: bytes | None = None
+        # store the geojson data bytes
+        self.data: bytes | None = None
 
-        # store the layer data in a file (unused for now)
+        # path to the temporary file containing the geojson source
         self.path = ""
-
-    @property
-    def url(self):
-        return self.layer.data
 
     def is_vector(self):
         return False
 
-    def init_qgis_layer(self):
-        # make a web request and read the geojson result as bytes
-        if isinstance(self.layer.data, str):
-            request(
-                self.url, handler=self.on_download, error_handler=self.on_download_error, to_json=False
-            )
-        else:
-            self.on_download({
-                "content": self.layer.data
-            })
+    def prepare(self):
 
-    def on_download(self, response):
+        if isinstance(self.layer.data, str):
+            # if the data is an url, make a web request
+            request(self.layer.data, handler=self.on_request_success, error_handler=lambda x: self.error_handler(x["exception"]), to_json=False)
+        elif isinstance(self.layer.data, dict):
+            # if the data is a dict
+            raise NotImplementedError
+        else:
+            raise ValueError(f"Unsupported type for GeojsonSource data: {type(self.layer.data)}")
+
+    def _create_qgis_layer_instance(self):
+
+        return QgsVectorLayer(self.path, self.layer_name, "ogr")
+
+    def on_request_success(self, result):
         try:
             # store request response
-            self.response = response["content"]
-            if self.response is None:
+            data = result["content"]
+            if data is None:
                 raise RequestsException("Empty response")
 
-            # call QGIS layer creation and add
-            self._set_qgis_layer()
+            self.store_geojson_data(data)
 
         except Exception as e:
-            TELLAE_STORE.main_dialog.signal_end_of_layer_add(self.layer_name, e)
+            self.error_handler(e)
 
-    def on_download_error(self, response):
-        exception = response["exception"]
-        TELLAE_STORE.main_dialog.signal_end_of_layer_add(self.layer_name, exception)
+    def store_geojson_data(self, data: bytes):
+        self.data = data
 
-    def _new_qgis_layer_instance(self):
+        self.create_temp_file()
+
+        self._ready()
+
+    def create_temp_file(self):
         try:
             file_path = self.path
             if file_path == "":
@@ -133,31 +134,32 @@ class GeojsonSource(QgsLayerSource):
                 file.close()
                 file_path = file.name
             with open(file_path, "wb") as f:
-                f.write(self.response)
+                f.write(self.data)
         except FileNotFoundError:
             raise FileNotFoundError
         except PermissionError:
             raise PermissionError
 
-        return QgsVectorLayer(file_path, self.layer_name, "ogr")
+        self.path = file_path
+
+    def error_handler(self, exception):
+        TELLAE_STORE.main_dialog.signal_end_of_layer_add(self.layer_name, exception)
 
 
 class SharkSource(GeojsonSource):
 
-    @property
-    def url(self):
+    def get_url(self):
         return f"/shark/layers/geojson/{self.layer.data}"
 
-    def init_qgis_layer(self):
+    def prepare(self):
         request_whale(
-            self.url, handler=self.on_download, error_handler=self.on_download_error, to_json=False
+            self.get_url(), handler=self.on_request_success, error_handler=lambda x: self.error_handler(x["exception"]), to_json=False
         )
 
 
-class VectorTileGeojsonSource(GeojsonSource):
+class VectorTileGeojsonSource(SharkSource):
 
-    @property
-    def url(self) -> str:
+    def get_url(self) -> str:
         # evaluate bbox
         rect = TELLAE_STORE.tellae_services.iface.mapCanvas().extent()
         bbox = [rect.xMinimum(), rect.yMinimum(), rect.xMaximum(), rect.yMaximum()]
@@ -213,16 +215,16 @@ class VectorTileGeojsonSource(GeojsonSource):
 
         return f"/shark/layers/geojson/{self.layer.data}?{urllib.parse.urlencode(params)}"
 
-    def init_qgis_layer(self):
-        request_whale(
-            self.url, handler=self.on_download, error_handler=self.on_download_error, to_json=False
-        )
-
 
 class VectorTileSource(QgsLayerSource):
 
-    @property
-    def url(self):
+    def __init__(self, layer):
+
+        super().__init__(layer)
+
+        self.uri = None
+
+    def evaluate_uri(self):
         whale_endpoint = TELLAE_STORE.whale_endpoint
         auth_cfg = TELLAE_STORE.authCfg
 
@@ -276,12 +278,15 @@ class VectorTileSource(QgsLayerSource):
     def is_vector(self):
         return True
 
-    def init_qgis_layer(self):
-        # nothing to download, just create the instance with the correct vector tiles url
-        self._set_qgis_layer()
+    def prepare(self):
+        # store url
+        self.uri = self.evaluate_uri()
 
-    def _new_qgis_layer_instance(self):
-        return QgsVectorTileLayer(self.url, self.layer_name)
+        # signal source as ready
+        self._ready()
+
+    def _create_qgis_layer_instance(self):
+        return QgsVectorTileLayer(self.uri, self.layer_name)
 
 
 class QgsKiteLayer:
@@ -348,8 +353,26 @@ class QgsKiteLayer:
         else:
             raise ValueError(f"Unsupported source type '{self.sourceType}'")
 
-    def _set_qgis_layer(self, qgis_layer):
-        self.qgis_layer = qgis_layer
+    def on_source_ready(self):
+        """
+        Create and set a QGIS layer instance from the source data, then call the pipeline to add it to QGIS.
+        """
+
+        # create a new QGIS layer instance
+        self._create_qgis_layer()
+
+        # check layer instance
+        self._validate_qgis_layer()
+
+        # call the pipeline to add the layer to QGIS
+        self._add_to_qgis()
+
+    def _create_qgis_layer(self):
+        self.qgis_layer = self.source.create_qgis_layer_instance()
+
+    def _validate_qgis_layer(self):
+        if not self.qgis_layer.isValid():
+            raise ValueError("QGIS layer is not valid")
 
         # check geometry type
         if self.geometry_type not in self.ACCEPTED_GEOMETRY_TYPES:
@@ -391,7 +414,7 @@ class QgsKiteLayer:
 
     def add_to_qgis(self):
         TELLAE_STORE.main_dialog.start_layer_download(self.name)
-        self.source.init_qgis_layer()
+        self.source.prepare()
 
     def _add_to_qgis(self):
         # add layer aliases
