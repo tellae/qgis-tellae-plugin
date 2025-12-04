@@ -29,7 +29,7 @@ from .layer_style import ClassicStyle, VectorTilesStyle
 from .props_mapping import PropsMapping
 import traceback
 from tellae.utils.requests import request, request_whale
-
+import json
 
 class QgsLayerSource(ABC):
 
@@ -37,7 +37,7 @@ class QgsLayerSource(ABC):
 
         self.layer: QgsKiteLayer = layer
 
-        self.is_ready = False
+        self._is_prepared = False
 
     @property
     def layer_name(self) -> str:
@@ -45,6 +45,10 @@ class QgsLayerSource(ABC):
         Layer name, displayed in the QGIS user interface.
         """
         return self.layer.name
+
+    @property
+    def is_prepared(self):
+        return self._is_prepared
 
     @abstractmethod
     def is_vector(self):
@@ -57,33 +61,57 @@ class QgsLayerSource(ABC):
         """
         raise NotImplementedError
 
-    def _ready(self):
-        # mark source as ready
-        self.is_ready = True
+    def _mark_as_prepared(self):
+        """
+        Mark the source as prepared and signal the parent layer.
+        """
+        # mark source as prepared
+        self._is_prepared = True
 
         # signal layer that source is ready and trigger following steps
-        self.layer.on_source_ready()
+        self.layer.on_source_prepared()
 
-    def create_qgis_layer_instance(self):
+    def create_qgis_layer_instance(self, **kwargs):
         """
+        Check that the source is prepared and create a QgsMapLayer instance.
 
-        :return:
+        Actual implementation of the instance creation is in _create_qgis_layer_instance.
+
+        :return: QgsMapLayer instance
+        :raises: RuntimeError if this method is called on an unprepared source
         """
-        if not self.is_ready:
+        if not self._is_prepared:
             raise RuntimeError("Calling method create_qgis_layer_instance on unprepared source")
 
-        return self._create_qgis_layer_instance()
+        return self._create_qgis_layer_instance(**kwargs)
 
     @abstractmethod
-    def _create_qgis_layer_instance(self):
+    def _create_qgis_layer_instance(self, **kwargs):
+        """
+        Create a QgsMapLayer instance based on the source properties.
+
+        :param kwargs: layer creation parameters
+        :return: QgsMapLayer instance
+        """
         raise NotImplementedError
+
+    def error_handler(self, exception):
+        """
+        Handle errors encountered during the pipeline.
+
+        :param exception: Exception subclass
+        """
+        TELLAE_STORE.main_dialog.signal_end_of_layer_add(self.layer_name, exception)
 
 
 class GeojsonSource(QgsLayerSource):
+    """
+    A source that contains GeoJSON data stored in a temporary file.
+    """
 
     def __init__(self, layer):
         super().__init__(layer)
-        # store the geojson data bytes
+        # geojson data bytes
         self.data: bytes | None = None
 
         # path to the temporary file containing the geojson source
@@ -93,19 +121,14 @@ class GeojsonSource(QgsLayerSource):
         return False
 
     def prepare(self):
-
         if isinstance(self.layer.data, str):
             # if the data is an url, make a web request
             request(self.layer.data, handler=self.on_request_success, error_handler=lambda x: self.error_handler(x["exception"]), to_json=False)
         elif isinstance(self.layer.data, dict):
             # if the data is a dict
-            raise NotImplementedError
+            self.store_geojson_data(json.dumps(self.layer.data).encode("utf-8"))
         else:
             raise ValueError(f"Unsupported type for GeojsonSource data: {type(self.layer.data)}")
-
-    def _create_qgis_layer_instance(self):
-
-        return QgsVectorLayer(self.path, self.layer_name, "ogr")
 
     def on_request_success(self, result):
         try:
@@ -124,7 +147,7 @@ class GeojsonSource(QgsLayerSource):
 
         self.create_temp_file()
 
-        self._ready()
+        self._mark_as_prepared()
 
     def create_temp_file(self):
         try:
@@ -142,8 +165,14 @@ class GeojsonSource(QgsLayerSource):
 
         self.path = file_path
 
-    def error_handler(self, exception):
-        TELLAE_STORE.main_dialog.signal_end_of_layer_add(self.layer_name, exception)
+    def _create_qgis_layer_instance(self, geometry=None, name=None):
+        name = self.layer_name if name is None else name
+
+        data = self.path
+        if geometry is not None:
+            data = f"{data}|geometrytype={geometry}"
+
+        return QgsVectorLayer(data, name, "ogr")
 
 
 class SharkSource(GeojsonSource):
@@ -283,7 +312,7 @@ class VectorTileSource(QgsLayerSource):
         self.uri = self.evaluate_uri()
 
         # signal source as ready
-        self._ready()
+        self._mark_as_prepared()
 
     def _create_qgis_layer_instance(self):
         return QgsVectorTileLayer(self.uri, self.layer_name)
@@ -353,7 +382,7 @@ class QgsKiteLayer:
         else:
             raise ValueError(f"Unsupported source type '{self.sourceType}'")
 
-    def on_source_ready(self):
+    def on_source_prepared(self):
         """
         Create and set a QGIS layer instance from the source data, then call the pipeline to add it to QGIS.
         """
@@ -504,6 +533,74 @@ class QgsKiteLayer:
         style.setSymbol(symbol)
 
         return style
+
+
+class MultipleGeometryLayer(QgsKiteLayer):
+    """
+    Layer containing several sub-layers, one for each geometry type (Point, LineString, Polygon).
+
+    Sub-layers are added to a QgsLayerTreeGroup with the layer name.
+    """
+
+    ACCEPTED_GEOMETRY_TYPES = [None]
+
+    SUBLAYER_NAME_FORMAT = "{original_name}"
+
+    @property
+    def is_vector(self):
+        return self.source.is_vector()
+
+    @property
+    def geometry_type(self) -> Qgis.GeometryType | None:
+        return None
+
+    def _create_qgis_layer(self):
+
+        qgis_layers = []
+        for geometry in ["Point", "LineString", "Polygon"]:
+
+            layer_name = self.SUBLAYER_NAME_FORMAT.format(original_name=self.name, geometry=geometry)
+            layer = self.source.create_qgis_layer_instance(geometry=geometry, name=layer_name)
+
+            qgis_layers.append(layer)
+
+        self.qgis_layer = qgis_layers
+
+    def _validate_qgis_layer(self):
+        for layer in self.qgis_layer:
+            if not layer.isValid():
+                raise ValueError("QGIS layer is not valid")
+
+    def _create_style(self):
+        return
+        if self.is_vector:
+            style = VectorTilesStyle(self)
+        else:
+            style = ClassicStyle(self)
+        self.style = style
+
+    def _update_style(self):
+        return
+        # TODO
+        self._call_style_update()
+
+    def _call_style_update(self):
+        # update symbols if editAttributes are present
+        if self.style.editAttributes:
+            self.style.update_layer_symbology()
+
+    def _update_aliases(self):
+        pass
+        # TODO: implement or use sub layers
+
+    def _add_to_project(self):
+        root = QgsProject.instance().layerTreeRoot()
+        group = root.addGroup(self.name)
+
+        for layer in self.qgis_layer:
+            # do not add the layer to the legend as it will already be added when linking group
+            QgsProject.instance().addMapLayer(layer, False)
+            group.addLayer(layer)
 
 
 class KiteCircleLayer(QgsKiteLayer):
@@ -668,22 +765,21 @@ def add_database_layer(layer_info):
 
 
 def add_custom_layer(geojson, name):
-
+    # create layer
     layer_data = {
         "id": f"customlayer:{TELLAE_STORE.nb_custom_layers}",
-        "layer_class": "KiteLineLayer",
+        "layer_class": "MultipleGeometryLayer",
         "data": geojson,
         "name": name
     }
-
-    TELLAE_STORE.increment_nb_custom_layers()
-
     add_layer(layer_data)
+
+    # increment custom layer count
+    TELLAE_STORE.increment_nb_custom_layers()
 
 
 def add_layer(layer_data):
 
-    message = "La couche '{layer_name}' a été ajoutée avec succès !"
     layer_name = "Unnamed"
     try:
         # create the layer instance
@@ -691,23 +787,21 @@ def add_layer(layer_data):
         layer_name = layer_instance.name
         # add the layer to Qgis
         layer_instance.add_to_qgis()
-    # min zoom not respected
-    except MinZoomException:
-        message = "Vous devez zoomer pour charger la couche '{layer_name}'"
-    # network error message
-    except RequestsException as e:
-        message = "Erreur lors du téléchargement de la couche '{layer_name}'"
-    except NotImplementedError:
-        message = "La couche '{layer_name}' nécessite des fonctionalités non implémentées pour le moment"
-    # generic error message
     except Exception as e:
-        log(f"An error occured during layer add: {str(traceback.format_exc())}")
-        message = "Erreur lors de l'ajout de la couche '{layer_name}'"
-    finally:
-        # display message
-        TELLAE_STORE.main_dialog.display_message(message.format(layer_name=layer_name))
-        # remove loader
-        TELLAE_STORE.main_dialog.set_progress_bar(False)
+        TELLAE_STORE.main_dialog.signal_end_of_layer_add(layer_name, e)
+    # min zoom not respected
+    # except MinZoomException:
+    #     message = "Vous devez zoomer pour charger la couche '{layer_name}'"
+    # # network error message
+    # except RequestsException as e:
+    #     message = "Erreur lors du téléchargement de la couche '{layer_name}'"
+    # except NotImplementedError:
+    #     message = "La couche '{layer_name}' nécessite des fonctionalités non implémentées pour le moment"
+    # # generic error message
+    # except Exception as e:
+    #     log(f"An error occured during layer add: {str(traceback.format_exc())}")
+    #     message = "Erreur lors de l'ajout de la couche '{layer_name}'"
+
 
 
 def create_layer(layer_data) -> QgsKiteLayer:
@@ -731,4 +825,5 @@ LAYER_CLASSES = {
     "KiteLabelLayer": KiteLabelLayer,
     "KiteLineLayer": KiteLineLayer,
     "KiteFillLayer": KiteFillLayer,
+    "MultipleGeometryLayer": MultipleGeometryLayer
 }

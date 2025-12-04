@@ -41,13 +41,11 @@ class LayersPanel(BasePanel):
         def handler(result):
             add_custom_layer(result["content"], name)
 
-        get_project_binary_from_hash(binary["hash"], "spatial_data", handler, to_json=False)
+        get_project_binary_from_hash(binary["hash"], "spatial_data", handler, to_json=True)
 
     def add_database_layer(self, index):
 
         layer_item = self.layers[index]
-        layer_name = layer_item.get("name", dict()).get(self.store.locale, "Unnamed")
-
         add_database_layer(layer_item)
 
 
