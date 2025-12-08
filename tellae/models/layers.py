@@ -31,6 +31,11 @@ from tellae.services.layers import LayerDownloadContext
 from tellae.utils.requests import request, request_whale
 import json
 
+
+class LayerInitialisationError(Exception):
+    pass
+
+
 class QgsLayerSource(ABC):
 
     def __init__(self, layer):
@@ -371,7 +376,7 @@ class QgsKiteLayer:
 
         self.style = None
 
-        self.source = self._init_source()
+        self.source = None
 
     @property
     def is_vector(self):
@@ -382,6 +387,9 @@ class QgsKiteLayer:
         if self.qgis_layer is None:
             return None
         return self.qgis_layer.geometryType()
+
+    def setup(self):
+        self.source = self._init_source()
 
     def _init_source(self) -> QgsLayerSource:
         if self.sourceType == "geojson":
@@ -474,6 +482,7 @@ class QgsKiteLayer:
         TELLAE_STORE.main_dialog.signal_end_of_layer_add(self.name)
 
     def _add_to_project(self):
+        QgsProject.instance().layerTreeRegistryBridge().setLayerInsertionPoint(QgsProject.instance().layerTreeRoot(), 0)
         QgsProject.instance().addMapLayer(self.qgis_layer)
 
     def _read_edit_attributes(self):
@@ -791,29 +800,20 @@ def add_custom_layer(geojson, name):
 
 
 def add_layer(layer_data):
-
-    layer_name = "Unnamed"
+    # create the layer instance
     try:
-        # create the layer instance
         layer_instance = create_layer(layer_data)
-        layer_name = layer_instance.name
-        # add the layer to Qgis
+    except Exception:
+        error = LayerInitialisationError
+        TELLAE_STORE.main_dialog.signal_end_of_layer_add(None, error)
+        return
+
+    # setup and add the layer to Qgis
+    try:
+        layer_instance.setup()
         layer_instance.add_to_qgis()
     except Exception as e:
-        TELLAE_STORE.main_dialog.signal_end_of_layer_add(layer_name, e)
-    # min zoom not respected
-    # except MinZoomException:
-    #     message = "Vous devez zoomer pour charger la couche '{layer_name}'"
-    # # network error message
-    # except RequestsException as e:
-    #     message = "Erreur lors du téléchargement de la couche '{layer_name}'"
-    # except NotImplementedError:
-    #     message = "La couche '{layer_name}' nécessite des fonctionalités non implémentées pour le moment"
-    # # generic error message
-    # except Exception as e:
-    #     log(f"An error occured during layer add: {str(traceback.format_exc())}")
-    #     message = "Erreur lors de l'ajout de la couche '{layer_name}'"
-
+        TELLAE_STORE.main_dialog.signal_end_of_layer_add(layer_instance.name, e)
 
 
 def create_layer(layer_data) -> QgsKiteLayer:

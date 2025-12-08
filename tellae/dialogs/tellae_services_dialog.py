@@ -34,6 +34,7 @@ from tellae.tellae_store import TELLAE_STORE
 from tellae.utils import *
 
 from tellae.panels import LayersPanel, ConfigPanel, AboutPanel
+from tellae.models.layers import LayerInitialisationError
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(
@@ -102,6 +103,10 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
             # evaluate message depending on exception type
             try:
                 raise exception
+            # layer init error
+            except LayerInitialisationError:
+                message = "Erreur lors de la lecture des metadonnées de la couche"
+                log(f"An error occured during layer creation:\n{str(traceback.format_exc())}")
             # min zoom not respected
             except MinZoomException:
                 level = Qgis.MessageLevel.Warning
