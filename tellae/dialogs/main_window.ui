@@ -177,7 +177,7 @@ QListWidget::item::selected {
          <item>
           <widget class="QStackedWidget" name="stacked_panels_widget">
            <property name="currentIndex">
-            <number>0</number>
+            <number>2</number>
            </property>
            <widget class="QWidget" name="layers">
             <widget class="QWidget" name="verticalLayoutWidget">
@@ -461,7 +461,10 @@ QListWidget::item::selected {
               <item>
                <widget class="QLabel" name="label_6">
                 <property name="text">
-                 <string>About this plugin</string>
+                 <string>Ce plugin propose des services pour la visualisation et l'analyse de données de mobilité. Cela permet de bénéficier de toutes les fonctionnalités de Qgis pour la manipulation et la modification de couches de visualisation. Vous devez posséder un compte [Kite](kite.tellae.fr) afin de vous authentifier et accéder à ces services (voir fenêtre d'authentification pour plus de détails).</string>
+                </property>
+                <property name="textFormat">
+                 <enum>Qt::MarkdownText</enum>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignJustify|Qt::AlignTop</set>
@@ -474,7 +477,10 @@ QListWidget::item::selected {
               <item>
                <widget class="QLabel" name="label_7">
                 <property name="text">
-                 <string>Kite (prononcer [kït]) fait référence au Milan, un rapace à la vue perçante qui est aisément observable dans les Pyrénées. Kite a initialement été développé pour visualiser les données du simulateur multi-agents Starling. Que ce soit les données d'entrées (population synthétique des déplacements), et les données de sortie (traces dynamiques et KPI). Kite a ensuite évolué pour fournir un environnement plus complet de visualisation et d'analyse des données de mobilité et des systèmes de transport.</string>
+                 <string>Ce plugin se concentre sur la visualisation de données disponibles ou préparées dans l'application web [Kite](kite.tellae.fr) et reproduit l'organisation des données par thématiques (calques, flux, réseau). Certaines fonctionnalités d'ajout/modification des données de Kite ne sont pas disponibles dans ce plugin. Afin d'en bénéficier, nous suggérons d'utiliser ces fonctionnalités dans Kite et de sauvegarder les données résultantes dans votre projet afin de pouvoir les retrouver ici.</string>
+                </property>
+                <property name="textFormat">
+                 <enum>Qt::MarkdownText</enum>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignJustify|Qt::AlignTop</set>
@@ -487,7 +493,10 @@ QListWidget::item::selected {
               <item>
                <widget class="QLabel" name="about_plugin">
                 <property name="text">
-                 <string>About Tellae</string>
+                 <string>[Tellae](tellae.fr) est un cabinet de conseil innovant spécialisé dans les problématiques de transports et mobilité des territoires. Nous fournissons à nos clients, publics ou privés, des solutions pour éclairer leurs décisions stratégiques et opérationnelles.</string>
+                </property>
+                <property name="textFormat">
+                 <enum>Qt::MarkdownText</enum>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignJustify|Qt::AlignTop</set>
