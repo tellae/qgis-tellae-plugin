@@ -46,7 +46,7 @@
      <property name="minimumSize">
       <size>
        <width>100</width>
-       <height>200</height>
+       <height>849</height>
       </size>
      </property>
      <property name="maximumSize">
@@ -76,10 +76,13 @@ QListWidget::item::selected {
      <property name="lineWidth">
       <number>0</number>
      </property>
+     <property name="autoScroll">
+      <bool>true</bool>
+     </property>
      <property name="iconSize">
       <size>
-       <width>50</width>
-       <height>50</height>
+       <width>40</width>
+       <height>40</height>
       </size>
      </property>
      <property name="flow">
@@ -89,13 +92,16 @@ QListWidget::item::selected {
       <bool>false</bool>
      </property>
      <property name="layoutMode">
-      <enum>QListView::Batched</enum>
+      <enum>QListView::SinglePass</enum>
      </property>
      <property name="viewMode">
       <enum>QListView::ListMode</enum>
      </property>
      <property name="uniformItemSizes">
-      <bool>true</bool>
+      <bool>false</bool>
+     </property>
+     <property name="selectionRectVisible">
+      <bool>false</bool>
      </property>
      <property name="currentRow">
       <number>-1</number>
@@ -440,6 +446,9 @@ QListWidget::item::selected {
              </property>
              <property name="text">
               <string>Recharger</string>
+             </property>
+             <property name="autoDefault">
+              <bool>false</bool>
              </property>
             </widget>
            </widget>

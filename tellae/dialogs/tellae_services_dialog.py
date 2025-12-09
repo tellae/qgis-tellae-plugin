@@ -54,11 +54,15 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
 
+        self.set_menu_icons()
+
         self.layers_panel = LayersPanel(self)
         self.config_panel = ConfigPanel(self)
         self.about_panel = AboutPanel(self)
 
         self.progress_count = 0
+
+        self.set_menu_icons()
 
     # dialog setup
 
@@ -75,21 +79,26 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
             TELLAE_STORE.set_tab
         )
 
-        self.set_menu_icons()
-
         # panels setup
         self.layers_panel.setup()
         self.config_panel.setup()
         self.about_panel.setup()
 
     def set_menu_icons(self):
-        # item = self.menu_widget.item(0)
-        # path = os.path.dirname(__file__) + "/../santa.svg"
-        # icon = QIcon(path)
-        # item.setIcon(icon)
-        # item = self.menu_widget.item(1)
-        # item.setIcon(QIcon(resources_path('icons', 'quick.png')))
-        pass
+        item = self.menu_widget.item(0)
+        path = TELLAE_STORE.plugin_dir + "/icons/layers_40dp_000000.svg"
+        icon = QIcon(path)
+        item.setIcon(icon)
+
+        item = self.menu_widget.item(1)
+        path = TELLAE_STORE.plugin_dir + "/icons/settings_40dp_000000.svg"
+        icon = QIcon(path)
+        item.setIcon(icon)
+
+        item = self.menu_widget.item(2)
+        path = TELLAE_STORE.plugin_dir + "/icons/info_40dp_000000.svg"
+        icon = QIcon(path)
+        item.setIcon(icon)
 
     def signal_end_of_layer_add(self, layer_name, exception=None):
         # display result message
