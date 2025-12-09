@@ -1,30 +1,10 @@
 import os
 import json
-
-import tempfile
-
-import requests
-from PyQt5 import QtWidgets, uic
-from PyQt5.QtCore import QCoreApplication, QElapsedTimer
 from qgis.core import (
-    QgsApplication,
-    QgsAuthMethodConfig,
-    QgsProject,
-    QgsVectorLayer,
-    QgsDataSourceUri,
-    QgsVectorTileLayer,
     QgsMessageLog,
-    QgsSymbolLayer,
-    QgsSymbol,
-    QgsProperty,
-    QgsCategorizedSymbolRenderer,
-    QgsRuleBasedRenderer,
-    QgsRendererCategory,
-    QgsSingleSymbolRenderer,
-    QgsNetworkReplyContent,
 )
+from qgis.PyQt.QtWidgets import QTableWidgetItem, QTableWidget
 
-AWS_REGION = "fr-north-1"
 
 THEMES_TRANSLATION = {
     "carpooling": "Covoiturage",
@@ -121,63 +101,59 @@ def read_local_config(plugin_dir):
 #     return QgsVectorTileLayer(url, layer_name)
 
 
-def create_auth_config(config_name, api_key, api_secret):
-    config = None
+def fill_table_widget(table_widget, headers, items):
+    # disable table edition
+    table_widget.setEditTriggers(QTableWidget.NoEditTriggers)
 
-    auth_manager = QgsApplication.authManager()
-    config_dict = auth_manager.availableAuthMethodConfigs()
-    for existing_config in config_dict.values():
-        if existing_config.name() == config_name:
-            config = existing_config
+    # set number of rows and columns
+    table_widget.setRowCount(len(items))
+    table_widget.setColumnCount(len(headers))
 
-    if config is not None:
-        config.setConfig("region", AWS_REGION)
-        config.setConfig("username", api_key)
-        config.setConfig("password", api_secret)
-        auth_manager.updateAuthenticationConfig(config)
+    # setup headers
+    table_widget.setHorizontalHeaderLabels([header["text"] for header in headers])
+    for col, header in enumerate(headers):
+        if "width" in header:
+            table_widget.setColumnWidth(col, header["width"])
+
+    # populate table cells
+    for row, layer in enumerate(items):
+        for col, header in enumerate(headers):
+            # evaluate its content depending on the row and column
+            if "slot" in header:
+                header["slot"](table_widget, row, col, layer, header)
+                continue
+            elif callable(header["value"]):
+                text = header["value"](layer)
+            else:
+                text = layer[header["value"]]
+
+            # create a table cell
+            cell = QTableWidgetItem(text)
+
+            # set cell text and tooltip
+            # cell.setText(text)
+            cell.setToolTip(text)
+
+            # set text alignment
+            if "align" in header:
+                cell.setTextAlignment(header["align"])
+
+            # put the cell in the table
+            table_widget.setItem(row, col, cell)
+
+
+def get_binary_name(binary, with_extension=True):
+    if "metadata" in binary and "name" in binary["metadata"]:
+        name = binary["metadata"]["name"]
+    elif "name" in binary:
+        name = binary["name"]
     else:
-        auth_manager = QgsApplication.authManager()
-        config = QgsAuthMethodConfig()
-        config.setName(config_name)
-        config.setMethod("AWSS3")
-        config.setConfig("region", AWS_REGION)
-        config.setConfig("username", api_key)
-        config.setConfig("password", api_secret)
-        auth_manager.storeAuthenticationConfig(config)
+        name = binary.get("originalname", "Unnamed")
 
-    return config.id()
+    if not with_extension:
+        name = name.split(".")[0]
 
-
-def get_auth_config(config_name):
-    auth_manager = QgsApplication.authManager()
-    config_dict = auth_manager.availableAuthMethodConfigs()
-    for config in config_dict.values():
-        if config.name() == config_name:
-            return config.id()
-    return None
-
-
-def remove_tellae_auth_config(cfg_name):
-    auth_manager = QgsApplication.authManager()
-    config_dict = auth_manager.availableAuthMethodConfigs()
-    for authConfig in config_dict.keys():
-        if config_dict[authConfig].name() == cfg_name:
-            auth_manager.removeAuthenticationConfig(authConfig)
-            break
-
-
-def get_apikey_from_cache(cfg_name):
-    auth_manager = QgsApplication.authManager()
-    config_dict = auth_manager.availableAuthMethodConfigs()
-    apikey = None
-    secret = None
-    for config in config_dict.values():
-        if config.name() == cfg_name:
-            aux_config = QgsAuthMethodConfig()
-            auth_manager.loadAuthenticationConfig(config.id(), aux_config, True)
-            apikey = aux_config.configMap()["username"]
-            secret = aux_config.configMap()["password"]
-    return apikey, secret
+    return name
 
 
 # def prepare_layer_style(layer, layer_info):

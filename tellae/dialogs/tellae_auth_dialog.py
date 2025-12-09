@@ -6,8 +6,9 @@ from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtWidgets import QDialogButtonBox, QDialog
 from qgis.PyQt.QtCore import Qt
-
+from tellae.services.auth import init_auth, try_new_indents
 from tellae.tellae_store import TELLAE_STORE
+from tellae.services.auth import get_apikey_from_cache
 
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
@@ -25,18 +26,10 @@ class TellaeAuthDialog(QtWidgets.QDialog, FORM_CLASS):
         # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
-        self.setup_dialog()
-
-    def init_auth(self):
-        try:
-            TELLAE_STORE.init_auth()
-        except Exception as e:
-            self.display_error_message(str(e))
-            self.open()
 
     def validate(self):
         try:
-            TELLAE_STORE.try_new_indents(self.keyEdit.text(), self.secretEdit.text())
+            try_new_indents(self.keyEdit.text(), self.secretEdit.text())
             self.done(QDialog.Accepted)
         except Exception as e:
             self.display_error_message(str(e))
@@ -61,7 +54,7 @@ class TellaeAuthDialog(QtWidgets.QDialog, FORM_CLASS):
     # def try_authenticate_from_inputs(self):
     #     self.try_authenticate(self.keyEdit.text(), self.secretEdit.text())
 
-    def setup_dialog(self):
+    def setup(self):
         self.helpButton.clicked.connect(self.open_help_page)
         self.cancelButton.clicked.connect(self.done)
         self.validateButton.clicked.connect(self.validate)
@@ -76,9 +69,16 @@ class TellaeAuthDialog(QtWidgets.QDialog, FORM_CLASS):
         self.errorMessage.setText(message)
 
     def set_indents_from_auth_config(self):
-        apikey, secret = TELLAE_STORE.get_current_indents()
+        apikey, secret = get_apikey_from_cache(TELLAE_STORE.authName)
 
         if apikey is not None:
             # fill the text fields
             self.keyEdit.setText(apikey)
             self.secretEdit.setText(secret)
+
+    def change_page_and_show(self):
+        # change page to config
+        TELLAE_STORE.set_tab(TELLAE_STORE.Tabs.config, update_menu_widget=True)
+
+        # show dialog
+        self.show()

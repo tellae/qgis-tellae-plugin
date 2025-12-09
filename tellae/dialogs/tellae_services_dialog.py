@@ -27,26 +27,23 @@ import traceback
 
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
-from qgis.PyQt.QtWidgets import QTableWidget, QTableWidgetItem, QPushButton
-from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtGui import QIcon, QPixmap
+from qgis.core import Qgis
 
 from tellae.tellae_store import TELLAE_STORE
-from tellae.models.layers import create_layer
 from tellae.utils import *
 
+from tellae.panels import LayersPanel, ConfigPanel, AboutPanel
+from tellae.models.layers import LayerInitialisationError
+
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
-FORM_CLASS, _ = uic.loadUiType(
-    os.path.join(os.path.dirname(__file__), "tellae_services_dialog_base.ui")
-)
+FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "main_window.ui"))
 
 
 class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
     def __init__(self, parent=None):
         """Constructor."""
         super(TellaeServicesDialog, self).__init__(parent)
-
-        self.selected_theme = "Tous"
-        self.layers = []
 
         # Set up the user interface from Designer through FORM_CLASS.
         # After self.setupUi() you can access any designer object by doing
@@ -55,135 +52,69 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
 
-        # progress bar starts hidden
-        self.progressBar.hide()
+        self.set_menu_icons()
 
-    def set_auth_button_text(self, user):
-        if user is None:
-            text = "Login"
-        else:
-            text = f'{user["firstName"]} {user["lastName"]}'
+        self.layers_panel = LayersPanel(self)
+        self.config_panel = ConfigPanel(self)
+        self.about_panel = AboutPanel(self)
 
-        self.authButton.setText(text)
+        self.progress_count = 0
 
-    def display_message(self, message: str):
-        self.message.setText(message)
+        self.set_menu_icons()
 
-    def set_progress_bar(self, visible: bool):
-        if visible:
-            self.progressBar.show()
-        else:
-            self.progressBar.hide()
+    # dialog setup
 
-    def create_theme_selector(self):
-        # set list of layers
-        self.themeSelector.addItems(["Tous"] + TELLAE_STORE.themes)
+    def setup(self):
 
-        # set default selection to "all"
-        self.themeSelector.setCurrentText("Tous")
+        # progress bar starts hidden with no message
+        self._set_progress_bar(False)
+        self.progress_text.setText("")
 
-        # add listener on update event
-        self.themeSelector.currentTextChanged.connect(self.update_theme)
+        # tabs management
+        self.menu_widget.setCurrentRow(0)
+        self.stacked_panels_widget.setCurrentIndex(0)
+        self.menu_widget.currentRowChanged["int"].connect(TELLAE_STORE.set_tab)
 
-    def update_theme(self, new_theme):
-        # update selected theme
-        self.selected_theme = new_theme
+        # panels setup
+        self.layers_panel.setup()
+        self.config_panel.setup()
+        self.about_panel.setup()
 
-        # update layers table
-        self.set_layers_table()
+    def set_menu_icons(self):
+        item = self.menu_widget.item(0)
+        path = TELLAE_STORE.plugin_dir + "/icons/layers_40dp_000000.svg"
+        icon = QIcon(path)
+        item.setIcon(icon)
 
-    def set_layers_table(self):
-        # get table widget
-        table = self.tableWidget
+        item = self.menu_widget.item(1)
+        path = TELLAE_STORE.plugin_dir + "/icons/settings_40dp_000000.svg"
+        icon = QIcon(path)
+        item.setIcon(icon)
 
-        # get list of layers to display
-        self.layers = TELLAE_STORE.get_filtered_layer_summary(self.selected_theme)
-        table.setRowCount(len(self.layers))
-
-        # setup table headers
-        # total table length is 721, scroll bar is 16 => header width must total to 705
-        headers = [
-            {"text": "Nom", "value": lambda x: x["name"][TELLAE_STORE.locale], "width": 285},
-            {
-                "text": "Date",
-                "value": lambda x: TELLAE_STORE.datasets_summary[x["main_dataset"]].get("date", ""),
-                "width": 80,
-                "align": Qt.AlignCenter,
-            },
-            {
-                "text": "Source",
-                "value": lambda x: TELLAE_STORE.datasets_summary[x["main_dataset"]][
-                    "provider_name"
-                ],
-                "width": 280,
-            },
-            {"text": "Actions", "value": "actions", "width": 60},
-        ]
-        table.setColumnCount(len(headers))
-        table.setHorizontalHeaderLabels([header["text"] for header in headers])
-        for col, header in enumerate(headers):
-            if "width" in header:
-                table.setColumnWidth(col, header["width"])
-
-        # populate table cells
-        for row, layer in enumerate(self.layers):
-            for col, header in enumerate(headers):
-                # create a table cell
-                cell = QTableWidgetItem()
-
-                # evaluate its content depending on the row and column
-                if callable(header["value"]):
-                    text = header["value"](layer)
-                elif header["value"] == "actions":
-                    btn = QPushButton(table)
-                    btn.setText("Add")
-                    btn.clicked.connect(lambda state, x=row: self.add_layer(x))
-                    table.setCellWidget(row, col, btn)
-                    continue
-                else:
-                    text = layer[header["value"]]
-
-                # set cell text and tooltip
-                cell.setText(text)
-                cell.setToolTip(text)
-
-                # set text alignment
-                if "align" in header:
-                    cell.setTextAlignment(header["align"])
-
-                # put the cell in the table
-                table.setItem(row, col, cell)
-
-        # disable table edition
-        table.setEditTriggers(QTableWidget.NoEditTriggers)
-
-    def add_layer(self, index):
-        layer_item = self.layers[index]
-        layer_name = layer_item.get("name", dict()).get(TELLAE_STORE.locale, "Unnamed")
-
-        try:
-            qgs_kite_layer = create_layer(layer_item)
-            qgs_kite_layer.add_to_qgis()
-
-        except Exception as e:
-            self.signal_end_of_layer_add(layer_name, e)
-
-    def start_layer_download(self, layer_name):
-        self.display_message(f"Téléchargement de la couche '{layer_name}'...")
-        self.set_progress_bar(True)
+        item = self.menu_widget.item(2)
+        path = TELLAE_STORE.plugin_dir + "/icons/info_40dp_000000.svg"
+        icon = QIcon(path)
+        item.setIcon(icon)
 
     def signal_end_of_layer_add(self, layer_name, exception=None):
         # display result message
         if exception is None:
             message = f"La couche '{layer_name}' a été ajoutée avec succès !"
+            level = Qgis.MessageLevel.Success
         else:
-            log(f"An error occured during layer add: {exception.__repr__()}")
-            # log(str(traceback.format_exc()))
+            # log(f"An error occurred during layer add: {exception.__repr__()}")
+            level = Qgis.MessageLevel.Critical
+
             # evaluate message depending on exception type
             try:
                 raise exception
+            # layer init error
+            except LayerInitialisationError:
+                message = "Erreur lors de la lecture des metadonnées de la couche"
+                log(f"An error occured during layer creation:\n{str(traceback.format_exc())}")
             # min zoom not respected
             except MinZoomException:
+                level = Qgis.MessageLevel.Warning
                 message = f"Vous devez zoomer pour charger la couche '{layer_name}'"
             # network error message
             except RequestsException as e:
@@ -193,7 +124,99 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
             # generic error message
             except Exception:
                 message = f"Erreur lors de l'ajout de la couche '{layer_name}'"
-        self.display_message(message)
+                log(f"An error occured during layer add:\n{str(traceback.format_exc())}")
 
-        # remove loader
-        self.set_progress_bar(False)
+        self.display_message_bar(message, level=level)
+
+    # primitives
+
+    def display_message_bar(
+        self,
+        title: str,
+        message: str = None,
+        level: Qgis.MessageLevel = Qgis.MessageLevel.Info,
+        duration: int = 5,
+        # more_details: str = None,
+        # open_logs: bool = False
+    ):
+        """Display a message.
+
+        :param title: Title of the message.
+        :type title: basestring
+
+        :param message: The message.
+        :type message: basestring
+
+        :param level: A QGIS error level.
+
+        :param duration: Duration in second.
+        :type duration: int
+
+        :param open_logs: If we need to add a button for the log panel.
+        :type open_logs: bool
+
+        :param more_details: The message to display in the "More button".
+        :type more_details: basestring
+        """
+        widget = self.message_bar.createMessage(title, message)
+
+        # if more_details or open_logs:
+        #     # Adding the button
+        #     button = QtWidgets.QPushButton(widget)
+        #     widget.layout().addWidget(button)
+        #
+        #     if open_logs:
+        #         button.setText('Open log panel')
+        #         # noinspection PyUnresolvedReferences
+        #         button.pressed.connect(
+        #             lambda: open_log_panel())
+        #     else:
+        #         button.setText(tr('More details'))
+        #         # noinspection PyUnresolvedReferences
+        #         button.pressed.connect(
+        #             lambda: QMessageBox.information(None, title, more_details))
+
+        self.message_bar.pushWidget(widget, level, duration)
+
+    def start_progress(self, message):
+        """
+        Start a progress display with the given message.
+
+        :param message: message to display on top of the progress bar
+        """
+        # update count
+        self.progress_count += 1
+
+        # activate progress bar
+        self._set_progress_bar(True)
+
+        # set progress text
+        self.progress_text.setText(message)
+
+    def end_progress(self):
+        """
+        End a progress and update progress bar.
+        """
+        # update count
+        self.progress_count -= 1
+
+        if self.progress_count == 0:
+
+            # deactivate progress bar
+            self._set_progress_bar(False)
+
+            # set progress text
+            self.progress_text.setText("")
+
+    def _set_progress_bar(self, visible: bool):
+        """
+        Direct management of the progress bar.
+
+        :param visible: progress bar boolean
+        """
+        if visible:
+            self.progress_bar.setRange(0, -0)
+            self.progress_bar.setValue(-1)
+        else:
+            self.progress_bar.setRange(0, 100)
+            self.progress_bar.setValue(0)
