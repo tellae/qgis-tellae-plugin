@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/tellae/qgis-tellae-plugin/compare/v1.0.1...v1.1.0) (2025-12-09)
+
+
+### Features
+
+* reworked interface and added project layers ([#39](https://github.com/tellae/qgis-tellae-plugin/issues/39)) ([e9cf3e1](https://github.com/tellae/qgis-tellae-plugin/commit/e9cf3e12e1fadeb433fc5efd121205006fdc1c8b))
+
 ## [1.0.1](https://github.com/tellae/qgis-tellae-plugin/compare/v1.0.0...v1.0.1) (2025-11-20)
 
 
