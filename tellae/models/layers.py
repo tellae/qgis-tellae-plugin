@@ -565,8 +565,6 @@ class MultipleGeometryLayer(QgsKiteLayer):
 
     ACCEPTED_GEOMETRY_TYPES = [None]
 
-    SUBLAYER_NAME_FORMAT = "{original_name}"
-
     @property
     def is_vector(self):
         return self.source.is_vector()
@@ -580,10 +578,10 @@ class MultipleGeometryLayer(QgsKiteLayer):
         qgis_layers = []
         for geometry in ["Point", "LineString", "Polygon"]:
 
-            layer_name = self.SUBLAYER_NAME_FORMAT.format(original_name=self.name, geometry=geometry)
-            layer = self.source.create_qgis_layer_instance(geometry=geometry, name=layer_name)
+            layer = self.source.create_qgis_layer_instance(geometry=geometry, name=self.name)
 
-            qgis_layers.append(layer)
+            if layer.featureCount() > 0:
+                qgis_layers.append(layer)
 
         self.qgis_layer = qgis_layers
 
@@ -615,13 +613,18 @@ class MultipleGeometryLayer(QgsKiteLayer):
         # TODO: implement or use sub layers
 
     def _add_to_project(self):
-        root = QgsProject.instance().layerTreeRoot()
-        group = root.insertGroup(0, self.name)
+        if len(self.qgis_layer) == 1:
+            QgsProject.instance().addMapLayer(self.qgis_layer[0])
+        elif len(self.qgis_layer) > 1:
+            root = QgsProject.instance().layerTreeRoot()
+            group = root.insertGroup(0, self.name)
 
-        for layer in self.qgis_layer:
-            # do not add the layer to the legend as it will already be added when linking group
-            QgsProject.instance().addMapLayer(layer, False)
-            group.addLayer(layer)
+            for layer in self.qgis_layer:
+                # do not add the layer to the legend as it will already be added when linking group
+                QgsProject.instance().addMapLayer(layer, False)
+                group.addLayer(layer)
+        else:
+            raise ValueError("La couche est vide ou incomplète")
 
 
 class KiteCircleLayer(QgsKiteLayer):
