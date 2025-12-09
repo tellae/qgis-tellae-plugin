@@ -177,7 +177,7 @@ QListWidget::item::selected {
          <item>
           <widget class="QStackedWidget" name="stacked_panels_widget">
            <property name="currentIndex">
-            <number>2</number>
+            <number>1</number>
            </property>
            <widget class="QWidget" name="layers">
             <widget class="QWidget" name="verticalLayoutWidget">
@@ -424,6 +424,22 @@ QListWidget::item::selected {
                <width>561</width>
                <height>27</height>
               </rect>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="reloadProjectBtn">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="geometry">
+              <rect>
+               <x>700</x>
+               <y>170</y>
+               <width>111</width>
+               <height>27</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>Recharger</string>
              </property>
             </widget>
            </widget>
