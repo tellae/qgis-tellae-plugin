@@ -82,4 +82,3 @@ class TellaeAuthDialog(QtWidgets.QDialog, FORM_CLASS):
 
         # show dialog
         self.show()
-

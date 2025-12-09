@@ -47,7 +47,9 @@ def init_layers_table():
     except RequestsException as e:
         log(f"An error occurred while trying to database layer tables: {e}")
 
+
 # layer download context manager
+
 
 class LayerDownloadContext:
 
@@ -96,7 +98,7 @@ def _layer_download_error_handler(layer_name, error_handler=None):
         log(result)
         TELLAE_STORE.main_dialog.display_message_bar(
             f"Erreur lors du téléchargement de la couche '{layer_name}': {result['status_code']} ({result['status_message']})",
-            level=Qgis.MessageLevel.Critical
+            level=Qgis.MessageLevel.Critical,
         )
 
         _end_of_layer_download()
@@ -114,6 +116,3 @@ def _start_of_layer_download(layer_name):
 def _end_of_layer_download():
     # stop progress bar
     TELLAE_STORE.main_dialog.end_progress()
-
-
-

@@ -1,8 +1,8 @@
-
 from tellae.tellae_store import TELLAE_STORE
 from tellae.utils import log
 from tellae.utils.requests import request_whale, RequestsException
 from tellae.services.whale import download_from_binaries
+
 
 def select_project(uuid: str):
     # check existence
@@ -32,13 +32,14 @@ def get_project_binary_from_hash(binary_hash, attribute, handler, error_handler=
     if index == -1:
         raise ValueError("Error while to get project binary info")
 
-    download_from_binaries(f"projects/{project_uuid}/{attribute}/{index}", handler=handler, error_handler=error_handler, to_json=to_json)
+    download_from_binaries(
+        f"projects/{project_uuid}/{attribute}/{index}",
+        handler=handler,
+        error_handler=error_handler,
+        to_json=to_json,
+    )
 
 
 def get_binary_index_from_hash(binary_hash, attribute):
     hashes = [binary["hash"] for binary in TELLAE_STORE.current_project[attribute]]
     return hashes.index(binary_hash)
-
-
-
-

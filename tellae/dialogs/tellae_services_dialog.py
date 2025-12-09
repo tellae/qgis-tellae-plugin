@@ -37,9 +37,7 @@ from tellae.panels import LayersPanel, ConfigPanel, AboutPanel
 from tellae.models.layers import LayerInitialisationError
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
-FORM_CLASS, _ = uic.loadUiType(
-    os.path.join(os.path.dirname(__file__), "main_window.ui")
-)
+FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "main_window.ui"))
 
 
 class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
@@ -70,14 +68,12 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
 
         # progress bar starts hidden with no message
         self._set_progress_bar(False)
-        self.progress_text.setText('')
+        self.progress_text.setText("")
 
         # tabs management
         self.menu_widget.setCurrentRow(0)
         self.stacked_panels_widget.setCurrentIndex(0)
-        self.menu_widget.currentRowChanged['int'].connect(
-            TELLAE_STORE.set_tab
-        )
+        self.menu_widget.currentRowChanged["int"].connect(TELLAE_STORE.set_tab)
 
         # panels setup
         self.layers_panel.setup()
@@ -135,13 +131,13 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
     # primitives
 
     def display_message_bar(
-            self,
-            title: str,
-            message: str = None,
-            level: Qgis.MessageLevel = Qgis.MessageLevel.Info,
-            duration: int = 5,
-            # more_details: str = None,
-            # open_logs: bool = False
+        self,
+        title: str,
+        message: str = None,
+        level: Qgis.MessageLevel = Qgis.MessageLevel.Info,
+        duration: int = 5,
+        # more_details: str = None,
+        # open_logs: bool = False
     ):
         """Display a message.
 

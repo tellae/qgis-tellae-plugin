@@ -18,11 +18,12 @@ AWS_REGION = "fr-north-1"
 
 # authentication actions
 
+
 def init_auth():
     if (
-            TELLAE_STORE.local_config is not None
-            and "auth" in TELLAE_STORE.local_config
-            and TELLAE_STORE.local_config["auth"].get("use", True)
+        TELLAE_STORE.local_config is not None
+        and "auth" in TELLAE_STORE.local_config
+        and TELLAE_STORE.local_config["auth"].get("use", True)
     ):  # try dev authentication if provided and not deactivated
         _try_dev_indents()
         return
@@ -137,6 +138,7 @@ def _create_or_update_auth_config(name, key, secret):
 
 
 # authentication utils
+
 
 def create_auth_config(config_name, api_key, api_secret):
     config = None

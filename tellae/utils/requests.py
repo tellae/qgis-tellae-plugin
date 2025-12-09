@@ -5,15 +5,15 @@ import json
 
 
 def request(
-        url,
-        method="GET",
-        body=None,
-        handler=None,
-        error_handler=None,
-        auth_cfg=None,
-        to_json=True,
-        blocking=False,
-        raise_exception=True
+    url,
+    method="GET",
+    body=None,
+    handler=None,
+    error_handler=None,
+    auth_cfg=None,
+    to_json=True,
+    blocking=False,
+    raise_exception=True,
 ):
     """
     Make a network request using a NetworkAccessManager instance.
@@ -37,10 +37,7 @@ def request(
     # create callback function for async requests
     def on_finished():
         process_call_result(
-            nam.httpResult(),
-            to_json=to_json,
-            handler=handler,
-            error_handler=error_handler
+            nam.httpResult(), to_json=to_json, handler=handler, error_handler=error_handler
         )
 
     try:
@@ -105,7 +102,7 @@ def process_call_result(call_result, to_json, handler=None, error_handler=None):
     :return:
     """
     # call handler depending on request success
-    if call_result["ok"] :
+    if call_result["ok"]:
         # convert request result to json
         if to_json:
             call_result["content"] = json.loads(call_result["content"])
@@ -117,6 +114,7 @@ def process_call_result(call_result, to_json, handler=None, error_handler=None):
         error_handler(call_result)
 
     return call_result
+
 
 def message_from_request_error(result):
     status = result["status"]

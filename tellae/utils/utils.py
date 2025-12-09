@@ -6,7 +6,6 @@ from qgis.core import (
 from qgis.PyQt.QtWidgets import QTableWidgetItem, QTableWidget
 
 
-
 THEMES_TRANSLATION = {
     "carpooling": "Covoiturage",
     "demography": "Démographie",
@@ -128,7 +127,6 @@ def fill_table_widget(table_widget, headers, items):
             else:
                 text = layer[header["value"]]
 
-
             # create a table cell
             cell = QTableWidgetItem(text)
 
@@ -156,6 +154,7 @@ def get_binary_name(binary, with_extension=True):
         name = name.split(".")[0]
 
     return name
+
 
 # def prepare_layer_style(layer, layer_info):
 #

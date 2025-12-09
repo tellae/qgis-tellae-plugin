@@ -138,10 +138,7 @@ class GeojsonSource(QgsLayerSource):
     def make_layer_request(self):
         with LayerDownloadContext(self.layer_name, self.on_request_success) as ctx:
             request(
-                self.layer.data,
-                handler=ctx.handler,
-                error_handler=ctx.error_handler,
-                to_json=False
+                self.layer.data, handler=ctx.handler, error_handler=ctx.error_handler, to_json=False
             )
 
     def on_request_success(self, result):
@@ -197,10 +194,7 @@ class SharkSource(GeojsonSource):
     def prepare(self):
         with LayerDownloadContext(self.layer_name, self.on_request_success) as ctx:
             request_whale(
-                self.get_url(),
-                handler=ctx.handler,
-                error_handler=ctx.error_handler,
-                to_json=False
+                self.get_url(), handler=ctx.handler, error_handler=ctx.error_handler, to_json=False
             )
 
 
@@ -482,7 +476,9 @@ class QgsKiteLayer:
         TELLAE_STORE.main_dialog.signal_end_of_layer_add(self.name)
 
     def _add_to_project(self):
-        QgsProject.instance().layerTreeRegistryBridge().setLayerInsertionPoint(QgsProject.instance().layerTreeRoot(), 0)
+        QgsProject.instance().layerTreeRegistryBridge().setLayerInsertionPoint(
+            QgsProject.instance().layerTreeRoot(), 0
+        )
         QgsProject.instance().addMapLayer(self.qgis_layer)
 
     def _read_edit_attributes(self):
@@ -782,6 +778,7 @@ class KiteLabelLayer(QgsKiteLayer):
     def set_symbol_opacity(self, symbol: QgsSymbol, value: float):
         pass
 
+
 def add_database_layer(layer_info):
     layer_data = {**layer_info, **layer_info.get("additionalProperties", dict())}
 
@@ -794,7 +791,7 @@ def add_custom_layer(geojson, name):
         "id": f"customlayer:{TELLAE_STORE.nb_custom_layers}",
         "layer_class": "MultipleGeometryLayer",
         "data": geojson,
-        "name": name
+        "name": name,
     }
     add_layer(layer_data)
 
@@ -834,11 +831,10 @@ def create_layer(layer_data) -> QgsKiteLayer:
     return layer_instance
 
 
-
 LAYER_CLASSES = {
     "KiteCircleLayer": KiteCircleLayer,
     "KiteLabelLayer": KiteLabelLayer,
     "KiteLineLayer": KiteLineLayer,
     "KiteFillLayer": KiteFillLayer,
-    "MultipleGeometryLayer": MultipleGeometryLayer
+    "MultipleGeometryLayer": MultipleGeometryLayer,
 }

@@ -13,4 +13,3 @@ class BasePanel(ABC):
     @abstractmethod
     def setup(self):
         raise NotImplementedError
-

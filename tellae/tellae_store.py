@@ -1,9 +1,4 @@
-from tellae.utils.utils import (
-    read_local_config,
-    THEMES_TRANSLATION,
-    log,
-    get_binary_name
-)
+from tellae.utils.utils import read_local_config, THEMES_TRANSLATION, log, get_binary_name
 import os
 from enum import IntEnum
 
@@ -99,7 +94,6 @@ class TellaeStore:
         self.main_dialog = tellae_services.dlg
         self.auth_dialog = tellae_services.auth
 
-
     def get_filtered_layer_summary(self, selected_theme: str):
 
         if selected_theme == "Tous":
@@ -127,7 +121,6 @@ class TellaeStore:
         )
 
         return sorted_data
-
 
     def increment_nb_custom_layers(self):
         self.nb_custom_layers += 1
@@ -169,7 +162,6 @@ class TellaeStore:
 
     def get_current_scale(self):
         return self.tellae_services.iface.mapCanvas().scale()
-
 
 
 TELLAE_STORE = TellaeStore()

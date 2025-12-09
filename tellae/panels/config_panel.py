@@ -2,6 +2,7 @@ from tellae.panels.base_panel import BasePanel
 from tellae.services.project import select_project
 from tellae.utils.utils import log
 
+
 class ConfigPanel(BasePanel):
 
     def __init__(self, main_dialog):
@@ -30,7 +31,9 @@ class ConfigPanel(BasePanel):
 
     def fill_project_selector(self):
 
-        self.project_names = [project.get("name", "Mon projet") for project in self.store.user["_ownedProjects"]]
+        self.project_names = [
+            project.get("name", "Mon projet") for project in self.store.user["_ownedProjects"]
+        ]
 
         # set list of layers
         self.ongoing_project_selector_fill = True

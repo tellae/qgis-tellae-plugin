@@ -47,14 +47,13 @@ class LayersPanel(BasePanel):
                 "spatial_data",
                 handler=ctx.handler,
                 error_handler=ctx.error_handler,
-                to_json=True
+                to_json=True,
             )
 
     def add_database_layer(self, index):
 
         layer_item = self.layers[index]
         add_database_layer(layer_item)
-
 
     # database tab
 
@@ -93,9 +92,7 @@ class LayersPanel(BasePanel):
             },
             {
                 "text": "Source",
-                "value": lambda x: self.store.datasets_summary[x["main_dataset"]][
-                    "provider_name"
-                ],
+                "value": lambda x: self.store.datasets_summary[x["main_dataset"]]["provider_name"],
                 "width": 280,
             },
             {"text": "Actions", "value": "actions", "width": 60, "slot": action_slot},
@@ -108,7 +105,6 @@ class LayersPanel(BasePanel):
     def update_selected_project(self):
         self.dlg.projectNameLayersPanel.setText(f"Projet: {self.store.current_project_name}")
         self.fill_project_spatial_data_table()
-
 
     def fill_project_spatial_data_table(self):
         table = self.dlg.projectLayersTable
@@ -124,13 +120,14 @@ class LayersPanel(BasePanel):
         # setup table headers
         # total table length is 721, scroll bar is 16 => header width must total to 705
         headers = [
-            {"text": "Nom", "value": lambda x: get_binary_name(x, with_extension=False), "width": 729},
+            {
+                "text": "Nom",
+                "value": lambda x: get_binary_name(x, with_extension=False),
+                "width": 729,
+            },
             {"text": "Actions", "value": "actions", "width": 60, "slot": action_slot},
         ]
 
         fill_table_widget(table, headers, spatial_data)
 
     # utils
-
-
-
