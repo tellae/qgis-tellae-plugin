@@ -3,10 +3,12 @@ from tellae.utils import log
 from tellae.utils.requests import request_whale, message_from_request_error
 from tellae.services.project import select_project
 from tellae.services.layers import init_layers_table
+from tellae.services.network import init_gtfs_list
 from qgis.core import (
     QgsApplication,
     QgsAuthMethodConfig,
 )
+from qgis.core import Qgis
 
 # authentication constants
 
@@ -111,25 +113,29 @@ def _login(handler=None, error_handler=None, set_indents=False):
 
 
 def _on_login(user):
-    TELLAE_STORE.main_dialog.start_progress("Téléchargement des données Tellae")
+    TELLAE_STORE.main_dialog.start_progress("Initialisation des données Tellae")
 
-    # update user in store (also tags store as authenticated)
-    TELLAE_STORE.set_user(user)
+    try:
+        # update user in store (also tags store as authenticated)
+        TELLAE_STORE.set_user(user)
 
-    # update login button
-    TELLAE_STORE.main_dialog.config_panel.set_auth_button_text(user)
+        # update login button
+        TELLAE_STORE.main_dialog.config_panel.set_auth_button_text(user)
 
-    # update project list
-    TELLAE_STORE.main_dialog.config_panel.fill_project_selector()
+        # update project list
+        TELLAE_STORE.main_dialog.config_panel.fill_project_selector()
 
-    # select project
-    select_project(user["kite"]["project"])
+        # select project
+        select_project(user["kite"]["project"])
 
-    # if store is not initiated, do it now
-    if not TELLAE_STORE.store_initiated:
-        init_store()
-
-    TELLAE_STORE.main_dialog.end_progress()
+        # if store is not initiated, do it now
+        if not TELLAE_STORE.store_initiated:
+            init_store()
+    except Exception as e:
+        TELLAE_STORE.main_dialog.display_message_bar("Erreur lors de l'initialisation des données Tellae", level=Qgis.MessageLevel.Critical)
+        raise e
+    finally:
+        TELLAE_STORE.main_dialog.end_progress()
 
 
 def _create_or_update_auth_config(name, key, secret):
@@ -208,5 +214,7 @@ def init_store():
         return
 
     init_layers_table()
+
+    init_gtfs_list()
 
     TELLAE_STORE.store_initiated = True
