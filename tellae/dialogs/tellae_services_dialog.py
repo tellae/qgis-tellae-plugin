@@ -33,7 +33,7 @@ from qgis.core import Qgis
 from tellae.tellae_store import TELLAE_STORE
 from tellae.utils import *
 
-from tellae.panels import LayersPanel, ConfigPanel, AboutPanel
+from tellae.panels import LayersPanel, FlowsPanel, ConfigPanel, AboutPanel
 from tellae.models.layers import LayerInitialisationError
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
@@ -55,6 +55,7 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
         self.set_menu_icons()
 
         self.layers_panel = LayersPanel(self)
+        self.flows_panel = FlowsPanel(self)
         self.config_panel = ConfigPanel(self)
         self.about_panel = AboutPanel(self)
 
@@ -77,6 +78,7 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
 
         # panels setup
         self.layers_panel.setup()
+        self.flows_panel.setup()
         self.config_panel.setup()
         self.about_panel.setup()
 
@@ -87,11 +89,16 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
         item.setIcon(icon)
 
         item = self.menu_widget.item(1)
-        path = TELLAE_STORE.plugin_dir + "/icons/settings_40dp_000000.svg"
+        path = TELLAE_STORE.plugin_dir + "/icons/sync_alt_40dp_000000.svg"
         icon = QIcon(path)
         item.setIcon(icon)
 
         item = self.menu_widget.item(2)
+        path = TELLAE_STORE.plugin_dir + "/icons/settings_40dp_000000.svg"
+        icon = QIcon(path)
+        item.setIcon(icon)
+
+        item = self.menu_widget.item(3)
         path = TELLAE_STORE.plugin_dir + "/icons/info_40dp_000000.svg"
         icon = QIcon(path)
         item.setIcon(icon)
