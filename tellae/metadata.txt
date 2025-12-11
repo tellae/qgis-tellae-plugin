@@ -23,7 +23,7 @@ hasProcessingProvider=no
 changelog=https://github.com/tellae/qgis-tellae-plugin/blob/main/CHANGELOG.md
 
 # Tags are comma separated with spaces allowed
-tags=python
+tags=python,mobility,transport,network,opendata
 
 homepage=https://github.com/tellae/qgis-tellae-plugin
 icon=tellae.png
