@@ -495,8 +495,7 @@ class QgsKiteLayer:
         self._add_to_project()
 
         # signal successful add
-        if self.verbose:
-            TELLAE_STORE.main_dialog.signal_end_of_layer_add(self.name)
+        self._signal_end_of_add()
 
     def _add_to_project(self):
         QgsProject.instance().layerTreeRegistryBridge().setLayerInsertionPoint(
@@ -513,6 +512,10 @@ class QgsKiteLayer:
         else:
             QgsProject.instance().addMapLayer(self.qgis_layer)
 
+
+    def _signal_end_of_add(self):
+        if self.verbose:
+            TELLAE_STORE.main_dialog.signal_end_of_layer_add(self.name)
 
     def _read_edit_attributes(self):
         log(self.id)
@@ -636,6 +639,8 @@ class MultipleLayer(QgsKiteLayer, ABC):
         for layer in self.sub_layers:
             layer.on_source_prepared()
 
+        self._signal_end_of_add()
+
     # paint methods
 
     def create_symbol(self):
@@ -655,6 +660,14 @@ class GeojsonLayer(MultipleLayer):
     sub_layer_specs = classmethod(sub_layer_specs)
 
 class FlowmapLayer(MultipleLayer):
+
+    def __init__(self, layer_data, parent=None):
+
+        self.flowmap_data = layer_data["data"]
+
+        layer_data["data"] = self.flowmap_data.to_geojson()
+
+        super().__init__(layer_data, parent)
 
     def sub_layer_specs(cls):
         return [
@@ -803,12 +816,12 @@ class FlowmapFlowsLayer(KiteLineLayer):
     ACCEPTED_GEOMETRY_TYPES = [Qgis.GeometryType.Line]
 
     LAYER_VARIABLES = {
+        "min_flow_width": 0.5,
         "max_flow_width": 6
     }
 
     def get_max(self):
-        # TODO: implement
-        return 143
+        return self.parent_layer.flowmap_data.max_flow_magnitude
 
     def create_symbol(self):
 
@@ -820,7 +833,7 @@ class FlowmapFlowsLayer(KiteLineLayer):
         arrow_symbol_layer.setArrowType(QgsArrowSymbolLayer.ArrowType.ArrowRightHalf)  # half arrow
 
         # width defining expression
-        expression = f'@max_flow_width/{self.get_max()}*"count"'
+        expression = f'max(@min_flow_width, @max_flow_width/{self.get_max()}*"count")'
 
         # set arrow size values
         arrow_symbol_layer.setDataDefinedProperty(QgsArrowSymbolLayer.Property.ArrowWidth, QgsProperty.fromExpression(expression))
@@ -868,51 +881,25 @@ class FlowmapLocationsLayer(KiteCircleLayer):
     ACCEPTED_GEOMETRY_TYPES = [Qgis.GeometryType.Point]
 
     LAYER_VARIABLES = {
-        "max_location_width": 10
+        "min_location_size": 1,
+        "max_location_size": 6
     }
 
     def get_max(self):
-        # TODO: implement
-        return 143
+        return self.parent_layer.flowmap_data.max_internal_flow
 
-    # def create_symbol(self):
-    #
-    #     symbol = super().create_symbol()
-    #
-    #
-    #
-    #     ########
-    #
-    #     # create an arrow symbol layer
-    #     arrow_symbol_layer = QgsArrowSymbolLayer()
-    #
-    #     # set properties to make it look like FlowMap
-    #     arrow_symbol_layer.setHeadType(QgsArrowSymbolLayer.HeadType.HeadSingle)  # single direction
-    #     arrow_symbol_layer.setArrowType(QgsArrowSymbolLayer.ArrowType.ArrowRightHalf)  # half arrow
-    #
-    #     # width defining expression
-    #     expression = f'@max_flow_width/{self.get_max()}*"count"'
-    #
-    #     # set arrow size values
-    #     arrow_symbol_layer.setDataDefinedProperty(QgsArrowSymbolLayer.Property.ArrowWidth, QgsProperty.fromExpression(expression))
-    #     arrow_symbol_layer.setDataDefinedProperty(QgsArrowSymbolLayer.Property.ArrowStartWidth,
-    #                                               QgsProperty.fromExpression(expression))
-    #     arrow_symbol_layer.setDataDefinedProperty(QgsArrowSymbolLayer.Property.ArrowHeadLength,
-    #                                               QgsProperty.fromExpression(expression))
-    #     arrow_symbol_layer.setDataDefinedProperty(QgsArrowSymbolLayer.Property.ArrowHeadThickness,
-    #                                               QgsProperty.fromExpression(expression))
-    #     arrow_symbol_layer.setOffset(0)
-    #
-    #     # set arrow border color to white
-    #     fill_symbol = arrow_symbol_layer.subSymbol()
-    #     fill_symbol_layer = fill_symbol.symbolLayer(0)
-    #     fill_symbol_layer.setStrokeColor(QColor("white"))
-    #     fill_symbol_layer.setDataDefinedProperty(QgsSimpleFillSymbolLayer.Property.StrokeWidth, QgsProperty.fromExpression(f'0.2/{self.get_max()}*"count"'))
-    #
-    #     # create a QgisLineSymbol from the arrow symbol layer
-    #     symbol = QgsLineSymbol([arrow_symbol_layer])
-    #
-    #     return symbol
+    def create_symbol(self):
+
+        symbol = super().create_symbol()
+
+        symbol_layer = symbol.symbolLayer(0)
+
+        # define size from expression
+        expression = f'max(@min_location_size, @max_location_size/{self.get_max()}*"interne")'
+        symbol_layer.setDataDefinedProperty(QgsSimpleMarkerSymbolLayer.Property.Size,
+                                                  QgsProperty.fromExpression(expression))
+
+        return symbol
 
     def set_symbol_size(
         self, symbol: QgsSymbol, value: int | float | QgsProperty, data_defined=False
@@ -965,14 +952,17 @@ def add_custom_layer(geojson, name):
     TELLAE_STORE.increment_nb_custom_layers()
 
 
-def add_flowmap_layer(geojson, name):
+def add_flowmap_layer(flowmap_data, name):
+
+    aggregated_flowmap_data = flowmap_data.agg_by_od()
+
     layer_data = {
         "id": f"customlayer:{TELLAE_STORE.nb_custom_layers}",
         "layer_class": "FlowmapLayer",
-        "data": geojson,
+        "data": aggregated_flowmap_data,
         "name": name,
         "editAttributes": {
-            "color": "#ff0000"
+            "color": "#3d6482"
         }
     }
 
