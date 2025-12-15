@@ -19,6 +19,8 @@ from qgis.core import (
     QgsMarkerSymbol,
     QgsProperty,
     QgsFields,
+    QgsArrowSymbolLayer,
+    QgsExpressionContextUtils
 )
 from PyQt5.QtGui import QColor
 from qgis.PyQt.QtCore import Qt
@@ -30,6 +32,7 @@ from .props_mapping import PropsMapping
 from tellae.services.layers import LayerDownloadContext
 from tellae.utils.requests import request, request_whale
 import json
+from copy import deepcopy
 
 
 class LayerInitialisationError(Exception):
@@ -333,7 +336,12 @@ class VectorTileSource(QgsLayerSource):
 class QgsKiteLayer:
     ACCEPTED_GEOMETRY_TYPES = []
 
-    def __init__(self, layer_data):
+    LAYER_VARIABLES = {}
+
+    def __init__(self, layer_data, parent=None):
+
+        self.parent_layer = parent
+
         self.id = layer_data["id"]
 
         self.layerClass = layer_data["layer_class"]
@@ -347,6 +355,10 @@ class QgsKiteLayer:
         self.dataProperties = layer_data.get("dataProperties", dict())
 
         self.category = layer_data.get("category", None)
+
+        self.verbose = layer_data.get("verbose", True)
+
+        self.source_geometry = layer_data.get("source_geometry", None)
 
         if "name" in layer_data:
             name = layer_data["name"]
@@ -405,6 +417,9 @@ class QgsKiteLayer:
         # create a new QGIS layer instance
         self._create_qgis_layer()
 
+        # bind variables to the layer
+        self._create_layer_variables()
+
         # check layer instance
         self._validate_qgis_layer()
 
@@ -412,7 +427,14 @@ class QgsKiteLayer:
         self._add_to_qgis()
 
     def _create_qgis_layer(self):
-        self.qgis_layer = self.source.create_qgis_layer_instance()
+        self.qgis_layer = self.source.create_qgis_layer_instance(geometry=self.source_geometry)
+
+    def _create_layer_variables(self):
+        """
+        Create a new variable in the layer's scope.
+        """
+        for key, value in self.LAYER_VARIABLES.items():
+            QgsExpressionContextUtils.setLayerVariable(self.qgis_layer, key, value)
 
     def _validate_qgis_layer(self):
         if not self.qgis_layer.isValid():
@@ -473,15 +495,28 @@ class QgsKiteLayer:
         self._add_to_project()
 
         # signal successful add
-        TELLAE_STORE.main_dialog.signal_end_of_layer_add(self.name)
+        if self.verbose:
+            TELLAE_STORE.main_dialog.signal_end_of_layer_add(self.name)
 
     def _add_to_project(self):
         QgsProject.instance().layerTreeRegistryBridge().setLayerInsertionPoint(
             QgsProject.instance().layerTreeRoot(), 0
         )
-        QgsProject.instance().addMapLayer(self.qgis_layer)
+
+        if self.qgis_layer.featureCount() == 0:
+            return
+
+        if self.parent_layer is not None and self.parent_layer.group is not None:
+            # do not add the layer to the legend as it will already be added when linking group
+            QgsProject.instance().addMapLayer(self.qgis_layer, False)
+            self.parent_layer.group.addLayer(self.qgis_layer)
+        else:
+            QgsProject.instance().addMapLayer(self.qgis_layer)
+
 
     def _read_edit_attributes(self):
+        log(self.id)
+        log(self.editAttributes)
         if self.editAttributes is not None:
             self.editAttributes = {
                 key: PropsMapping.from_spec(key, spec) for key, spec in self.editAttributes.items()
@@ -552,76 +587,81 @@ class QgsKiteLayer:
         return style
 
 
-class MultipleGeometryLayer(QgsKiteLayer):
+
+class MultipleLayer(QgsKiteLayer, ABC):
     """
-    Layer containing several sub-layers, one for each geometry type (Point, LineString, Polygon).
+    Layer containing several sub-layers (QgsKiteLayer instances).
 
     Sub-layers are added to a QgsLayerTreeGroup with the layer name.
     """
 
-    ACCEPTED_GEOMETRY_TYPES = [None]
+    def __init__(self, layer_data, parent=None):
 
-    @property
-    def is_vector(self):
-        return self.source.is_vector()
+        super().__init__(layer_data)
 
-    @property
-    def geometry_type(self) -> Qgis.GeometryType | None:
-        return None
+        sub_layers = []
+        for i, spec in enumerate(self.sub_layer_specs()):
+            layer_class = spec["layer_class"]
+            geometry = spec["geometry"]
+            layer_data_copy = deepcopy(layer_data)
+            layer_data_copy["id"] = f"{self.id}-{i}"
 
-    def _create_qgis_layer(self):
+            layer_data_copy["layer_class"] = layer_class
+            layer_data_copy["verbose"] = False
+            layer_data_copy["source_geometry"] = geometry
+            layer = create_layer(layer_data_copy, parent=self)
 
-        qgis_layers = []
-        for geometry in ["Point", "LineString", "Polygon"]:
+            sub_layers.append(layer)
 
-            layer = self.source.create_qgis_layer_instance(geometry=geometry, name=self.name)
+        self.sub_layers = sub_layers
 
-            if layer.featureCount() > 0:
-                qgis_layers.append(layer)
+        self.group = None
 
-        self.qgis_layer = qgis_layers
+    @abstractmethod
+    def sub_layer_specs(cls):
+        raise NotImplementedError
+    sub_layer_specs = classmethod(sub_layer_specs)
 
-    def _validate_qgis_layer(self):
-        for layer in self.qgis_layer:
-            if not layer.isValid():
-                raise ValueError("QGIS layer is not valid")
+    def setup(self):
+        super().setup()
 
-    def _create_style(self):
-        return
-        if self.is_vector:
-            style = VectorTilesStyle(self)
-        else:
-            style = ClassicStyle(self)
-        self.style = style
+        for layer in self.sub_layers:
+            layer.source = self.source
 
-    def _update_style(self):
-        return
-        # TODO
-        self._call_style_update()
+    def on_source_prepared(self):
+        # create a group for the sublayers
+        root = QgsProject.instance().layerTreeRoot()
+        self.group = root.insertGroup(0, self.name)
 
-    def _call_style_update(self):
-        # update symbols if editAttributes are present
-        if self.style.editAttributes:
-            self.style.update_layer_symbology()
+        for layer in self.sub_layers:
+            layer.on_source_prepared()
 
-    def _update_aliases(self):
-        pass
-        # TODO: implement or use sub layers
+    # paint methods
 
-    def _add_to_project(self):
-        if len(self.qgis_layer) == 1:
-            QgsProject.instance().addMapLayer(self.qgis_layer[0])
-        elif len(self.qgis_layer) > 1:
-            root = QgsProject.instance().layerTreeRoot()
-            group = root.insertGroup(0, self.name)
+    def create_symbol(self):
+        raise RuntimeError("Style method called on parent layer")
 
-            for layer in self.qgis_layer:
-                # do not add the layer to the legend as it will already be added when linking group
-                QgsProject.instance().addMapLayer(layer, False)
-                group.addLayer(layer)
-        else:
-            raise ValueError("La couche est vide ou incomplète")
+    def create_vector_tile_style(self, label) -> QgsVectorTileBasicRendererStyle:
+        raise NotImplementedError
 
+class GeojsonLayer(MultipleLayer):
+
+    def sub_layer_specs(cls):
+        return [
+            {"layer_class": "KiteCircleLayer", "geometry": "Point"},
+            {"layer_class": "KiteLineLayer", "geometry": "LineString"},
+            {"layer_class": "KiteFillLayer", "geometry": "Polygon"}
+        ]
+    sub_layer_specs = classmethod(sub_layer_specs)
+
+class FlowmapLayer(MultipleLayer):
+
+    def sub_layer_specs(cls):
+        return [
+            {"layer_class": "FlowmapFlowsLayer", "geometry": "LineString"},
+            {"layer_class": "FlowmapLocationsLayer", "geometry": "Point"}
+        ]
+    sub_layer_specs = classmethod(sub_layer_specs)
 
 class KiteCircleLayer(QgsKiteLayer):
     """
@@ -756,6 +796,132 @@ class KiteLineLayer(QgsKiteLayer):
             symbol_layer.setStrokeWidthUnit(value)
 
 
+class FlowmapFlowsLayer(KiteLineLayer):
+    """
+    A class for displaying flows data with a FlowMap like layer.
+    """
+    ACCEPTED_GEOMETRY_TYPES = [Qgis.GeometryType.Line]
+
+    LAYER_VARIABLES = {
+        "max_flow_width": 6
+    }
+
+    def get_max(self):
+        # TODO: implement
+        return 143
+
+    def create_symbol(self):
+
+        # create an arrow symbol layer
+        arrow_symbol_layer = QgsArrowSymbolLayer()
+
+        # set properties to make it look like FlowMap
+        arrow_symbol_layer.setHeadType(QgsArrowSymbolLayer.HeadType.HeadSingle)  # single direction
+        arrow_symbol_layer.setArrowType(QgsArrowSymbolLayer.ArrowType.ArrowRightHalf)  # half arrow
+
+        # width defining expression
+        expression = f'@max_flow_width/{self.get_max()}*"count"'
+
+        # set arrow size values
+        arrow_symbol_layer.setDataDefinedProperty(QgsArrowSymbolLayer.Property.ArrowWidth, QgsProperty.fromExpression(expression))
+        arrow_symbol_layer.setDataDefinedProperty(QgsArrowSymbolLayer.Property.ArrowStartWidth,
+                                                  QgsProperty.fromExpression(expression))
+        arrow_symbol_layer.setDataDefinedProperty(QgsArrowSymbolLayer.Property.ArrowHeadLength,
+                                                  QgsProperty.fromExpression(expression))
+        arrow_symbol_layer.setDataDefinedProperty(QgsArrowSymbolLayer.Property.ArrowHeadThickness,
+                                                  QgsProperty.fromExpression(expression))
+        arrow_symbol_layer.setOffset(0)
+
+        # set arrow border color to white
+        fill_symbol = arrow_symbol_layer.subSymbol()
+        fill_symbol_layer = fill_symbol.symbolLayer(0)
+        fill_symbol_layer.setStrokeColor(QColor("white"))
+        fill_symbol_layer.setDataDefinedProperty(QgsSimpleFillSymbolLayer.Property.StrokeWidth, QgsProperty.fromExpression(f'0.2/{self.get_max()}*"count"'))
+
+        # create a QgisLineSymbol from the arrow symbol layer
+        symbol = QgsLineSymbol([arrow_symbol_layer])
+
+        return symbol
+
+    def set_symbol_color(self, symbol: QgsSymbol, value: QColor | QgsProperty, data_defined=False):
+        arrow_symbol_layer = symbol.symbolLayer(0)
+        fill_symbol = arrow_symbol_layer.subSymbol()
+        fill_symbol_layer = fill_symbol.symbolLayer(0)
+        if data_defined:
+            # set the FillColor property of the fill symbol layer
+            fill_symbol_layer.setDataDefinedProperty(QgsSimpleFillSymbolLayer.Property.FillColor, value)
+        else:
+            if isinstance(fill_symbol, QgsFillSymbol):
+                # use setColor virtual method of QgsSimpleFillSymbolLayer
+                fill_symbol.setColor(value)
+
+    def set_symbol_size(
+        self, symbol: QgsSymbol, value: int | float | QgsProperty, data_defined=False
+    ):
+        raise NotImplementedError
+
+    def set_symbol_size_unit(self, symbol, value: Qgis.RenderUnit):
+        raise NotImplementedError
+
+
+class FlowmapLocationsLayer(KiteCircleLayer):
+    ACCEPTED_GEOMETRY_TYPES = [Qgis.GeometryType.Point]
+
+    LAYER_VARIABLES = {
+        "max_location_width": 10
+    }
+
+    def get_max(self):
+        # TODO: implement
+        return 143
+
+    # def create_symbol(self):
+    #
+    #     symbol = super().create_symbol()
+    #
+    #
+    #
+    #     ########
+    #
+    #     # create an arrow symbol layer
+    #     arrow_symbol_layer = QgsArrowSymbolLayer()
+    #
+    #     # set properties to make it look like FlowMap
+    #     arrow_symbol_layer.setHeadType(QgsArrowSymbolLayer.HeadType.HeadSingle)  # single direction
+    #     arrow_symbol_layer.setArrowType(QgsArrowSymbolLayer.ArrowType.ArrowRightHalf)  # half arrow
+    #
+    #     # width defining expression
+    #     expression = f'@max_flow_width/{self.get_max()}*"count"'
+    #
+    #     # set arrow size values
+    #     arrow_symbol_layer.setDataDefinedProperty(QgsArrowSymbolLayer.Property.ArrowWidth, QgsProperty.fromExpression(expression))
+    #     arrow_symbol_layer.setDataDefinedProperty(QgsArrowSymbolLayer.Property.ArrowStartWidth,
+    #                                               QgsProperty.fromExpression(expression))
+    #     arrow_symbol_layer.setDataDefinedProperty(QgsArrowSymbolLayer.Property.ArrowHeadLength,
+    #                                               QgsProperty.fromExpression(expression))
+    #     arrow_symbol_layer.setDataDefinedProperty(QgsArrowSymbolLayer.Property.ArrowHeadThickness,
+    #                                               QgsProperty.fromExpression(expression))
+    #     arrow_symbol_layer.setOffset(0)
+    #
+    #     # set arrow border color to white
+    #     fill_symbol = arrow_symbol_layer.subSymbol()
+    #     fill_symbol_layer = fill_symbol.symbolLayer(0)
+    #     fill_symbol_layer.setStrokeColor(QColor("white"))
+    #     fill_symbol_layer.setDataDefinedProperty(QgsSimpleFillSymbolLayer.Property.StrokeWidth, QgsProperty.fromExpression(f'0.2/{self.get_max()}*"count"'))
+    #
+    #     # create a QgisLineSymbol from the arrow symbol layer
+    #     symbol = QgsLineSymbol([arrow_symbol_layer])
+    #
+    #     return symbol
+
+    def set_symbol_size(
+        self, symbol: QgsSymbol, value: int | float | QgsProperty, data_defined=False
+    ):
+        raise NotImplementedError
+
+    def set_symbol_size_unit(self, symbol, value: Qgis.RenderUnit):
+        raise NotImplementedError
+
 class KiteLabelLayer(QgsKiteLayer):
     """
     A class for displaying Point geometries with text labels.
@@ -789,7 +955,7 @@ def add_custom_layer(geojson, name):
     # create layer
     layer_data = {
         "id": f"customlayer:{TELLAE_STORE.nb_custom_layers}",
-        "layer_class": "MultipleGeometryLayer",
+        "layer_class": "GeojsonLayer",
         "data": geojson,
         "name": name,
     }
@@ -798,6 +964,22 @@ def add_custom_layer(geojson, name):
     # increment custom layer count
     TELLAE_STORE.increment_nb_custom_layers()
 
+
+def add_flowmap_layer(geojson, name):
+    layer_data = {
+        "id": f"customlayer:{TELLAE_STORE.nb_custom_layers}",
+        "layer_class": "FlowmapLayer",
+        "data": geojson,
+        "name": name,
+        "editAttributes": {
+            "color": "#ff0000"
+        }
+    }
+
+    add_layer(layer_data)
+
+    # increment custom layer count
+    TELLAE_STORE.increment_nb_custom_layers()
 
 def add_layer(layer_data):
     # create the layer instance
@@ -816,7 +998,7 @@ def add_layer(layer_data):
         TELLAE_STORE.main_dialog.signal_end_of_layer_add(layer_instance.name, e)
 
 
-def create_layer(layer_data) -> QgsKiteLayer:
+def create_layer(layer_data, parent=None) -> QgsKiteLayer:
     # get layer constructor
     layer_class = layer_data["layer_class"]
     if layer_class in LAYER_CLASSES:
@@ -826,7 +1008,7 @@ def create_layer(layer_data) -> QgsKiteLayer:
 
     # create and initialise layer instance
     layer_instance = layer_constructor.__new__(layer_constructor)
-    layer_instance.__init__(layer_data)
+    layer_instance.__init__(layer_data, parent=parent)
 
     return layer_instance
 
@@ -836,5 +1018,8 @@ LAYER_CLASSES = {
     "KiteLabelLayer": KiteLabelLayer,
     "KiteLineLayer": KiteLineLayer,
     "KiteFillLayer": KiteFillLayer,
-    "MultipleGeometryLayer": MultipleGeometryLayer,
+    "FlowmapLayer": FlowmapLayer,
+    "FlowmapFlowsLayer": FlowmapFlowsLayer,
+    "FlowmapLocationsLayer": FlowmapLocationsLayer,
+    "GeojsonLayer": GeojsonLayer,
 }
