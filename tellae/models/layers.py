@@ -21,7 +21,10 @@ from qgis.core import (
     QgsFields,
     QgsArrowSymbolLayer,
     QgsExpressionContextUtils,
-    QgsFeatureRequest
+    QgsFeatureRequest,
+    QgsFilledLineSymbolLayer,
+    QgsGradientFillSymbolLayer,
+    QgsSingleSymbolRenderer
 )
 from PyQt5.QtGui import QColor
 from qgis.PyQt.QtCore import Qt
@@ -922,6 +925,24 @@ class FlowmapLocationsLayer(KiteCircleLayer):
     def set_symbol_size_unit(self, symbol, value: Qgis.RenderUnit):
         raise NotImplementedError
 
+class StarlingLayer(KiteLineLayer):
+
+    ACCEPTED_GEOMETRY_TYPES = [Qgis.GeometryType.Line]
+
+    def _update_style(self):
+        fill_symbol_layer = QgsGradientFillSymbolLayer(QColor("#3d6482"), QColor("#85c287"))
+
+        fill_symbol = QgsFillSymbol([fill_symbol_layer])
+
+        symbol_layer = QgsFilledLineSymbolLayer(width=3, fillSymbol=fill_symbol)
+        symbol_layer.setPenCapStyle(Qt.PenCapStyle.RoundCap)
+
+        symbol = QgsLineSymbol([symbol_layer])
+
+        renderer = QgsSingleSymbolRenderer(symbol)
+
+        self.qgis_layer.setRenderer(renderer)
+
 class KiteLabelLayer(QgsKiteLayer):
     """
     A class for displaying Point geometries with text labels.
@@ -984,6 +1005,21 @@ def add_flowmap_layer(flowmap_data, name):
     # increment custom layer count
     TELLAE_STORE.increment_nb_custom_layers()
 
+def add_starling_layer(starling_data, name):
+    # create layer
+    layer_data = {
+        "id": f"customlayer:{TELLAE_STORE.nb_custom_layers}",
+        "layer_class": "StarlingLayer",
+        "data": starling_data,
+        "name": name,
+    }
+
+    add_layer(layer_data)
+
+    # increment custom layer count
+    TELLAE_STORE.increment_nb_custom_layers()
+
+
 def add_layer(layer_data):
     # create the layer instance
     try:
@@ -1024,5 +1060,6 @@ LAYER_CLASSES = {
     "FlowmapLayer": FlowmapLayer,
     "FlowmapFlowsLayer": FlowmapFlowsLayer,
     "FlowmapLocationsLayer": FlowmapLocationsLayer,
+    "StarlingLayer": StarlingLayer,
     "GeojsonLayer": GeojsonLayer,
 }

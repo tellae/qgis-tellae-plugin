@@ -1,7 +1,7 @@
 from tellae.panels.base_panel import BasePanel
 from tellae.utils import *
 from tellae.utils.utils import fill_table_widget, get_binary_name, log
-from tellae.models.layers import add_flowmap_layer
+from tellae.models.layers import add_flowmap_layer, add_starling_layer
 from tellae.services.project import get_project_binary_from_hash
 from tellae.services.layers import LayerDownloadContext
 from qgis.PyQt.QtWidgets import QPushButton
@@ -18,8 +18,16 @@ class FlowsPanel(BasePanel):
 
     def add_project_flows(self, row_idx):
         binary = self.store.get_project_data("flows")[row_idx]
-        name = get_binary_name(binary, with_extension=False)
+        flow_type = binary["metadata"]["type"]
+        if flow_type == "FLOWMAP":
+            self.add_project_flowmap(binary)
+        elif flow_type == "STARLING":
+            self.add_project_starling_flows(binary)
+        else:
+            raise ValueError(f"Unsupported flows type '{flow_type}'")
 
+    def add_project_flowmap(self, binary):
+        name = get_binary_name(binary, with_extension=False)
         def handler(result):
             flowmap_data = FlowmapData.from_zip_stream(result["content"])
             add_flowmap_layer(flowmap_data, name)
@@ -31,6 +39,21 @@ class FlowsPanel(BasePanel):
                 handler=ctx.handler,
                 error_handler=ctx.error_handler,
                 to_json=False,
+            )
+
+    def add_project_starling_flows(self, binary):
+        name = get_binary_name(binary, with_extension=False)
+        def handler(result):
+            geojson = result["content"]
+            add_starling_layer(geojson, name)
+
+        with LayerDownloadContext(name, handler) as ctx:
+            get_project_binary_from_hash(
+                binary["hash"],
+                "flows",
+                handler=ctx.handler,
+                error_handler=ctx.error_handler,
+                to_json=True
             )
 
     # project tab
