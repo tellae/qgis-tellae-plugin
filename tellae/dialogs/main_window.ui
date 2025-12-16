@@ -183,7 +183,7 @@ QListWidget::item::selected {
          <item>
           <widget class="QStackedWidget" name="stacked_panels_widget">
            <property name="currentIndex">
-            <number>1</number>
+            <number>2</number>
            </property>
            <widget class="QWidget" name="layers">
             <widget class="QWidget" name="verticalLayoutWidget">
@@ -453,85 +453,119 @@ QListWidget::item::selected {
             </widget>
            </widget>
            <widget class="QWidget" name="page">
-            <widget class="QWidget" name="verticalLayoutWidget_3">
+            <widget class="QLabel" name="label_10">
              <property name="geometry">
               <rect>
                <x>10</x>
                <y>10</y>
-               <width>801</width>
-               <height>481</height>
+               <width>799</width>
+               <height>51</height>
               </rect>
              </property>
-             <layout class="QVBoxLayout" name="verticalLayout_3">
-              <item>
-               <widget class="QLabel" name="label_10">
-                <property name="font">
-                 <font>
-                  <pointsize>15</pointsize>
-                  <weight>75</weight>
-                  <bold>true</bold>
-                 </font>
-                </property>
-                <property name="text">
-                 <string>À propos de Tellae et de ce plugin</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
-                <property name="wordWrap">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="label_6">
-                <property name="text">
-                 <string>Ce plugin propose des services pour la visualisation et l'analyse de données de mobilité. Cela permet de bénéficier de toutes les fonctionnalités de Qgis pour la manipulation et la modification de couches de visualisation. Vous devez posséder un compte [Kite](kite.tellae.fr) afin de vous authentifier et accéder à ces services (voir fenêtre d'authentification pour plus de détails).</string>
-                </property>
-                <property name="textFormat">
-                 <enum>Qt::MarkdownText</enum>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignJustify|Qt::AlignTop</set>
-                </property>
-                <property name="wordWrap">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="label_7">
-                <property name="text">
-                 <string>Ce plugin se concentre sur la visualisation de données disponibles ou préparées dans l'application web [Kite](kite.tellae.fr) et reproduit l'organisation des données par thématiques (calques, flux, réseau). Certaines fonctionnalités d'ajout/modification des données de Kite ne sont pas disponibles dans ce plugin. Afin d'en bénéficier, nous suggérons d'utiliser ces fonctionnalités dans Kite et de sauvegarder les données résultantes dans votre projet afin de pouvoir les retrouver ici.</string>
-                </property>
-                <property name="textFormat">
-                 <enum>Qt::MarkdownText</enum>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignJustify|Qt::AlignTop</set>
-                </property>
-                <property name="wordWrap">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="about_plugin">
-                <property name="text">
-                 <string>[Tellae](tellae.fr) est un cabinet de conseil innovant spécialisé dans les problématiques de transports et mobilité des territoires. Nous fournissons à nos clients, publics ou privés, des solutions pour éclairer leurs décisions stratégiques et opérationnelles.</string>
-                </property>
-                <property name="textFormat">
-                 <enum>Qt::MarkdownText</enum>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignJustify|Qt::AlignTop</set>
-                </property>
-                <property name="wordWrap">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-             </layout>
+             <property name="font">
+              <font>
+               <pointsize>15</pointsize>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>À propos de Tellae et de ce plugin</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+            </widget>
+            <widget class="QLabel" name="label_6">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>70</y>
+               <width>799</width>
+               <height>61</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>Le plugin Tellae rend disponible de nombreuses fonctionnalités de la plateforme KITE directement dans Qgis: accès à un large catalogue de données générales et de données spécifiques à la mobilité, fonctionnalités d'analyse de la mobilité.</string>
+             </property>
+             <property name="textFormat">
+              <enum>Qt::MarkdownText</enum>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignJustify|Qt::AlignTop</set>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+            </widget>
+            <widget class="QLabel" name="label_7">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>140</y>
+               <width>799</width>
+               <height>61</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>Pour utiliser le plugin, vous devez tout d'abord créer un compte [Kite](kite.tellae.fr) afin de vous authentifier et accéder aux services (voir fenêtre d'authentification pour plus de détails).</string>
+             </property>
+             <property name="textFormat">
+              <enum>Qt::MarkdownText</enum>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignJustify|Qt::AlignTop</set>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+            </widget>
+            <widget class="QLabel" name="label_8">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>190</y>
+               <width>799</width>
+               <height>101</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>Le plugin se concentre sur la visualisation de données disponibles ou préparées dans l'application web [Kite](kite.tellae.fr) et reproduit l'organisation des données par thématiques (calques, flux, réseau). Certaines fonctionnalités ne sont pas disponibles dans ce plugin. Afin d'en bénéficier, nous conseillons d'utiliser directement KITE, puis de sauvegarder les données résultantes dans votre projet afin de pouvoir les retrouver dans Qgis avec le plugin.</string>
+             </property>
+             <property name="textFormat">
+              <enum>Qt::MarkdownText</enum>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignJustify|Qt::AlignTop</set>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+            </widget>
+            <widget class="QLabel" name="label_11">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>280</y>
+               <width>799</width>
+               <height>101</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>[Tellae](tellae.fr) est un cabinet de conseil innovant spécialisé dans les problématiques de transports et mobilité des territoires. Nous fournissons à nos clients, publics ou privés, des solutions pour éclairer leurs décisions stratégiques et opérationnelles.</string>
+             </property>
+             <property name="textFormat">
+              <enum>Qt::MarkdownText</enum>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignJustify|Qt::AlignTop</set>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
             </widget>
            </widget>
           </widget>
