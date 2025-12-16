@@ -20,7 +20,8 @@ from qgis.core import (
     QgsProperty,
     QgsFields,
     QgsArrowSymbolLayer,
-    QgsExpressionContextUtils
+    QgsExpressionContextUtils,
+    QgsFeatureRequest
 )
 from PyQt5.QtGui import QColor
 from qgis.PyQt.QtCore import Qt
@@ -494,8 +495,8 @@ class QgsKiteLayer:
         # add layer to QGIS
         self._add_to_project()
 
-        # signal successful add
-        self._signal_end_of_add()
+        # callbacks on layer add
+        self._on_layer_added()
 
     def _add_to_project(self):
         QgsProject.instance().layerTreeRegistryBridge().setLayerInsertionPoint(
@@ -513,13 +514,12 @@ class QgsKiteLayer:
             QgsProject.instance().addMapLayer(self.qgis_layer)
 
 
-    def _signal_end_of_add(self):
+    def _on_layer_added(self):
+        # display a popup if verbose
         if self.verbose:
             TELLAE_STORE.main_dialog.signal_end_of_layer_add(self.name)
 
     def _read_edit_attributes(self):
-        log(self.id)
-        log(self.editAttributes)
         if self.editAttributes is not None:
             self.editAttributes = {
                 key: PropsMapping.from_spec(key, spec) for key, spec in self.editAttributes.items()
@@ -639,7 +639,7 @@ class MultipleLayer(QgsKiteLayer, ABC):
         for layer in self.sub_layers:
             layer.on_source_prepared()
 
-        self._signal_end_of_add()
+        self._on_layer_added()
 
     # paint methods
 
@@ -819,6 +819,19 @@ class FlowmapFlowsLayer(KiteLineLayer):
         "min_flow_width": 0.5,
         "max_flow_width": 6
     }
+
+    def _update_style(self):
+        super()._update_style()
+
+        renderer = self.qgis_layer.renderer()
+
+        # enabled order by
+        renderer.setOrderByEnabled(True)
+        # add order by clause
+        order_by_clause = QgsFeatureRequest.OrderByClause("count", ascending=True)
+        renderer.setOrderBy(QgsFeatureRequest.OrderBy([order_by_clause]))
+
+        self.qgis_layer.setRenderer(renderer)
 
     def get_max(self):
         return self.parent_layer.flowmap_data.max_flow_magnitude
