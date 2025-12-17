@@ -28,13 +28,13 @@ def init_gtfs_list():
               }
         """
 
-    log(query)
-
-    gtfs_list = request_whale("/graphql", method="POST", body={
-        "query": query
-    }, blocking=True)["data"]["PublicTransports"]["results"]
-
-    log([gtfs["uuid"] for gtfs in gtfs_list])
+    gtfs_list = request_whale(
+        "/graphql",
+        method="POST",
+        headers={"content-type": "application/json"},
+        body={"query": query},
+        blocking=True
+    )["content"]["data"]["PublicTransports"]["results"]
 
     TELLAE_STORE.gtfs_list = gtfs_list
 

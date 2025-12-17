@@ -10,6 +10,7 @@ def request(
     body=None,
     handler=None,
     error_handler=None,
+    headers=None,
     auth_cfg=None,
     to_json=True,
     blocking=False,
@@ -42,7 +43,7 @@ def request(
 
     try:
         # make request
-        call_result, _ = nam.request(url, method=method, body=body, blocking=blocking)
+        call_result, _ = nam.request(url, method=method, body=body, headers=headers, blocking=blocking)
 
         if not blocking:
             # add callback for asynchronous requests
