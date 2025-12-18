@@ -29,6 +29,77 @@ class QgsKiteLayer:
 
     LAYER_VARIABLES = {}
 
+    # def __init__(
+    #     self,
+    #     layer_id,
+    #     data,
+    #     editAttributes=None,
+    #     sourceType="geojson",
+    #     layerProps=None,
+    #     dataProperties=None,
+    #     verbose=True,
+    #     source_parameters=None,
+    #     name="Unnamed",
+    #     datasets=None,
+    #     main_dataset=None,
+    #     parent=None,
+    # ):
+    #     # layer id
+    #     self.id = layer_id
+    #
+    #     # source instance
+    #     self.source = None
+    #
+    #     # Qgis layer instance
+    #     self.qgis_layer = None
+    #
+    #     # layer style instance
+    #     self.style = None
+    #
+    #     # parent layer instance
+    #     self.parent = parent
+    #
+    #     # layer descriptive properties, used to determine layer display
+    #
+    #     # layer name (displayed in Qgis legend)
+    #     if isinstance(name, dict):
+    #         self.name = name[TELLAE_STORE.locale]
+    #     else:
+    #         self.name = name
+    #
+    #     # object used to determine layer contents
+    #     self.data = data
+    #
+    #     # type of data provided to the layer
+    #     self.source_type = sourceType
+    #
+    #     # additional parameters passed to source at layer creation
+    #     self.source_parameters = source_parameters
+    #
+    #     # description of the properties of the data
+    #     self.data_properties = dataProperties if dataProperties is not None else dict()
+    #
+    #     self.editAttributes = editAttributes if editAttributes is not None else dict()
+    #     self._read_edit_attributes()
+    #
+    #     # datasets used by the data
+    #     self.datasets = datasets if datasets is not None else []
+    #
+    #     # main dataset used by the data
+    #     self.main_dataset = main_dataset
+    #
+    #     # additional mapbox properties
+    #     self.mapbox_props = layerProps if layerProps is not None else dict()
+    #
+    #     # util attributes
+    #
+    #     # whether to display information with popup
+    #     self.verbose = verbose
+
+
+
+
+
     def __init__(self, layer_data, parent=None):
 
         self.parent_layer = parent
