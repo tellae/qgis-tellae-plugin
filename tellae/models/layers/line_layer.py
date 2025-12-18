@@ -14,7 +14,6 @@ from PyQt5.QtGui import QColor
 from qgis.PyQt.QtCore import Qt
 
 
-
 class KiteLineLayer(QgsKiteLayer):
     """
     A class for displaying LineString and Polygon geometries with solid lines.

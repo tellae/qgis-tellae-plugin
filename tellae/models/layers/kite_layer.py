@@ -9,16 +9,24 @@ from qgis.core import (
 from tellae.tellae_store import TELLAE_STORE
 from tellae.models.layers.layer_style import ClassicStyle, VectorTilesStyle
 from tellae.models.props_mapping import PropsMapping
-from tellae.models.layers.layer_source import QgsLayerSource, GeojsonSource, SharkSource, VectorTileGeojsonSource
+from tellae.models.layers.layer_source import (
+    QgsLayerSource,
+    GeojsonSource,
+    SharkSource,
+    VectorTileGeojsonSource,
+)
 from tellae.utils.utils import log
 from tellae.utils import RequestsException
 import traceback
 
+
 class LayerInitialisationError(Exception):
     pass
 
+
 class MinZoomException(Exception):
     pass
+
 
 class LayerStylingException(Exception):
     pass
@@ -43,7 +51,7 @@ class QgsKiteLayer:
         datasets=None,
         main_dataset=None,
         parent=None,
-        **kwargs
+        **kwargs,
     ):
         # layer id
         self.id = layer_id
@@ -249,7 +257,6 @@ class QgsKiteLayer:
         else:
             QgsProject.instance().addMapLayer(self.qgis_layer)
 
-
     def _on_layer_added(self):
         # display a popup if verbose
         self.signal_successful_layer_add()
@@ -328,7 +335,9 @@ class QgsKiteLayer:
         """
         Signal that the layer was successfully added to Qgis.
         """
-        self.popup(f"La couche '{self.name}' a été ajoutée avec succès !", Qgis.MessageLevel.Success)
+        self.popup(
+            f"La couche '{self.name}' a été ajoutée avec succès !", Qgis.MessageLevel.Success
+        )
 
     def signal_layer_add_error(self, exception):
         """

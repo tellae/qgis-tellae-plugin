@@ -45,4 +45,3 @@ class KiteFillLayer(QgsKiteLayer):
 
     def set_symbol_size_unit(self, symbol: QgsSymbol, value: Qgis.RenderUnit):
         log("Trying to set size unit on KiteFillLayer")
-

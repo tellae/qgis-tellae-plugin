@@ -8,7 +8,6 @@ from qgis.core import (
     QgsVectorTileLayer,
     QgsCoordinateTransform,
     QgsCoordinateReferenceSystem,
-
 )
 
 from tellae.utils import log, RequestsException
@@ -207,7 +206,9 @@ class VectorTileGeojsonSource(SharkSource):
 
         # start with properties from dataProperties
         select = (
-            list(self.layer.data_properties.keys()) if self.layer.data_properties is not None else []
+            list(self.layer.data_properties.keys())
+            if self.layer.data_properties is not None
+            else []
         )
 
         # add edit attributes that read properties
@@ -257,7 +258,9 @@ class VectorTileSource(QgsLayerSource):
 
         # start with properties from dataProperties
         select = (
-            list(self.layer.data_properties.keys()) if self.layer.data_properties is not None else []
+            list(self.layer.data_properties.keys())
+            if self.layer.data_properties is not None
+            else []
         )
 
         # add edit attributes that read properties
@@ -310,4 +313,3 @@ class VectorTileSource(QgsLayerSource):
 
     def _create_qgis_layer_instance(self):
         return QgsVectorTileLayer(self.uri, self.layer_name)
-

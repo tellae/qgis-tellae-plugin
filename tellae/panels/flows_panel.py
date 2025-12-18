@@ -28,6 +28,7 @@ class FlowsPanel(BasePanel):
 
     def add_project_flowmap(self, binary):
         name = get_binary_name(binary, with_extension=False)
+
         def handler(result):
             # read and aggregated flowmap data
             flowmap_data = FlowmapData.from_zip_stream(result["content"])
@@ -46,6 +47,7 @@ class FlowsPanel(BasePanel):
 
     def add_project_starling_flows(self, binary):
         name = get_binary_name(binary, with_extension=False)
+
         def handler(result):
             # add flow as a StarlingLayer instance
             StarlingLayer(data=result["content"], name=name).add_to_qgis()
@@ -56,7 +58,7 @@ class FlowsPanel(BasePanel):
                 "flows",
                 handler=ctx.handler,
                 error_handler=ctx.error_handler,
-                to_json=True
+                to_json=True,
             )
 
     # project tab

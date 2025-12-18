@@ -29,4 +29,3 @@ LAYER_CLASSES = {
     "StarlingLayer": StarlingLayer,
     "GeojsonLayer": GeojsonLayer,
 }
-

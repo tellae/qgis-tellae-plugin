@@ -26,31 +26,27 @@ class FlowmapLayer(MultipleLayer):
         kwargs["data"] = self.flowmap_data.to_geojson()
 
         # set editAttributes manually
-        kwargs["editAttributes"] = {
-            "color": "#3d6482"
-        }
+        kwargs["editAttributes"] = {"color": "#3d6482"}
 
         super().__init__(*args, **kwargs)
 
     def sub_layer_specs(cls):
         return [
             {"layer_class": FlowmapFlowsLayer, "geometry": "LineString"},
-            {"layer_class": FlowmapLocationsLayer, "geometry": "Point"}
+            {"layer_class": FlowmapLocationsLayer, "geometry": "Point"},
         ]
-    sub_layer_specs = classmethod(sub_layer_specs)
 
+    sub_layer_specs = classmethod(sub_layer_specs)
 
 
 class FlowmapFlowsLayer(KiteLineLayer):
     """
     A class for displaying flows data with a FlowMap like layer.
     """
+
     ACCEPTED_GEOMETRY_TYPES = [Qgis.GeometryType.Line]
 
-    LAYER_VARIABLES = {
-        "min_flow_width": 0.5,
-        "max_flow_width": 6
-    }
+    LAYER_VARIABLES = {"min_flow_width": 0.5, "max_flow_width": 6}
 
     def _update_style(self):
         super()._update_style()
@@ -81,20 +77,28 @@ class FlowmapFlowsLayer(KiteLineLayer):
         expression = f'max(@min_flow_width, @max_flow_width/{self.get_max()}*"count")'
 
         # set arrow size values
-        arrow_symbol_layer.setDataDefinedProperty(QgsArrowSymbolLayer.Property.ArrowWidth, QgsProperty.fromExpression(expression))
-        arrow_symbol_layer.setDataDefinedProperty(QgsArrowSymbolLayer.Property.ArrowStartWidth,
-                                                  QgsProperty.fromExpression(expression))
-        arrow_symbol_layer.setDataDefinedProperty(QgsArrowSymbolLayer.Property.ArrowHeadLength,
-                                                  QgsProperty.fromExpression(expression))
-        arrow_symbol_layer.setDataDefinedProperty(QgsArrowSymbolLayer.Property.ArrowHeadThickness,
-                                                  QgsProperty.fromExpression(expression))
+        arrow_symbol_layer.setDataDefinedProperty(
+            QgsArrowSymbolLayer.Property.ArrowWidth, QgsProperty.fromExpression(expression)
+        )
+        arrow_symbol_layer.setDataDefinedProperty(
+            QgsArrowSymbolLayer.Property.ArrowStartWidth, QgsProperty.fromExpression(expression)
+        )
+        arrow_symbol_layer.setDataDefinedProperty(
+            QgsArrowSymbolLayer.Property.ArrowHeadLength, QgsProperty.fromExpression(expression)
+        )
+        arrow_symbol_layer.setDataDefinedProperty(
+            QgsArrowSymbolLayer.Property.ArrowHeadThickness, QgsProperty.fromExpression(expression)
+        )
         arrow_symbol_layer.setOffset(0)
 
         # set arrow border color to white
         fill_symbol = arrow_symbol_layer.subSymbol()
         fill_symbol_layer = fill_symbol.symbolLayer(0)
         fill_symbol_layer.setStrokeColor(QColor("white"))
-        fill_symbol_layer.setDataDefinedProperty(QgsSimpleFillSymbolLayer.Property.StrokeWidth, QgsProperty.fromExpression(f'0.2/{self.get_max()}*"count"'))
+        fill_symbol_layer.setDataDefinedProperty(
+            QgsSimpleFillSymbolLayer.Property.StrokeWidth,
+            QgsProperty.fromExpression(f'0.2/{self.get_max()}*"count"'),
+        )
 
         # create a QgisLineSymbol from the arrow symbol layer
         symbol = QgsLineSymbol([arrow_symbol_layer])
@@ -107,7 +111,9 @@ class FlowmapFlowsLayer(KiteLineLayer):
         fill_symbol_layer = fill_symbol.symbolLayer(0)
         if data_defined:
             # set the FillColor property of the fill symbol layer
-            fill_symbol_layer.setDataDefinedProperty(QgsSimpleFillSymbolLayer.Property.FillColor, value)
+            fill_symbol_layer.setDataDefinedProperty(
+                QgsSimpleFillSymbolLayer.Property.FillColor, value
+            )
         else:
             if isinstance(fill_symbol, QgsFillSymbol):
                 # use setColor virtual method of QgsSimpleFillSymbolLayer
@@ -125,10 +131,7 @@ class FlowmapFlowsLayer(KiteLineLayer):
 class FlowmapLocationsLayer(KiteCircleLayer):
     ACCEPTED_GEOMETRY_TYPES = [Qgis.GeometryType.Point]
 
-    LAYER_VARIABLES = {
-        "min_location_size": 1,
-        "max_location_size": 6
-    }
+    LAYER_VARIABLES = {"min_location_size": 1, "max_location_size": 6}
 
     def get_max(self):
         return self.parent_layer.flowmap_data.max_internal_flow
@@ -141,8 +144,9 @@ class FlowmapLocationsLayer(KiteCircleLayer):
 
         # define size from expression
         expression = f'max(@min_location_size, @max_location_size/{self.get_max()}*"interne")'
-        symbol_layer.setDataDefinedProperty(QgsSimpleMarkerSymbolLayer.Property.Size,
-                                                  QgsProperty.fromExpression(expression))
+        symbol_layer.setDataDefinedProperty(
+            QgsSimpleMarkerSymbolLayer.Property.Size, QgsProperty.fromExpression(expression)
+        )
 
         return symbol
 

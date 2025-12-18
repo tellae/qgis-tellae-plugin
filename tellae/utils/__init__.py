@@ -6,6 +6,3 @@ from tellae.utils.network_access_manager import (
     RequestsExceptionUserAbort,
     UnauthorizedError,
 )
-
-
-

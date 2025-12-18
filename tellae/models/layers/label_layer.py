@@ -5,6 +5,7 @@ from qgis.core import (
     QgsSymbol,
 )
 
+
 class KiteLabelLayer(QgsKiteLayer):
     """
     A class for displaying Point geometries with text labels.

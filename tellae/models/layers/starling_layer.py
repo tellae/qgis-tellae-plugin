@@ -6,7 +6,7 @@ from qgis.core import (
     QgsLineSymbol,
     QgsFilledLineSymbolLayer,
     QgsGradientFillSymbolLayer,
-    QgsSingleSymbolRenderer
+    QgsSingleSymbolRenderer,
 )
 from PyQt5.QtGui import QColor
 from qgis.PyQt.QtCore import Qt

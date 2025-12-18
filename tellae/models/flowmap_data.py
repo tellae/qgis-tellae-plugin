@@ -15,7 +15,6 @@ class FlowmapData:
     }
     """
 
-
     def __init__(self, flowmap_data):
 
         self.raw_data = flowmap_data
@@ -62,11 +61,10 @@ class FlowmapData:
 
     def _evaluate_locations_stats(self):
         # TODO: THIS IS ALREADY AGGREGATION
-        location_stats = {location_id: {
-                    "entrant": 0,
-                    "sortant": 0,
-                    "interne": 0
-                } for location_id in self._locations_dict.keys()}
+        location_stats = {
+            location_id: {"entrant": 0, "sortant": 0, "interne": 0}
+            for location_id in self._locations_dict.keys()
+        }
 
         for flow in self.flows:
             origin = flow["origin"]
@@ -97,25 +95,18 @@ class FlowmapData:
             origin = flow["origin"]
             dest = flow["dest"]
             pair = (origin, dest)
-            count =  float(flow["count"])
+            count = float(flow["count"])
 
             if pair not in od_dict:
-                od_dict[pair] =count
+                od_dict[pair] = count
             else:
                 od_dict[pair] += count
 
         new_flows = []
         for pair, count_sum in od_dict.items():
-            new_flows.append({
-                "origin": pair[0],
-                "dest": pair[1],
-                "count": count_sum
-            })
+            new_flows.append({"origin": pair[0], "dest": pair[1], "count": count_sum})
 
-        new_flowmap_data = {
-            "flows": new_flows,
-            "locations": self.locations
-        }
+        new_flowmap_data = {"flows": new_flows, "locations": self.locations}
 
         return FlowmapData(new_flowmap_data)
 
@@ -133,9 +124,9 @@ class FlowmapData:
                     "type": "Feature",
                     "geometry": {
                         "type": "Point",
-                        "coordinates": [float(location["lon"]), float(location["lat"])]
+                        "coordinates": [float(location["lon"]), float(location["lat"])],
                     },
-                    "properties": properties
+                    "properties": properties,
                 }
                 features.append(feature)
 
@@ -151,35 +142,38 @@ class FlowmapData:
                     "type": "Feature",
                     "geometry": {
                         "type": "LineString",
-                        "coordinates": [[float(origin["lon"]), float(origin["lat"])], [float(dest["lon"]), float(dest["lat"])]]
+                        "coordinates": [
+                            [float(origin["lon"]), float(origin["lat"])],
+                            [float(dest["lon"]), float(dest["lat"])],
+                        ],
                     },
-                    "properties": properties
+                    "properties": properties,
                 }
                 features.append(feature)
 
-        return {
-            "type": "FeatureCollection",
-            "features": features
-        }
+        return {"type": "FeatureCollection", "features": features}
 
     def from_zip_stream(stream):
         flowmap_data = dict()
         with ZipFile(io.BytesIO(stream)) as zipf:
 
-            with zipf.open('locations.csv', mode="r") as locations_file:
+            with zipf.open("locations.csv", mode="r") as locations_file:
                 flowmap_data["locations"] = csv_to_records(locations_file)
 
-            with zipf.open('flows.csv', mode="r") as flows_file:
+            with zipf.open("flows.csv", mode="r") as flows_file:
                 flowmap_data["flows"] = csv_to_records(flows_file)
 
         return FlowmapData(flowmap_data)
+
     from_zip_stream = staticmethod(from_zip_stream)
+
 
 # utils
 
+
 def csv_to_records(file):
     lines = [line.decode("utf-8") for line in file.readlines()]
-    my_reader = csv.reader(lines, delimiter=',')
+    my_reader = csv.reader(lines, delimiter=",")
 
     headers = []
     records = []

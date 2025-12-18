@@ -6,6 +6,7 @@ from qgis.core import (
     QgsVectorTileBasicRendererStyle,
 )
 
+
 class MultipleLayer(QgsKiteLayer, ABC):
     """
     Layer containing several sub-layers (QgsKiteLayer instances).
@@ -31,13 +32,11 @@ class MultipleLayer(QgsKiteLayer, ABC):
                 sourceType=self.source_type,
                 dataProperties=self.data_properties,
                 verbose=False,
-                source_parameters={
-                    "geometry": spec["geometry"]
-                },
+                source_parameters={"geometry": spec["geometry"]},
                 name=self.name,
                 datasets=self.datasets,
                 main_dataset=self.main_dataset,
-                parent=self
+                parent=self,
             )
 
             self.sub_layers.append(layer)
@@ -45,6 +44,7 @@ class MultipleLayer(QgsKiteLayer, ABC):
     @abstractmethod
     def sub_layer_specs(cls):
         raise NotImplementedError
+
     sub_layer_specs = classmethod(sub_layer_specs)
 
     def _setup(self):
