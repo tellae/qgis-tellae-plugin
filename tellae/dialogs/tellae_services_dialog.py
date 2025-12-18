@@ -34,7 +34,7 @@ from tellae.tellae_store import TELLAE_STORE
 from tellae.utils import *
 
 from tellae.panels import LayersPanel, FlowsPanel, ConfigPanel, AboutPanel
-from tellae.models.layers import LayerInitialisationError
+from tellae.models.layers import LayerInitialisationError, MinZoomException
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "main_window.ui"))

@@ -1,7 +1,7 @@
 from tellae.panels.base_panel import BasePanel
 from tellae.utils import *
 from tellae.utils.utils import fill_table_widget, get_binary_name, log
-from tellae.models.layers import add_flowmap_layer, add_starling_layer
+from tellae.models.layers.add import add_flowmap_layer, add_starling_layer
 from tellae.services.project import get_project_binary_from_hash
 from tellae.services.layers import LayerDownloadContext
 from qgis.PyQt.QtWidgets import QPushButton

@@ -8,9 +8,4 @@ from tellae.utils.network_access_manager import (
 )
 
 
-class MinZoomException(Exception):
-    pass
 
-
-class LayerStylingException(Exception):
-    pass
