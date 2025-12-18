@@ -5,13 +5,15 @@ from . import *
 def add_database_layer(layer_info):
     layer_data = {**layer_info, **layer_info.get("additionalProperties", dict())}
 
+    layer_data["layer_id"] = layer_data["id"]
+
     add_layer(layer_data)
 
 
 def add_custom_layer(geojson, name):
     # create layer
     layer_data = {
-        "id": f"customlayer:{TELLAE_STORE.nb_custom_layers}",
+        "layer_id": f"customlayer:{TELLAE_STORE.nb_custom_layers}",
         "layer_class": "GeojsonLayer",
         "data": geojson,
         "name": name,
@@ -27,7 +29,7 @@ def add_flowmap_layer(flowmap_data, name):
     aggregated_flowmap_data = flowmap_data.agg_by_od()
 
     layer_data = {
-        "id": f"customlayer:{TELLAE_STORE.nb_custom_layers}",
+        "layer_id": f"customlayer:{TELLAE_STORE.nb_custom_layers}",
         "layer_class": "FlowmapLayer",
         "data": aggregated_flowmap_data,
         "name": name,
@@ -44,7 +46,7 @@ def add_flowmap_layer(flowmap_data, name):
 def add_starling_layer(starling_data, name):
     # create layer
     layer_data = {
-        "id": f"customlayer:{TELLAE_STORE.nb_custom_layers}",
+        "layer_id": f"customlayer:{TELLAE_STORE.nb_custom_layers}",
         "layer_class": "StarlingLayer",
         "data": starling_data,
         "name": name,
@@ -82,7 +84,7 @@ def create_layer(layer_data) -> QgsKiteLayer:
 
     # create and initialise layer instance
     layer_instance = layer_constructor.__new__(layer_constructor)
-    layer_instance.__init__(layer_data)
+    layer_instance.__init__(**layer_data)
 
     return layer_instance
 

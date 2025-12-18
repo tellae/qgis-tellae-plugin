@@ -18,13 +18,13 @@ from PyQt5.QtGui import QColor
 
 class FlowmapLayer(MultipleLayer):
 
-    def __init__(self, layer_data):
+    def __init__(self, *args, **kwargs):
 
-        self.flowmap_data = layer_data["data"]
+        self.flowmap_data = kwargs["data"]
 
-        layer_data["data"] = self.flowmap_data.to_geojson()
+        kwargs["data"] = self.flowmap_data.to_geojson()
 
-        super().__init__(layer_data)
+        super().__init__(*args, **kwargs)
 
     def sub_layer_specs(cls):
         return [

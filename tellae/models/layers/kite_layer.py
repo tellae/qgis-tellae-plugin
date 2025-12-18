@@ -40,6 +40,7 @@ class QgsKiteLayer:
         datasets=None,
         main_dataset=None,
         parent=None,
+        **kwargs
     ):
         # layer id
         self.id = layer_id
@@ -71,7 +72,7 @@ class QgsKiteLayer:
         self.source_type = sourceType
 
         # additional parameters passed to source at layer creation
-        self.source_parameters = source_parameters
+        self.source_parameters = source_parameters if source_parameters is not None else dict()
 
         # description of the properties of the data
         self.data_properties = dataProperties if dataProperties is not None else dict()
@@ -92,47 +93,6 @@ class QgsKiteLayer:
 
         # whether to display information with popup
         self.verbose = verbose
-    #
-    # def __init__(self, layer_data):
-    #
-    #     self.parent_layer = layer_data.get("parent", None)
-    #
-    #     self.id = layer_data["id"]
-    #
-    #     self.layerClass = layer_data["layer_class"]
-    #
-    #     self.data = layer_data.get("data", None)
-    #
-    #     self.sourceType = layer_data.get("sourceType", "geojson")
-    #
-    #     self.mapboxProps = layer_data.get("layerProps", dict())
-    #
-    #     self.dataProperties = layer_data.get("dataProperties", dict())
-    #
-    #     self.verbose = layer_data.get("verbose", True)
-    #
-    #     self.source_geometry = layer_data.get("source_geometry", None)
-    #
-    #     if "name" in layer_data:
-    #         name = layer_data["name"]
-    #         if isinstance(name, dict):
-    #             self.name = name[TELLAE_STORE.locale]
-    #         else:
-    #             self.name = name
-    #     else:
-    #         self.name = "Unnamed"
-    #
-    #     self.datasets = layer_data.get("datasets", [])
-    #     self.main_dataset = layer_data.get("main_dataset", None)
-    #
-    #     self.editAttributes = layer_data.get("editAttributes", dict())
-    #     self._read_edit_attributes()
-    #
-    #     self.qgis_layer = None
-    #
-    #     self.style = None
-    #
-    #     self.source = None
 
     @property
     def is_vector(self):

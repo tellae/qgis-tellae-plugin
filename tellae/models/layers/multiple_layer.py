@@ -13,9 +13,9 @@ class MultipleLayer(QgsKiteLayer, ABC):
     Sub-layers are added to a QgsLayerTreeGroup with the layer name.
     """
 
-    def __init__(self, layer_data):
+    def __init__(self, *args, **kwargs):
 
-        super().__init__(layer_data)
+        super().__init__(*args, **kwargs)
 
         self.group = None
 
@@ -23,16 +23,22 @@ class MultipleLayer(QgsKiteLayer, ABC):
 
         for i, spec in enumerate(self.sub_layer_specs()):
             layer_class = spec["layer_class"]
-            geometry = spec["geometry"]
-            layer_data_copy = deepcopy(layer_data)
-            layer_data_copy["id"] = f"{self.id}-{i}"
-            layer_data_copy["parent"] = self
 
-            layer_data_copy["layer_class"] = layer_class
-            layer_data_copy["verbose"] = False
-            layer_data_copy["source_geometry"] = geometry
-
-            layer = layer_class(layer_data_copy)
+            layer = layer_class(
+                layer_id=f"{self.id}-{i}",
+                data=self.data,
+                editAttributes=kwargs["editAttributes"],
+                sourceType=self.source_type,
+                dataProperties=self.data_properties,
+                verbose=False,
+                source_parameters={
+                    "geometry": spec["geometry"]
+                },
+                name=self.name,
+                datasets=self.datasets,
+                main_dataset=self.main_dataset,
+                parent=self
+            )
 
             self.sub_layers.append(layer)
 
