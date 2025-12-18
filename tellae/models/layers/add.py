@@ -94,8 +94,6 @@ LAYER_CLASSES = {
     "KiteLineLayer": KiteLineLayer,
     "KiteFillLayer": KiteFillLayer,
     "FlowmapLayer": FlowmapLayer,
-    "FlowmapFlowsLayer": FlowmapFlowsLayer,
-    "FlowmapLocationsLayer": FlowmapLocationsLayer,
     "StarlingLayer": StarlingLayer,
     "GeojsonLayer": GeojsonLayer,
 }
