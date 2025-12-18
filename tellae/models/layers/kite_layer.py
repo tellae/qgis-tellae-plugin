@@ -26,113 +26,113 @@ class QgsKiteLayer:
 
     LAYER_VARIABLES = {}
 
-    # def __init__(
-    #     self,
-    #     layer_id,
-    #     data,
-    #     editAttributes=None,
-    #     sourceType="geojson",
-    #     layerProps=None,
-    #     dataProperties=None,
-    #     verbose=True,
-    #     source_parameters=None,
-    #     name="Unnamed",
-    #     datasets=None,
-    #     main_dataset=None,
-    #     parent=None,
-    # ):
-    #     # layer id
-    #     self.id = layer_id
-    #
-    #     # source instance
-    #     self.source = None
-    #
-    #     # Qgis layer instance
-    #     self.qgis_layer = None
-    #
-    #     # layer style instance
-    #     self.style = None
-    #
-    #     # parent layer instance
-    #     self.parent = parent
-    #
-    #     # layer descriptive properties, used to determine layer display
-    #
-    #     # layer name (displayed in Qgis legend)
-    #     if isinstance(name, dict):
-    #         self.name = name[TELLAE_STORE.locale]
-    #     else:
-    #         self.name = name
-    #
-    #     # object used to determine layer contents
-    #     self.data = data
-    #
-    #     # type of data provided to the layer
-    #     self.source_type = sourceType
-    #
-    #     # additional parameters passed to source at layer creation
-    #     self.source_parameters = source_parameters
-    #
-    #     # description of the properties of the data
-    #     self.data_properties = dataProperties if dataProperties is not None else dict()
-    #
-    #     self.editAttributes = editAttributes if editAttributes is not None else dict()
-    #     self._read_edit_attributes()
-    #
-    #     # datasets used by the data
-    #     self.datasets = datasets if datasets is not None else []
-    #
-    #     # main dataset used by the data
-    #     self.main_dataset = main_dataset
-    #
-    #     # additional mapbox properties
-    #     self.mapbox_props = layerProps if layerProps is not None else dict()
-    #
-    #     # util attributes
-    #
-    #     # whether to display information with popup
-    #     self.verbose = verbose
+    def __init__(
+        self,
+        layer_id,
+        data,
+        editAttributes=None,
+        sourceType="geojson",
+        layerProps=None,
+        dataProperties=None,
+        verbose=True,
+        source_parameters=None,
+        name="Unnamed",
+        datasets=None,
+        main_dataset=None,
+        parent=None,
+    ):
+        # layer id
+        self.id = layer_id
 
-    def __init__(self, layer_data):
+        # source instance
+        self.source = None
 
-        self.parent_layer = layer_data.get("parent", None)
-
-        self.id = layer_data["id"]
-
-        self.layerClass = layer_data["layer_class"]
-
-        self.data = layer_data.get("data", None)
-
-        self.sourceType = layer_data.get("sourceType", "geojson")
-
-        self.mapboxProps = layer_data.get("layerProps", dict())
-
-        self.dataProperties = layer_data.get("dataProperties", dict())
-
-        self.verbose = layer_data.get("verbose", True)
-
-        self.source_geometry = layer_data.get("source_geometry", None)
-
-        if "name" in layer_data:
-            name = layer_data["name"]
-            if isinstance(name, dict):
-                self.name = name[TELLAE_STORE.locale]
-            else:
-                self.name = name
-        else:
-            self.name = "Unnamed"
-
-        self.datasets = layer_data.get("datasets", [])
-        self.main_dataset = layer_data.get("main_dataset", None)
-
-        self.editAttributes = layer_data.get("editAttributes", dict())
-        self._read_edit_attributes()
-
+        # Qgis layer instance
         self.qgis_layer = None
 
+        # layer style instance
         self.style = None
 
-        self.source = None
+        # parent layer instance
+        self.parent_layer = parent
+
+        # layer descriptive properties, used to determine layer display
+
+        # layer name (displayed in Qgis legend)
+        if isinstance(name, dict):
+            self.name = name[TELLAE_STORE.locale]
+        else:
+            self.name = name
+
+        # object used to determine layer contents
+        self.data = data
+
+        # type of data provided to the layer
+        self.source_type = sourceType
+
+        # additional parameters passed to source at layer creation
+        self.source_parameters = source_parameters
+
+        # description of the properties of the data
+        self.data_properties = dataProperties if dataProperties is not None else dict()
+
+        self.edit_attributes = editAttributes if editAttributes is not None else dict()
+        self._read_edit_attributes()
+
+        # datasets used by the data
+        self.datasets = datasets if datasets is not None else []
+
+        # main dataset used by the data
+        self.main_dataset = main_dataset
+
+        # additional mapbox properties
+        self.mapbox_props = layerProps if layerProps is not None else dict()
+
+        # util attributes
+
+        # whether to display information with popup
+        self.verbose = verbose
+    #
+    # def __init__(self, layer_data):
+    #
+    #     self.parent_layer = layer_data.get("parent", None)
+    #
+    #     self.id = layer_data["id"]
+    #
+    #     self.layerClass = layer_data["layer_class"]
+    #
+    #     self.data = layer_data.get("data", None)
+    #
+    #     self.sourceType = layer_data.get("sourceType", "geojson")
+    #
+    #     self.mapboxProps = layer_data.get("layerProps", dict())
+    #
+    #     self.dataProperties = layer_data.get("dataProperties", dict())
+    #
+    #     self.verbose = layer_data.get("verbose", True)
+    #
+    #     self.source_geometry = layer_data.get("source_geometry", None)
+    #
+    #     if "name" in layer_data:
+    #         name = layer_data["name"]
+    #         if isinstance(name, dict):
+    #             self.name = name[TELLAE_STORE.locale]
+    #         else:
+    #             self.name = name
+    #     else:
+    #         self.name = "Unnamed"
+    #
+    #     self.datasets = layer_data.get("datasets", [])
+    #     self.main_dataset = layer_data.get("main_dataset", None)
+    #
+    #     self.editAttributes = layer_data.get("editAttributes", dict())
+    #     self._read_edit_attributes()
+    #
+    #     self.qgis_layer = None
+    #
+    #     self.style = None
+    #
+    #     self.source = None
 
     @property
     def is_vector(self):
@@ -148,16 +148,16 @@ class QgsKiteLayer:
         self.source = self._init_source()
 
     def _init_source(self) -> QgsLayerSource:
-        if self.sourceType == "geojson":
+        if self.source_type == "geojson":
             return GeojsonSource(self)
-        elif self.sourceType == "shark":
+        elif self.source_type == "shark":
             return SharkSource(self)
-        elif self.sourceType == "vector":
+        elif self.source_type == "vector":
             if TELLAE_STORE.get_current_scale() > 2000000:
                 raise MinZoomException
             return VectorTileGeojsonSource(self)
         else:
-            raise ValueError(f"Unsupported source type '{self.sourceType}'")
+            raise ValueError(f"Unsupported source type '{self.source_type}'")
 
     def on_source_prepared(self):
         """
@@ -177,7 +177,7 @@ class QgsKiteLayer:
         self._add_to_qgis()
 
     def _create_qgis_layer(self):
-        self.qgis_layer = self.source.create_qgis_layer_instance(geometry=self.source_geometry)
+        self.qgis_layer = self.source.create_qgis_layer_instance(**self.source_parameters)
 
     def _create_layer_variables(self):
         """
@@ -215,14 +215,14 @@ class QgsKiteLayer:
         for index in self.qgis_layer.attributeList():
             key = self.qgis_layer.attributeDisplayName(index)
             alias = None
-            if key in self.dataProperties:
-                if isinstance(self.dataProperties[key], dict):
-                    alias = self.dataProperties[key][TELLAE_STORE.locale]
-                elif isinstance(self.dataProperties[key], str):
-                    alias = self.dataProperties[key]
+            if key in self.data_properties:
+                if isinstance(self.data_properties[key], dict):
+                    alias = self.data_properties[key][TELLAE_STORE.locale]
+                elif isinstance(self.data_properties[key], str):
+                    alias = self.data_properties[key]
                 else:
                     raise ValueError(
-                        f"Unsupported dataProperty type: {type(self.dataProperties[key])}"
+                        f"Unsupported dataProperty type: {type(self.data_properties[key])}"
                     )
 
             if alias is not None:
@@ -269,9 +269,9 @@ class QgsKiteLayer:
             TELLAE_STORE.main_dialog.signal_end_of_layer_add(self.name)
 
     def _read_edit_attributes(self):
-        if self.editAttributes is not None:
-            self.editAttributes = {
-                key: PropsMapping.from_spec(key, spec) for key, spec in self.editAttributes.items()
+        if self.edit_attributes is not None:
+            self.edit_attributes = {
+                key: PropsMapping.from_spec(key, spec) for key, spec in self.edit_attributes.items()
             }
 
     def infer_main_props_mapping(self):
@@ -280,8 +280,8 @@ class QgsKiteLayer:
         non_constant = None
         color = None
 
-        for key in self.editAttributes:
-            mapping = self.editAttributes[key]
+        for key in self.edit_attributes:
+            mapping = self.edit_attributes[key]
             if not mapping.paint:
                 continue
 

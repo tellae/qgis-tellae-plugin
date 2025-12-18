@@ -207,11 +207,11 @@ class VectorTileGeojsonSource(SharkSource):
 
         # start with properties from dataProperties
         select = (
-            list(self.layer.dataProperties.keys()) if self.layer.dataProperties is not None else []
+            list(self.layer.data_properties.keys()) if self.layer.data_properties is not None else []
         )
 
         # add edit attributes that read properties
-        edit_attributes = self.layer.editAttributes
+        edit_attributes = self.layer.edit_attributes
         if edit_attributes is None:
             edit_attributes = dict()
 
@@ -225,14 +225,14 @@ class VectorTileGeojsonSource(SharkSource):
             params["select"] = f"{','.join(select)}"
 
         # evaluate features filter
-        if "filter" in self.layer.editAttributes:  # new way
-            filter_mapping = self.layer.editAttributes["filter"]
+        if "filter" in self.layer.edit_attributes:  # new way
+            filter_mapping = self.layer.edit_attributes["filter"]
             if filter_mapping.mapping_type != "enum":
                 raise ValueError("Vector tiles filter is expected to be of type 'enum'")
             params["filter_key"] = filter_mapping.mapping_options["key"]
             params["filter_values"] = f"{','.join(filter_mapping.mapping_options['values'])}"
-        elif "filter" in self.layer.mapboxProps:  # old way
-            mapbox_filter = self.layer.mapboxProps["filter"]
+        elif "filter" in self.layer.mapbox_props:  # old way
+            mapbox_filter = self.layer.mapbox_props["filter"]
             params["filter_key"] = mapbox_filter[1][1]
             params["filter_values"] = f"{','.join(mapbox_filter[2][1])}"
 
@@ -257,11 +257,11 @@ class VectorTileSource(QgsLayerSource):
 
         # start with properties from dataProperties
         select = (
-            list(self.layer.dataProperties.keys()) if self.layer.dataProperties is not None else []
+            list(self.layer.data_properties.keys()) if self.layer.data_properties is not None else []
         )
 
         # add edit attributes that read properties
-        edit_attributes = self.layer.editAttributes
+        edit_attributes = self.layer.edit_attributes
         if edit_attributes is None:
             edit_attributes = dict()
 
@@ -275,14 +275,14 @@ class VectorTileSource(QgsLayerSource):
             params["select"] = f"[{','.join(select)}]"
 
         # evaluate features filter
-        if "filter" in self.layer.editAttributes:  # new way
-            filter_mapping = self.layer.editAttributes["filter"]
+        if "filter" in self.layer.edit_attributes:  # new way
+            filter_mapping = self.layer.edit_attributes["filter"]
             if filter_mapping.mapping_type != "enum":
                 raise ValueError("Vector tiles filter is expected to be of type 'enum'")
             params["filter_key"] = filter_mapping.mapping_options["key"]
             params["filter"] = f"[{','.join(filter_mapping.mapping_options['values'])}]"
-        elif "filter" in self.layer.mapboxProps:  # old way
-            mapbox_filter = self.layer.mapboxProps["filter"]
+        elif "filter" in self.layer.mapbox_props:  # old way
+            mapbox_filter = self.layer.mapbox_props["filter"]
             params["filter_key"] = mapbox_filter[1][1]
             params["filter"] = f"[{','.join(mapbox_filter[2][1])}]"
 

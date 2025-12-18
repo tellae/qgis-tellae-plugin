@@ -15,7 +15,7 @@ class KiteLabelLayer(QgsKiteLayer):
     def infer_main_props_mapping(self):
 
         try:
-            return self.editAttributes["text"]
+            return self.edit_attributes["text"]
         except KeyError:
             raise ValueError("KiteSymbolLayer mapping should have 'text' paint type")
 
