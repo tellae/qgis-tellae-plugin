@@ -10,6 +10,9 @@ from tellae.tellae_store import TELLAE_STORE
 from tellae.models.layers.layer_style import ClassicStyle, VectorTilesStyle
 from tellae.models.props_mapping import PropsMapping
 from tellae.models.layers.layer_source import QgsLayerSource, GeojsonSource, SharkSource, VectorTileGeojsonSource
+from tellae.utils.utils import log
+from tellae.utils import RequestsException
+import traceback
 
 class LayerInitialisationError(Exception):
     pass
@@ -28,8 +31,8 @@ class QgsKiteLayer:
 
     def __init__(
         self,
-        layer_id,
-        data,
+        layer_id=None,
+        data=None,
         editAttributes=None,
         sourceType="geojson",
         layerProps=None,
@@ -94,6 +97,9 @@ class QgsKiteLayer:
         # whether to display information with popup
         self.verbose = verbose
 
+    def __str__(self):
+        return f"{self.name} ({self.__class__.__name__})"
+
     @property
     def is_vector(self):
         return self.source.is_vector()
@@ -104,7 +110,13 @@ class QgsKiteLayer:
             return None
         return self.qgis_layer.geometryType()
 
-    def setup(self):
+    def _setup(self):
+        # if no id was provided, use an incremented custom layer id
+        if self.id is None:
+            self.id = f"customlayer:{TELLAE_STORE.nb_custom_layers}"
+            # increment custom layer count
+            TELLAE_STORE.increment_nb_custom_layers()
+
         self.source = self._init_source()
 
     def _init_source(self) -> QgsLayerSource:
@@ -123,6 +135,10 @@ class QgsKiteLayer:
         """
         Create and set a QGIS layer instance from the source data, then call the pipeline to add it to QGIS.
         """
+
+        if not self.source.is_prepared:
+            self.log("Called on_source_prepared but source is not tagged as prepared")
+            raise RuntimeError("Source is not prepared")
 
         # create a new QGIS layer instance
         self._create_qgis_layer()
@@ -189,7 +205,18 @@ class QgsKiteLayer:
                 self.qgis_layer.setFieldAlias(index, alias)
 
     def add_to_qgis(self):
-        self.source.prepare()
+        try:
+            # setup layer instance
+            self._setup()
+
+            # check source existence
+            if self.source is None:
+                raise ValueError(f"No source found for layer {self.name}")
+
+            # call source preparation (should call on_source_prepared method when done, possibly async)
+            self.source.prepare()
+        except Exception as e:
+            self.signal_layer_add_error(e)
 
     def _add_to_qgis(self):
         # add layer aliases
@@ -225,8 +252,7 @@ class QgsKiteLayer:
 
     def _on_layer_added(self):
         # display a popup if verbose
-        if self.verbose:
-            TELLAE_STORE.main_dialog.signal_end_of_layer_add(self.name)
+        self.signal_successful_layer_add()
 
     def _read_edit_attributes(self):
         if self.edit_attributes is not None:
@@ -298,3 +324,58 @@ class QgsKiteLayer:
 
         return style
 
+    def signal_successful_layer_add(self):
+        """
+        Signal that the layer was successfully added to Qgis.
+        """
+        self.popup(f"La couche '{self.name}' a été ajoutée avec succès !", Qgis.MessageLevel.Success)
+
+    def signal_layer_add_error(self, exception):
+        """
+        Signal that an error was encountered while adding the layer to Qgis.
+
+        :param exception: Exception instance
+        """
+
+        layer_name = self.name
+
+        # log(f"An error occurred during layer add: {exception.__repr__()}")
+        level = Qgis.MessageLevel.Critical
+
+        # evaluate message depending on exception type
+        try:
+            raise exception
+        # min zoom not respected
+        except MinZoomException:
+            level = Qgis.MessageLevel.Warning
+            message = f"Vous devez zoomer pour charger la couche '{layer_name}'"
+        # network error message
+        except RequestsException:
+            message = f"Erreur lors du téléchargement de la couche '{layer_name}'"
+        except NotImplementedError:
+            message = f"La couche '{layer_name}' nécessite des fonctionalités non implémentées pour le moment"
+        # generic error message
+        except Exception:
+            message = f"Erreur lors de l'ajout de la couche '{layer_name}'"
+            self.log(f"An error occured during layer add:\n{str(traceback.format_exc())}")
+
+        self.popup(message, level)
+
+    def popup(self, message: str, level: Qgis.MessageLevel):
+        """
+        Display a popup if the layer is tagged as verbose.
+
+        :param message: popup message
+        :param level: message priority level
+        """
+        # display a popup if verbose
+        if self.verbose:
+            TELLAE_STORE.main_dialog.display_message_bar(message, level=level)
+
+    def log(self, message):
+        """
+        Log a message with the layer name as prefix.
+
+        :param message: message to log
+        """
+        log(f"[{self}]: {message}")

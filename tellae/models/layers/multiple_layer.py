@@ -27,7 +27,7 @@ class MultipleLayer(QgsKiteLayer, ABC):
             layer = layer_class(
                 layer_id=f"{self.id}-{i}",
                 data=self.data,
-                editAttributes=kwargs["editAttributes"],
+                editAttributes=kwargs.get("editAttributes", None),
                 sourceType=self.source_type,
                 dataProperties=self.data_properties,
                 verbose=False,
@@ -47,8 +47,8 @@ class MultipleLayer(QgsKiteLayer, ABC):
         raise NotImplementedError
     sub_layer_specs = classmethod(sub_layer_specs)
 
-    def setup(self):
-        super().setup()
+    def _setup(self):
+        super()._setup()
 
         for layer in self.sub_layers:
             layer.source = self.source

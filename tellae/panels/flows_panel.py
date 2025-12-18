@@ -1,7 +1,7 @@
 from tellae.panels.base_panel import BasePanel
 from tellae.utils import *
 from tellae.utils.utils import fill_table_widget, get_binary_name, log
-from tellae.models.layers.add import add_flowmap_layer, add_starling_layer
+from tellae.models.layers import StarlingLayer, FlowmapLayer
 from tellae.services.project import get_project_binary_from_hash
 from tellae.services.layers import LayerDownloadContext
 from qgis.PyQt.QtWidgets import QPushButton
@@ -29,8 +29,11 @@ class FlowsPanel(BasePanel):
     def add_project_flowmap(self, binary):
         name = get_binary_name(binary, with_extension=False)
         def handler(result):
+            # read and aggregated flowmap data
             flowmap_data = FlowmapData.from_zip_stream(result["content"])
-            add_flowmap_layer(flowmap_data, name)
+            aggregated_flowmap_data = flowmap_data.agg_by_od()
+            # add flow as a StarlingLayer instance
+            FlowmapLayer(data=aggregated_flowmap_data, name=name).add_to_qgis()
 
         with LayerDownloadContext(name, handler) as ctx:
             get_project_binary_from_hash(
@@ -44,8 +47,8 @@ class FlowsPanel(BasePanel):
     def add_project_starling_flows(self, binary):
         name = get_binary_name(binary, with_extension=False)
         def handler(result):
-            geojson = result["content"]
-            add_starling_layer(geojson, name)
+            # add flow as a StarlingLayer instance
+            StarlingLayer(data=result["content"], name=name).add_to_qgis()
 
         with LayerDownloadContext(name, handler) as ctx:
             get_project_binary_from_hash(

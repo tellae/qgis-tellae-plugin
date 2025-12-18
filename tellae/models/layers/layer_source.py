@@ -88,7 +88,7 @@ class QgsLayerSource(ABC):
 
         :param exception: Exception subclass
         """
-        TELLAE_STORE.main_dialog.signal_end_of_layer_add(self.layer_name, exception)
+        self.layer.signal_layer_add_error(exception)
 
 
 class GeojsonSource(QgsLayerSource):

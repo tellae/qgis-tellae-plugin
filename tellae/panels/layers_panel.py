@@ -1,7 +1,8 @@
 from tellae.panels.base_panel import BasePanel
 from tellae.utils import *
 from tellae.utils.utils import fill_table_widget, get_binary_name, log
-from tellae.models.layers.add import add_custom_layer, add_database_layer
+from tellae.models.layers.add import add_database_layer
+from tellae.models.layers import GeojsonLayer
 from tellae.services.project import get_project_binary_from_hash
 from tellae.services.layers import LayerDownloadContext
 from qgis.PyQt.QtWidgets import QPushButton
@@ -39,7 +40,7 @@ class LayersPanel(BasePanel):
         name = get_binary_name(binary, with_extension=False)
 
         def handler(result):
-            add_custom_layer(result["content"], name)
+            GeojsonLayer(data=result["content"], name=name).add_to_qgis()
 
         with LayerDownloadContext(name, handler) as ctx:
             get_project_binary_from_hash(

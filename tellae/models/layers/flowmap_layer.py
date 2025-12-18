@@ -22,7 +22,13 @@ class FlowmapLayer(MultipleLayer):
 
         self.flowmap_data = kwargs["data"]
 
+        # convert data to geojson format
         kwargs["data"] = self.flowmap_data.to_geojson()
+
+        # set editAttributes manually
+        kwargs["editAttributes"] = {
+            "color": "#3d6482"
+        }
 
         super().__init__(*args, **kwargs)
 
