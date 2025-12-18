@@ -72,7 +72,7 @@ def add_layer(layer_data):
     except Exception as e:
         TELLAE_STORE.main_dialog.signal_end_of_layer_add(layer_instance.name, e)
 
-def create_layer(layer_data, parent=None) -> QgsKiteLayer:
+def create_layer(layer_data) -> QgsKiteLayer:
     # get layer constructor
     layer_class = layer_data["layer_class"]
     if layer_class in LAYER_CLASSES:
@@ -82,7 +82,7 @@ def create_layer(layer_data, parent=None) -> QgsKiteLayer:
 
     # create and initialise layer instance
     layer_instance = layer_constructor.__new__(layer_constructor)
-    layer_instance.__init__(layer_data, parent=parent)
+    layer_instance.__init__(layer_data)
 
     return layer_instance
 

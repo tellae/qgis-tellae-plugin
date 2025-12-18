@@ -11,14 +11,11 @@ from tellae.models.layers.layer_style import ClassicStyle, VectorTilesStyle
 from tellae.models.props_mapping import PropsMapping
 from tellae.models.layers.layer_source import QgsLayerSource, GeojsonSource, SharkSource, VectorTileGeojsonSource
 
-
 class LayerInitialisationError(Exception):
     pass
 
-
 class MinZoomException(Exception):
     pass
-
 
 class LayerStylingException(Exception):
     pass
@@ -96,13 +93,9 @@ class QgsKiteLayer:
     #     # whether to display information with popup
     #     self.verbose = verbose
 
+    def __init__(self, layer_data):
 
-
-
-
-    def __init__(self, layer_data, parent=None):
-
-        self.parent_layer = parent
+        self.parent_layer = layer_data.get("parent", None)
 
         self.id = layer_data["id"]
 
@@ -115,8 +108,6 @@ class QgsKiteLayer:
         self.mapboxProps = layer_data.get("layerProps", dict())
 
         self.dataProperties = layer_data.get("dataProperties", dict())
-
-        self.category = layer_data.get("category", None)
 
         self.verbose = layer_data.get("verbose", True)
 
@@ -133,9 +124,6 @@ class QgsKiteLayer:
 
         self.datasets = layer_data.get("datasets", [])
         self.main_dataset = layer_data.get("main_dataset", None)
-
-        # TODO: what data structure
-        self.filter = layer_data.get("filter", None)
 
         self.editAttributes = layer_data.get("editAttributes", dict())
         self._read_edit_attributes()
