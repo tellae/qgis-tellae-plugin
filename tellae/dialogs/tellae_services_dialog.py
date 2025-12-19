@@ -23,7 +23,6 @@
 """
 
 import os
-import traceback
 
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
@@ -31,10 +30,8 @@ from qgis.PyQt.QtGui import QIcon, QPixmap
 from qgis.core import Qgis
 
 from tellae.tellae_store import TELLAE_STORE
-from tellae.utils import *
 
-from tellae.panels import LayersPanel, ConfigPanel, AboutPanel
-from tellae.models.layers import LayerInitialisationError
+from tellae.panels import LayersPanel, FlowsPanel, ConfigPanel, AboutPanel
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "main_window.ui"))
@@ -55,6 +52,7 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
         self.set_menu_icons()
 
         self.layers_panel = LayersPanel(self)
+        self.flows_panel = FlowsPanel(self)
         self.config_panel = ConfigPanel(self)
         self.about_panel = AboutPanel(self)
 
@@ -77,6 +75,7 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
 
         # panels setup
         self.layers_panel.setup()
+        self.flows_panel.setup()
         self.config_panel.setup()
         self.about_panel.setup()
 
@@ -87,46 +86,19 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
         item.setIcon(icon)
 
         item = self.menu_widget.item(1)
-        path = TELLAE_STORE.plugin_dir + "/icons/settings_40dp_000000.svg"
+        path = TELLAE_STORE.plugin_dir + "/icons/sync_alt_40dp_000000.svg"
         icon = QIcon(path)
         item.setIcon(icon)
 
         item = self.menu_widget.item(2)
-        path = TELLAE_STORE.plugin_dir + "/icons/info_40dp_000000.svg"
+        path = TELLAE_STORE.plugin_dir + "/icons/settings_40dp_000000.svg"
         icon = QIcon(path)
         item.setIcon(icon)
 
-    def signal_end_of_layer_add(self, layer_name, exception=None):
-        # display result message
-        if exception is None:
-            message = f"La couche '{layer_name}' a été ajoutée avec succès !"
-            level = Qgis.MessageLevel.Success
-        else:
-            # log(f"An error occurred during layer add: {exception.__repr__()}")
-            level = Qgis.MessageLevel.Critical
-
-            # evaluate message depending on exception type
-            try:
-                raise exception
-            # layer init error
-            except LayerInitialisationError:
-                message = "Erreur lors de la lecture des metadonnées de la couche"
-                log(f"An error occured during layer creation:\n{str(traceback.format_exc())}")
-            # min zoom not respected
-            except MinZoomException:
-                level = Qgis.MessageLevel.Warning
-                message = f"Vous devez zoomer pour charger la couche '{layer_name}'"
-            # network error message
-            except RequestsException as e:
-                message = f"Erreur lors du téléchargement de la couche '{layer_name}'"
-            except NotImplementedError:
-                message = f"La couche '{layer_name}' nécessite des fonctionalités non implémentées pour le moment"
-            # generic error message
-            except Exception:
-                message = f"Erreur lors de l'ajout de la couche '{layer_name}'"
-                log(f"An error occured during layer add:\n{str(traceback.format_exc())}")
-
-        self.display_message_bar(message, level=level)
+        item = self.menu_widget.item(3)
+        path = TELLAE_STORE.plugin_dir + "/icons/info_40dp_000000.svg"
+        icon = QIcon(path)
+        item.setIcon(icon)
 
     # primitives
 

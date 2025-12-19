@@ -113,6 +113,11 @@ QListWidget::item::selected {
      </item>
      <item>
       <property name="text">
+       <string>Flux</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
        <string>Parameters</string>
       </property>
      </item>
@@ -199,7 +204,7 @@ QListWidget::item::selected {
               <item>
                <widget class="QTabWidget" name="add_layers_tab">
                 <property name="currentIndex">
-                 <number>1</number>
+                 <number>0</number>
                 </property>
                 <widget class="QWidget" name="database">
                  <attribute name="title">
@@ -322,6 +327,77 @@ QListWidget::item::selected {
              <property name="text">
               <string>Cartographiez les données territoriales sur votre carte </string>
              </property>
+            </widget>
+           </widget>
+           <widget class="QWidget" name="page_2">
+            <widget class="QLabel" name="label_3">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>10</y>
+               <width>811</width>
+               <height>31</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>Visualisez et analysez les flux OD (Origine - Destination)</string>
+             </property>
+            </widget>
+            <widget class="QWidget" name="verticalLayoutWidget_2">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>50</y>
+               <width>811</width>
+               <height>731</height>
+              </rect>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_2">
+              <item>
+               <widget class="QTabWidget" name="add_flows_tab">
+                <property name="currentIndex">
+                 <number>0</number>
+                </property>
+                <widget class="QWidget" name="project_3">
+                 <attribute name="title">
+                  <string>Projet</string>
+                 </attribute>
+                 <widget class="QTableWidget" name="projectFlowsTable">
+                  <property name="geometry">
+                   <rect>
+                    <x>10</x>
+                    <y>70</y>
+                    <width>791</width>
+                    <height>621</height>
+                   </rect>
+                  </property>
+                  <property name="alternatingRowColors">
+                   <bool>true</bool>
+                  </property>
+                  <property name="selectionMode">
+                   <enum>QAbstractItemView::NoSelection</enum>
+                  </property>
+                  <attribute name="verticalHeaderVisible">
+                   <bool>false</bool>
+                  </attribute>
+                 </widget>
+                 <widget class="QLabel" name="projectNameFlowsPanel">
+                  <property name="geometry">
+                   <rect>
+                    <x>10</x>
+                    <y>10</y>
+                    <width>431</width>
+                    <height>19</height>
+                   </rect>
+                  </property>
+                  <property name="text">
+                   <string>Projet :</string>
+                  </property>
+                 </widget>
+                </widget>
+               </widget>
+              </item>
+             </layout>
             </widget>
            </widget>
            <widget class="QWidget" name="parameters">

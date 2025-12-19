@@ -392,7 +392,10 @@ class NetworkAccessManager(object):
 
                 ba = self.reply.readAll()
                 self.http_call_result.content = bytes(ba)
-                self.http_call_result.text = str(ba.data(), encoding="utf-8")
+                try:
+                    self.http_call_result.text = str(ba.data(), encoding="utf-8")
+                except UnicodeDecodeError:
+                    self.http_call_result.text = ""
                 self.http_call_result.ok = True
 
         # Let's log the whole response for debugging purposes:

@@ -8,8 +8,9 @@ class TellaeStore:
     # tab values enumeration (number corresponds to page number)
     class Tabs(IntEnum):
         layers = 0
-        config = 1
-        about = 2
+        flows = 1
+        config = 2
+        about = 3
 
     def __init__(self):
 

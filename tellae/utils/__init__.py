@@ -6,11 +6,3 @@ from tellae.utils.network_access_manager import (
     RequestsExceptionUserAbort,
     UnauthorizedError,
 )
-
-
-class MinZoomException(Exception):
-    pass
-
-
-class LayerStylingException(Exception):
-    pass

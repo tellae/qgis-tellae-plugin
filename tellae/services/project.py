@@ -19,6 +19,7 @@ def select_project(uuid: str):
 
         # update project data tables
         TELLAE_STORE.main_dialog.layers_panel.update_selected_project()
+        TELLAE_STORE.main_dialog.flows_panel.update_selected_project()
 
         # update project info
         TELLAE_STORE.main_dialog.config_panel.update_selected_project()

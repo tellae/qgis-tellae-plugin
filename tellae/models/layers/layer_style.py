@@ -32,13 +32,13 @@ class LayerStyle:
         self.originalRenderer = self.layer.qgis_layer.renderer()
 
         self.min_zoom_level = None
-        if "minzoom" in self.layer.mapboxProps:
-            self.min_zoom_level = self.layer.mapboxProps["minzoom"]
+        if "minzoom" in self.layer.mapbox_props:
+            self.min_zoom_level = self.layer.mapbox_props["minzoom"]
 
-        self.editAttributes = self.layer.editAttributes
+        self.editAttributes = self.layer.edit_attributes
 
         self.main_props_mapping = None
-        if self.layer.editAttributes:
+        if self.layer.edit_attributes:
             self.main_props_mapping = self.layer.infer_main_props_mapping()
 
         self.secondary_mappings = [
