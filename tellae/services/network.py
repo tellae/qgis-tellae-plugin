@@ -39,3 +39,9 @@ def init_gtfs_list():
     TELLAE_STORE.gtfs_list = gtfs_list
     TELLAE_STORE.main_dialog.network_panel.update_network_list()
 
+def get_gtfs_routes_and_stops(gtfs_uuid, handler, error_handler):
+
+    request_whale(url=f"/public_transports/{gtfs_uuid}/gtfs_routes", handler=handler, error_handler=error_handler)
+
+
+

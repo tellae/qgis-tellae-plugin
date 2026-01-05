@@ -1,10 +1,12 @@
 from tellae.panels.base_panel import BasePanel
 from tellae.panels.data_table import DataTable
-from tellae.utils.utils import get_binary_name, log
-from tellae.services.project import get_project_binary_from_hash
+from tellae.utils.utils import log
+from tellae.models.layers.gtfs_layers import GtfsLayer
 from tellae.services.layers import LayerDownloadContext
+from tellae.services.network import get_gtfs_routes_and_stops
 from qgis.PyQt.QtCore import Qt
 import datetime
+import copy
 
 
 class NetworkPanel(BasePanel):
@@ -20,7 +22,7 @@ class NetworkPanel(BasePanel):
     def setup(self):
         button_slot = self.database_network_table.table_button_slot(self.add_network)
         self.database_network_table.set_headers([
-            {"text": "Nom", "value": lambda x: f'{x["pt_network"]["moa"]["name"]} ({x["pt_network"]["name"]})', "width": 435},
+            {"text": "Nom", "value": lambda x: self.gtfs_name(x), "width": 435},
             {
                 "text": "Date",
                 "value": lambda x: f'{self.gtfs_date_to_datetime(x["start_date"])} - {self.gtfs_date_to_datetime(x["end_date"])}',
@@ -34,25 +36,47 @@ class NetworkPanel(BasePanel):
         res = datetime.datetime.strptime(gtfs_date, "%Y-%M-%d")
         return res.strftime("%d/%M/%Y")
 
+    def gtfs_name(self, gtfs):
+        return f'{gtfs["pt_network"]["moa"]["name"]} ({gtfs["pt_network"]["name"]})'
 
     # actions
 
     def add_network(self, row_idx):
-        binary = self.store.get_project_data("spatial_data")[row_idx]
-        name = get_binary_name(binary, with_extension=False)
+
+        gtfs = self.network_list[row_idx]
+        name = self.gtfs_name(gtfs)
 
         def handler(result):
-            pass
-            # add_custom_layer(result["content"], name)
+            routes = result["content"]["results"]
+
+            features = []
+            for route in routes:
+
+                properties_copy = copy.deepcopy(route)
+                geometry_copy = properties_copy["geometry"]
+                del properties_copy["geometry"]
+                del properties_copy["statistics"]
+                del properties_copy["gtfs"]
+                del properties_copy["_creationDate"]
+                del properties_copy["_lastUpdate"]
+
+                features.append({
+                    "type": "Feature",
+                    "geometry": geometry_copy,
+                    "properties": properties_copy
+                })
+
+            geojson = {
+                "type": "FeatureCollection",
+                "features": features
+            }
+
+            GtfsLayer(data=geojson, name=name).add_to_qgis()
+
+
 
         with LayerDownloadContext(name, handler) as ctx:
-            get_project_binary_from_hash(
-                binary["hash"],
-                "spatial_data",
-                handler=ctx.handler,
-                error_handler=ctx.error_handler,
-                to_json=True,
-            )
+            get_gtfs_routes_and_stops(gtfs["uuid"], handler=ctx.handler, error_handler=ctx.error_handler)
 
     # database tab
 

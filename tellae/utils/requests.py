@@ -85,6 +85,9 @@ def request_whale(url, **kwargs):
     if url.startswith("https://"):
         raise ValueError("Only the relative path of the Whale url should be provided")
 
+    if not url.startswith("/"):
+        raise ValueError("Missing leading slash in Whale request")
+
     # prepend whale endpoint
     whale_url = TELLAE_STORE.whale_endpoint + url
 
