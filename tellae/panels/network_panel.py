@@ -1,12 +1,10 @@
 from tellae.panels.base_panel import BasePanel
-from tellae.utils import *
-from tellae.utils.utils import fill_table_widget, get_binary_name, log
-from tellae.models.layers import add_custom_layer, add_database_layer
+from tellae.panels.data_table import DataTable
+from tellae.utils.utils import get_binary_name, log
 from tellae.services.project import get_project_binary_from_hash
 from tellae.services.layers import LayerDownloadContext
-from qgis.PyQt.QtWidgets import QPushButton
-from PyQt5.QtWidgets import QStyle
 from qgis.PyQt.QtCore import Qt
+import datetime
 
 
 class NetworkPanel(BasePanel):
@@ -17,8 +15,25 @@ class NetworkPanel(BasePanel):
 
         self.network_list = []
 
+        self.database_network_table = DataTable(self, self.dlg.network_database_table)
+
     def setup(self):
-        pass
+        button_slot = self.database_network_table.table_button_slot(self.add_network)
+        self.database_network_table.set_headers([
+            {"text": "Nom", "value": lambda x: f'{x["pt_network"]["moa"]["name"]} ({x["pt_network"]["name"]})', "width": 435},
+            {
+                "text": "Date",
+                "value": lambda x: f'{self.gtfs_date_to_datetime(x["start_date"])} - {self.gtfs_date_to_datetime(x["end_date"])}',
+                "width": 280,
+                "align": Qt.AlignCenter
+            },
+            {"text": "Actions", "value": "actions", "width": 60, "slot": button_slot},
+        ])
+
+    def gtfs_date_to_datetime(self, gtfs_date):
+        res = datetime.datetime.strptime(gtfs_date, "%Y-%M-%d")
+        return res.strftime("%d/%M/%Y")
+
 
     # actions
 
@@ -27,7 +42,8 @@ class NetworkPanel(BasePanel):
         name = get_binary_name(binary, with_extension=False)
 
         def handler(result):
-            add_custom_layer(result["content"], name)
+            pass
+            # add_custom_layer(result["content"], name)
 
         with LayerDownloadContext(name, handler) as ctx:
             get_project_binary_from_hash(
@@ -40,31 +56,6 @@ class NetworkPanel(BasePanel):
 
     # database tab
 
-    def fill_network_table(self):
-        pass
-        # get table widget
-        table = "TODO"
-
-        # action slot
-
-        def action_slot(table_widget, row_ix, col_ix, _, __):
-            btn = QPushButton(table)
-            btn.setIcon(self.dlg.style().standardIcon(QStyle.SP_DialogSaveButton))
-            btn.clicked.connect(lambda state, x=row_ix: self.add_network(x))
-            table_widget.setCellWidget(row_ix, col_ix, btn)
-
-        # setup table headers
-        # total table length is 791, scroll bar is 16 => header width must total to 775
-        headers = [
-            {"text": "Nom", "value": lambda x: f'{x["pt_network"]["moa"]["name"]} ({x["pt_network"]["name"]})', "width": 435},
-            {
-                "text": "Date",
-                "value": lambda x: f'{x["start_date"]} - {x["end_date"]}',
-                "width": 280,
-            },
-            {"text": "Actions", "value": "actions", "width": 60, "slot": action_slot},
-        ]
-
-        fill_table_widget(table, headers, self.store.gtfs_list)
-
-    # utils
+    def update_network_list(self):
+        self.network_list = self.store.gtfs_list
+        self.database_network_table.fill_table_with_items(self.network_list)

@@ -37,4 +37,5 @@ def init_gtfs_list():
     )["content"]["data"]["PublicTransports"]["results"]
 
     TELLAE_STORE.gtfs_list = gtfs_list
+    TELLAE_STORE.main_dialog.network_panel.update_network_list()
 

@@ -118,6 +118,11 @@ QListWidget::item::selected {
      </item>
      <item>
       <property name="text">
+       <string>Network</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
        <string>Parameters</string>
       </property>
      </item>
@@ -188,7 +193,7 @@ QListWidget::item::selected {
          <item>
           <widget class="QStackedWidget" name="stacked_panels_widget">
            <property name="currentIndex">
-            <number>1</number>
+            <number>2</number>
            </property>
            <widget class="QWidget" name="layers">
             <widget class="QWidget" name="verticalLayoutWidget">
@@ -329,7 +334,7 @@ QListWidget::item::selected {
              </property>
             </widget>
            </widget>
-           <widget class="QWidget" name="page_2">
+           <widget class="QWidget" name="flows">
             <widget class="QLabel" name="label_3">
              <property name="geometry">
               <rect>
@@ -398,6 +403,73 @@ QListWidget::item::selected {
                </widget>
               </item>
              </layout>
+            </widget>
+           </widget>
+           <widget class="QWidget" name="network">
+            <widget class="QWidget" name="verticalLayoutWidget_4">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>50</y>
+               <width>811</width>
+               <height>731</height>
+              </rect>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_4">
+              <item>
+               <widget class="QTabWidget" name="add_network_tab">
+                <property name="currentIndex">
+                 <number>0</number>
+                </property>
+                <widget class="QWidget" name="database_2">
+                 <attribute name="title">
+                  <string>Base de données</string>
+                 </attribute>
+                 <widget class="QTableWidget" name="network_database_table">
+                  <property name="geometry">
+                   <rect>
+                    <x>10</x>
+                    <y>70</y>
+                    <width>791</width>
+                    <height>621</height>
+                   </rect>
+                  </property>
+                  <property name="toolTip">
+                   <string/>
+                  </property>
+                  <property name="autoFillBackground">
+                   <bool>false</bool>
+                  </property>
+                  <property name="verticalScrollBarPolicy">
+                   <enum>Qt::ScrollBarAlwaysOn</enum>
+                  </property>
+                  <property name="alternatingRowColors">
+                   <bool>true</bool>
+                  </property>
+                  <property name="selectionMode">
+                   <enum>QAbstractItemView::NoSelection</enum>
+                  </property>
+                  <attribute name="verticalHeaderVisible">
+                   <bool>false</bool>
+                  </attribute>
+                 </widget>
+                </widget>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QLabel" name="label_8">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>10</y>
+               <width>811</width>
+               <height>31</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>Visualisez un réseau de transport public</string>
+             </property>
             </widget>
            </widget>
            <widget class="QWidget" name="parameters">
