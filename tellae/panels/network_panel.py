@@ -6,7 +6,7 @@ from tellae.services.layers import LayerDownloadContext
 from tellae.services.network import get_gtfs_routes_and_stops
 from qgis.PyQt.QtCore import Qt
 import datetime
-import copy
+
 
 
 class NetworkPanel(BasePanel):
@@ -46,34 +46,8 @@ class NetworkPanel(BasePanel):
         gtfs = self.network_list[row_idx]
         name = self.gtfs_name(gtfs)
 
-        def handler(result):
-            routes = result["content"]["results"]
-
-            features = []
-            for route in routes:
-
-                properties_copy = copy.deepcopy(route)
-                geometry_copy = properties_copy["geometry"]
-                del properties_copy["geometry"]
-                del properties_copy["statistics"]
-                del properties_copy["gtfs"]
-                del properties_copy["_creationDate"]
-                del properties_copy["_lastUpdate"]
-
-                features.append({
-                    "type": "Feature",
-                    "geometry": geometry_copy,
-                    "properties": properties_copy
-                })
-
-            geojson = {
-                "type": "FeatureCollection",
-                "features": features
-            }
-
+        def handler(geojson):
             GtfsLayer(data=geojson, name=name).add_to_qgis()
-
-
 
         with LayerDownloadContext(name, handler) as ctx:
             get_gtfs_routes_and_stops(gtfs["uuid"], handler=ctx.handler, error_handler=ctx.error_handler)

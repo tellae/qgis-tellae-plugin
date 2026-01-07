@@ -1,7 +1,7 @@
 from .multiple_layer import MultipleLayer
 from .line_layer import KiteLineLayer
 from .circle_layer import KiteCircleLayer
-
+from tellae.utils.constants import TELLAE_PRIMARY_COLOR
 from qgis.core import (
     Qgis,
     QgsFeatureRequest,
@@ -18,8 +18,8 @@ class GtfsLayer(MultipleLayer):
 
     def sub_layer_specs(cls):
         return [
-            {"layer_class": GtfsRoutesLayer, "geometry": "LineString"},
-            # {"layer_class": GtfsStopsLayer, "geometry": "Point"},
+            {"layer_class": GtfsStopsLayer, "geometry": "Point"},
+            {"layer_class": GtfsRoutesLayer, "geometry": "LineString"}
         ]
 
     sub_layer_specs = classmethod(sub_layer_specs)
@@ -94,3 +94,18 @@ class GtfsRoutesLayer(KiteLineLayer):
 class GtfsStopsLayer(KiteCircleLayer):
     ACCEPTED_GEOMETRY_TYPES = [Qgis.GeometryType.Point]
 
+    def __init__(self, *args, **kwargs):
+
+        # set editAttributes manually
+        kwargs["editAttributes"] = {
+            "color": TELLAE_PRIMARY_COLOR,
+            "size": 5,
+            "opacity": 0.7
+        }
+
+        kwargs["dataProperties"] = {
+            "stop_id": "ID",
+            "stop_name": "Nom"
+        }
+
+        super().__init__(*args, **kwargs)
