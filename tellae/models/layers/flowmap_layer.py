@@ -1,7 +1,7 @@
 from .multiple_layer import MultipleLayer
 from .line_layer import KiteLineLayer
 from .circle_layer import KiteCircleLayer
-
+from tellae.utils.constants import TELLAE_PRIMARY_COLOR
 from qgis.core import (
     Qgis,
     QgsSimpleFillSymbolLayer,
@@ -26,7 +26,7 @@ class FlowmapLayer(MultipleLayer):
         kwargs["data"] = self.flowmap_data.to_geojson()
 
         # set editAttributes manually
-        kwargs["editAttributes"] = {"color": "#3d6482"}
+        kwargs["editAttributes"] = {"color": TELLAE_PRIMARY_COLOR}
 
         super().__init__(*args, **kwargs)
 
