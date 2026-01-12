@@ -453,6 +453,29 @@ QListWidget::item::selected {
                    <bool>false</bool>
                   </attribute>
                  </widget>
+                 <widget class="QLineEdit" name="network_search_bar">
+                  <property name="geometry">
+                   <rect>
+                    <x>10</x>
+                    <y>30</y>
+                    <width>291</width>
+                    <height>27</height>
+                   </rect>
+                  </property>
+                 </widget>
+                 <widget class="QLabel" name="label_5">
+                  <property name="geometry">
+                   <rect>
+                    <x>10</x>
+                    <y>10</y>
+                    <width>81</width>
+                    <height>19</height>
+                   </rect>
+                  </property>
+                  <property name="text">
+                   <string>Rechercher</string>
+                  </property>
+                 </widget>
                 </widget>
                </widget>
               </item>

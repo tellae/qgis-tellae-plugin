@@ -2,6 +2,7 @@ from tellae.tellae_store import TELLAE_STORE
 from tellae.utils import log
 from tellae.utils.requests import request_whale
 import copy
+import datetime
 
 
 def init_gtfs_list():
@@ -36,7 +37,18 @@ def init_gtfs_list():
         blocking=True
     )["content"]["data"]["PublicTransports"]["results"]
 
+    # evaluate and store name
+    for gtfs in gtfs_list:
+        gtfs["name"] = gtfs_name(gtfs)
+
+    # sort by name and date
+    gtfs_list = sorted(gtfs_list, key= lambda x: datetime.datetime.strptime(x["start_date"], "%Y-%M-%d"), reverse=True)
+    gtfs_list = sorted(gtfs_list, key= lambda x: x["name"])
+
+    # set result in store
     TELLAE_STORE.gtfs_list = gtfs_list
+
+    # update ux
     TELLAE_STORE.main_dialog.network_panel.update_network_list()
 
 def get_gtfs_routes_and_stops(gtfs_uuid, handler, error_handler):
@@ -83,3 +95,10 @@ def get_gtfs_routes_and_stops(gtfs_uuid, handler, error_handler):
     handler(geojson)
 
 
+def gtfs_name(gtfs):
+    return f'{gtfs["pt_network"]["moa"]["name"]} ({gtfs["pt_network"]["name"]})'
+
+
+def gtfs_date_to_datetime(gtfs_date):
+    res = datetime.datetime.strptime(gtfs_date, "%Y-%M-%d")
+    return res.strftime("%d/%M/%Y")

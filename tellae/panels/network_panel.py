@@ -3,7 +3,7 @@ from tellae.panels.data_table import DataTable
 from tellae.utils.utils import log
 from tellae.models.layers.gtfs_layers import GtfsLayer
 from tellae.services.layers import LayerDownloadContext
-from tellae.services.network import get_gtfs_routes_and_stops
+from tellae.services.network import get_gtfs_routes_and_stops, gtfs_date_to_datetime
 from qgis.PyQt.QtCore import Qt
 import datetime
 
@@ -15,6 +15,8 @@ class NetworkPanel(BasePanel):
 
         super().__init__(main_dialog)
 
+        self.search_text = ""
+
         self.network_list = []
 
         self.database_network_table = DataTable(self, self.dlg.network_database_table)
@@ -22,29 +24,35 @@ class NetworkPanel(BasePanel):
     def setup(self):
         button_slot = self.database_network_table.table_button_slot(self.add_network)
         self.database_network_table.set_headers([
-            {"text": "Nom", "value": lambda x: self.gtfs_name(x), "width": 435},
+            {"text": "Nom", "value": "name", "width": 435},
             {
                 "text": "Date",
-                "value": lambda x: f'{self.gtfs_date_to_datetime(x["start_date"])} - {self.gtfs_date_to_datetime(x["end_date"])}',
+                "value": lambda x: f'{gtfs_date_to_datetime(x["start_date"])} - {gtfs_date_to_datetime(x["end_date"])}',
                 "width": 280,
                 "align": Qt.AlignCenter
             },
             {"text": "Actions", "value": "actions", "width": 60, "slot": button_slot},
         ])
 
-    def gtfs_date_to_datetime(self, gtfs_date):
-        res = datetime.datetime.strptime(gtfs_date, "%Y-%M-%d")
-        return res.strftime("%d/%M/%Y")
+        self.dlg.network_search_bar.textChanged.connect(self.update_network_list)
 
-    def gtfs_name(self, gtfs):
-        return f'{gtfs["pt_network"]["moa"]["name"]} ({gtfs["pt_network"]["name"]})'
+    def searched_gtfs(self):
+        text = self.dlg.network_search_bar.text()
+        if text == "":
+            gtfs_list = self.store.gtfs_list
+        else:
+            gtfs_list = [x for x in self.store.gtfs_list if text.lower() in x["name"].lower()]
+
+        return gtfs_list
+
+
 
     # actions
 
     def add_network(self, row_idx):
 
         gtfs = self.network_list[row_idx]
-        name = self.gtfs_name(gtfs)
+        name = gtfs["name"]
 
         def handler(geojson):
             GtfsLayer(data=geojson, name=name).add_to_qgis()
@@ -55,5 +63,6 @@ class NetworkPanel(BasePanel):
     # database tab
 
     def update_network_list(self):
-        self.network_list = self.store.gtfs_list
+
+        self.network_list = self.searched_gtfs()
         self.database_network_table.fill_table_with_items(self.network_list)
