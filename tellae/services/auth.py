@@ -132,10 +132,7 @@ def _on_login(user):
         if not TELLAE_STORE.store_initiated:
             init_store()
     except Exception as e:
-        TELLAE_STORE.main_dialog.display_message_bar(
-            "Erreur lors de l'initialisation des données Tellae", level=Qgis.MessageLevel.Critical
-        )
-        raise e
+        pass
     finally:
         TELLAE_STORE.main_dialog.end_progress()
 
@@ -215,8 +212,16 @@ def init_store():
         log("Trying to initiate store without being authenticated")
         return
 
-    init_layers_table()
+    try:
+        init_layers_table()
+    except Exception as e:
+        TELLAE_STORE.main_dialog.display_message_bar("Erreur lors de la récupération de la table des calques", level=Qgis.MessageLevel.Critical)
+        raise e
 
-    init_gtfs_list()
+    try:
+        init_gtfs_list()
+    except Exception as e:
+        TELLAE_STORE.main_dialog.display_message_bar("Erreur lors de la récupération de la table réseau", level=Qgis.MessageLevel.Critical)
+        raise e
 
     TELLAE_STORE.store_initiated = True
