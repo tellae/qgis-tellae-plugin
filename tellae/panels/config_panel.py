@@ -59,4 +59,4 @@ class ConfigPanel(BasePanel):
 
     def update_selected_project(self):
         self.dlg.projectDescription.setText(self.store.current_project.get("description", ""))
-        self.dlg.projectSelector.setCurrentText(self.store.current_project["uuid"])
+        self.dlg.projectSelector.setCurrentText(self.store.current_project_name)
