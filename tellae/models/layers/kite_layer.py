@@ -291,6 +291,9 @@ class QgsKiteLayer:
             if not mapping.paint:
                 continue
 
+            if mapping.paint_type in ["text", "tooltip", "filter", "sort", "icon"]:
+                continue
+
             if mapping.legend:
                 if legend is not None:
                     raise ValueError("Cannot have several 'legend' mappings")
@@ -298,8 +301,10 @@ class QgsKiteLayer:
 
             if mapping.mapping_type != "constant":
                 if non_constant is not None:
-                    raise ValueError("Cannot have several 'non-constant' mappings")
-                non_constant = mapping
+                    # if several non-constant, cannot decide, set to True
+                    non_constant = True
+                else:
+                    non_constant = mapping
 
             if mapping.paint_type == "color":
                 if color is not None:
@@ -309,7 +314,7 @@ class QgsKiteLayer:
         if legend is not None:
             return legend
 
-        if non_constant is not None:
+        if non_constant is not None and non_constant is not True:
             return non_constant
 
         if color is not None:
