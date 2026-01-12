@@ -193,7 +193,7 @@ QListWidget::item::selected {
          <item>
           <widget class="QStackedWidget" name="stacked_panels_widget">
            <property name="currentIndex">
-            <number>1</number>
+            <number>2</number>
            </property>
            <widget class="QWidget" name="layers">
             <widget class="QWidget" name="verticalLayoutWidget">
