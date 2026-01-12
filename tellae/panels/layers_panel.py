@@ -29,32 +29,40 @@ class LayersPanel(BasePanel):
 
         # set database table headers
         button_slot = self.database_layers_table.table_button_slot(self.add_database_layer)
-        self.database_layers_table.set_headers([
-            {"text": "Nom", "value": lambda x: x["name"][self.store.locale], "width": 355},
-            {
-                "text": "Date",
-                "value": lambda x: self.store.datasets_summary[x["main_dataset"]].get("date", ""),
-                "width": 80,
-                "align": Qt.AlignCenter,
-            },
-            {
-                "text": "Source",
-                "value": lambda x: self.store.datasets_summary[x["main_dataset"]]["provider_name"],
-                "width": 280,
-            },
-            {"text": "Actions", "value": "actions", "width": 60, "slot": button_slot},
-        ])
+        self.database_layers_table.set_headers(
+            [
+                {"text": "Nom", "value": lambda x: x["name"][self.store.locale], "width": 355},
+                {
+                    "text": "Date",
+                    "value": lambda x: self.store.datasets_summary[x["main_dataset"]].get(
+                        "date", ""
+                    ),
+                    "width": 80,
+                    "align": Qt.AlignCenter,
+                },
+                {
+                    "text": "Source",
+                    "value": lambda x: self.store.datasets_summary[x["main_dataset"]][
+                        "provider_name"
+                    ],
+                    "width": 280,
+                },
+                {"text": "Actions", "value": "actions", "width": 60, "slot": button_slot},
+            ]
+        )
 
         # set project table headers
         button_slot = self.project_layers_table.table_button_slot(self.add_spatial_data)
-        self.project_layers_table.set_headers([
-            {
-                "text": "Nom",
-                "value": lambda x: get_binary_name(x, with_extension=False),
-                "width": 729,
-            },
-            {"text": "Actions", "value": "actions", "width": 60, "slot": button_slot},
-        ])
+        self.project_layers_table.set_headers(
+            [
+                {
+                    "text": "Nom",
+                    "value": lambda x: get_binary_name(x, with_extension=False),
+                    "width": 729,
+                },
+                {"text": "Actions", "value": "actions", "width": 60, "slot": button_slot},
+            ]
+        )
 
     # actions
 

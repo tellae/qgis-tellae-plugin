@@ -132,7 +132,9 @@ def _on_login(user):
         if not TELLAE_STORE.store_initiated:
             init_store()
     except Exception as e:
-        TELLAE_STORE.main_dialog.display_message_bar("Erreur lors de l'initialisation des données Tellae", level=Qgis.MessageLevel.Critical)
+        TELLAE_STORE.main_dialog.display_message_bar(
+            "Erreur lors de l'initialisation des données Tellae", level=Qgis.MessageLevel.Critical
+        )
         raise e
     finally:
         TELLAE_STORE.main_dialog.end_progress()

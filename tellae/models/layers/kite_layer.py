@@ -403,4 +403,5 @@ class QgsKiteLayer:
         """
         root = QgsProject.instance().layerTreeRoot()
         return root.insertGroup(0, name)
+
     create_legend_group = staticmethod(create_legend_group)

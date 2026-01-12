@@ -8,7 +8,6 @@ from qgis.PyQt.QtCore import Qt
 import datetime
 
 
-
 class NetworkPanel(BasePanel):
 
     def __init__(self, main_dialog):
@@ -23,16 +22,18 @@ class NetworkPanel(BasePanel):
 
     def setup(self):
         button_slot = self.database_network_table.table_button_slot(self.add_network)
-        self.database_network_table.set_headers([
-            {"text": "Nom", "value": "name", "width": 435},
-            {
-                "text": "Date",
-                "value": lambda x: f'{gtfs_date_to_datetime(x["start_date"])} - {gtfs_date_to_datetime(x["end_date"])}',
-                "width": 280,
-                "align": Qt.AlignCenter
-            },
-            {"text": "Actions", "value": "actions", "width": 60, "slot": button_slot},
-        ])
+        self.database_network_table.set_headers(
+            [
+                {"text": "Nom", "value": "name", "width": 435},
+                {
+                    "text": "Date",
+                    "value": lambda x: f'{gtfs_date_to_datetime(x["start_date"])} - {gtfs_date_to_datetime(x["end_date"])}',
+                    "width": 280,
+                    "align": Qt.AlignCenter,
+                },
+                {"text": "Actions", "value": "actions", "width": 60, "slot": button_slot},
+            ]
+        )
 
         self.dlg.network_search_bar.textChanged.connect(self.update_network_list)
 
@@ -44,7 +45,6 @@ class NetworkPanel(BasePanel):
             gtfs_list = [x for x in self.store.gtfs_list if text.lower() in x["name"].lower()]
 
         return gtfs_list
-
 
     # actions
 
@@ -59,7 +59,9 @@ class NetworkPanel(BasePanel):
             GtfsRoutesLayer(data=geojson["routes"], name=name, group=group).add_to_qgis()
 
         with LayerDownloadContext(name, handler) as ctx:
-            get_gtfs_routes_and_stops(gtfs["uuid"], handler=ctx.handler, error_handler=ctx.error_handler)
+            get_gtfs_routes_and_stops(
+                gtfs["uuid"], handler=ctx.handler, error_handler=ctx.error_handler
+            )
 
     # database tab
 

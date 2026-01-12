@@ -29,5 +29,5 @@ LAYER_CLASSES = {
     "StarlingLayer": StarlingLayer,
     "GeojsonLayer": GeojsonLayer,
     "GtfsRoutesLayer": GtfsRoutesLayer,
-    "GtfsStopsLayer": GtfsStopsLayer
+    "GtfsStopsLayer": GtfsStopsLayer,
 }

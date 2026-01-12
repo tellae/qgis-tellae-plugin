@@ -1,9 +1,5 @@
 from .line_layer import KiteLineLayer
-from qgis.core import (
-    Qgis,
-    QgsFeatureRequest,
-    QgsSymbol
-)
+from qgis.core import Qgis, QgsFeatureRequest, QgsSymbol
 from qgis.PyQt.QtCore import Qt
 
 
@@ -21,24 +17,16 @@ class GtfsRoutesLayer(KiteLineLayer):
             "color": {
                 "type": "direct",
                 "paint_type": "color",
-                "mapping_options": {
-                    "key": "route_color",
-                    "default": "#000000"
-                }
+                "mapping_options": {"key": "route_color", "default": "#000000"},
             },
             "size": {
                 "type": "category",
                 "paint_type": "size",
                 "mapping_options": {
                     "key": "route_type",
-                    "values_map": {
-                        0: 2,
-                        1: 2,
-                        2: 2,
-                        3: 1
-                    },
-                    "default": 0.75
-                }
+                    "values_map": {0: 2, 1: 2, 2: 2, 3: 1},
+                    "default": 0.75,
+                },
             },
         }
 
@@ -46,7 +34,7 @@ class GtfsRoutesLayer(KiteLineLayer):
             "route_id": "ID",
             "route_short_name": "Nom court",
             "route_long_name": "Nom long",
-            "route_color": "Couleur"
+            "route_color": "Couleur",
         }
 
         super().__init__(*args, **kwargs)

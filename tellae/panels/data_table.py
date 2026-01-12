@@ -32,7 +32,6 @@ class DataTable:
             if "width" in header:
                 self.table_widget.setColumnWidth(col, header["width"])
 
-
     def fill_table_with_items(self, items):
 
         # set number of rows and columns

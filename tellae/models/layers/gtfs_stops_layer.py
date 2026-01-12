@@ -11,15 +11,8 @@ class GtfsStopsLayer(KiteCircleLayer):
     def __init__(self, *args, **kwargs):
 
         # set editAttributes manually
-        kwargs["editAttributes"] = {
-            "color": TELLAE_PRIMARY_COLOR,
-            "size": 5,
-            "opacity": 0.7
-        }
+        kwargs["editAttributes"] = {"color": TELLAE_PRIMARY_COLOR, "size": 5, "opacity": 0.7}
 
-        kwargs["dataProperties"] = {
-            "stop_id": "ID",
-            "stop_name": "Nom"
-        }
+        kwargs["dataProperties"] = {"stop_id": "ID", "stop_name": "Nom"}
 
         super().__init__(*args, **kwargs)
