@@ -18,8 +18,6 @@ class MultipleLayer(QgsKiteLayer, ABC):
 
         super().__init__(*args, **kwargs)
 
-        self.group = None
-
         self.sub_layers = []
 
         for i, spec in enumerate(self.sub_layer_specs()):
@@ -55,10 +53,10 @@ class MultipleLayer(QgsKiteLayer, ABC):
 
     def on_source_prepared(self):
         # create a group for the sublayers
-        root = QgsProject.instance().layerTreeRoot()
-        self.group = root.insertGroup(0, self.name)
+        self.group = self.create_legend_group(self.name)
 
         for layer in self.sub_layers:
+            layer.group = self.group
             layer.on_source_prepared()
 
         self._on_layer_added()

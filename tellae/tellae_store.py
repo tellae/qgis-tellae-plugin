@@ -9,8 +9,9 @@ class TellaeStore:
     class Tabs(IntEnum):
         layers = 0
         flows = 1
-        config = 2
-        about = 3
+        network = 2
+        config = 3
+        about = 4
 
     def __init__(self):
 
@@ -56,6 +57,9 @@ class TellaeStore:
 
         # number of custom layers
         self.nb_custom_layers = 0
+
+        # network
+        self.gtfs_list = []
 
         # local config
         self.local_config = None

@@ -18,7 +18,7 @@ def init_layers_table():
 
         # evaluate list of themes
         themes = list(set([theme for layer in layers for theme in layer["themes"]]))
-        themes = [THEMES_TRANSLATION[theme] for theme in themes]
+        themes = [THEMES_TRANSLATION.get(theme, theme) for theme in themes]
 
         # update store
         TELLAE_STORE.layer_summary = layers
@@ -45,7 +45,7 @@ def init_layers_table():
         TELLAE_STORE.main_dialog.layers_panel.fill_theme_selector()
         TELLAE_STORE.main_dialog.layers_panel.fill_layers_table()
     except RequestsException as e:
-        log(f"An error occurred while trying to database layer tables: {e}")
+        log(f"An error occurred while trying to get database layer tables: {e}")
 
 
 # layer download context manager

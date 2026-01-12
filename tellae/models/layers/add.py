@@ -28,4 +28,6 @@ LAYER_CLASSES = {
     "FlowmapLayer": FlowmapLayer,
     "StarlingLayer": StarlingLayer,
     "GeojsonLayer": GeojsonLayer,
+    "GtfsRoutesLayer": GtfsRoutesLayer,
+    "GtfsStopsLayer": GtfsStopsLayer,
 }

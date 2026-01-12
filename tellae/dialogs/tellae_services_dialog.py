@@ -31,7 +31,7 @@ from qgis.core import Qgis
 
 from tellae.tellae_store import TELLAE_STORE
 
-from tellae.panels import LayersPanel, FlowsPanel, ConfigPanel, AboutPanel
+from tellae.panels import LayersPanel, FlowsPanel, NetworkPanel, ConfigPanel, AboutPanel
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "main_window.ui"))
@@ -53,6 +53,7 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
 
         self.layers_panel = LayersPanel(self)
         self.flows_panel = FlowsPanel(self)
+        self.network_panel = NetworkPanel(self)
         self.config_panel = ConfigPanel(self)
         self.about_panel = AboutPanel(self)
 
@@ -76,6 +77,7 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
         # panels setup
         self.layers_panel.setup()
         self.flows_panel.setup()
+        self.network_panel.setup()
         self.config_panel.setup()
         self.about_panel.setup()
 
@@ -91,11 +93,16 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
         item.setIcon(icon)
 
         item = self.menu_widget.item(2)
-        path = TELLAE_STORE.plugin_dir + "/icons/settings_40dp_000000.svg"
+        path = TELLAE_STORE.plugin_dir + "/icons/directions_bus_40dp_000000.svg"
         icon = QIcon(path)
         item.setIcon(icon)
 
         item = self.menu_widget.item(3)
+        path = TELLAE_STORE.plugin_dir + "/icons/settings_40dp_000000.svg"
+        icon = QIcon(path)
+        item.setIcon(icon)
+
+        item = self.menu_widget.item(4)
         path = TELLAE_STORE.plugin_dir + "/icons/info_40dp_000000.svg"
         icon = QIcon(path)
         item.setIcon(icon)

@@ -51,6 +51,7 @@ class QgsKiteLayer:
         datasets=None,
         main_dataset=None,
         parent=None,
+        group=None,
         **kwargs,
     ):
         # layer id
@@ -67,6 +68,9 @@ class QgsKiteLayer:
 
         # parent layer instance
         self.parent_layer = parent
+
+        # legend group
+        self.group = group
 
         # layer descriptive properties, used to determine layer display
 
@@ -250,10 +254,10 @@ class QgsKiteLayer:
         if self.qgis_layer.featureCount() == 0:
             return
 
-        if self.parent_layer is not None and self.parent_layer.group is not None:
+        if self.group is not None:
             # do not add the layer to the legend as it will already be added when linking group
             QgsProject.instance().addMapLayer(self.qgis_layer, False)
-            self.parent_layer.group.addLayer(self.qgis_layer)
+            self.group.addLayer(self.qgis_layer)
         else:
             QgsProject.instance().addMapLayer(self.qgis_layer)
 
@@ -388,3 +392,16 @@ class QgsKiteLayer:
         :param message: message to log
         """
         log(f"[{self}]: {message}")
+
+    def create_legend_group(name):
+        """
+        Create a legend group to which layers can be appended.
+
+        :param name: group name
+
+        :return: QgsLayerTreeGroup instance
+        """
+        root = QgsProject.instance().layerTreeRoot()
+        return root.insertGroup(0, name)
+
+    create_legend_group = staticmethod(create_legend_group)
