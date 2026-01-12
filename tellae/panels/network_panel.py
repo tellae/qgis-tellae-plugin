@@ -1,7 +1,7 @@
 from tellae.panels.base_panel import BasePanel
 from tellae.panels.data_table import DataTable
 from tellae.utils.utils import log
-from tellae.models.layers.gtfs_layers import GtfsLayer
+from tellae.models.layers import GtfsRoutesLayer, GtfsStopsLayer
 from tellae.services.layers import LayerDownloadContext
 from tellae.services.network import get_gtfs_routes_and_stops, gtfs_date_to_datetime
 from qgis.PyQt.QtCore import Qt
@@ -46,7 +46,6 @@ class NetworkPanel(BasePanel):
         return gtfs_list
 
 
-
     # actions
 
     def add_network(self, row_idx):
@@ -55,7 +54,9 @@ class NetworkPanel(BasePanel):
         name = gtfs["name"]
 
         def handler(geojson):
-            GtfsLayer(data=geojson, name=name).add_to_qgis()
+            group = GtfsRoutesLayer.create_legend_group(name)
+            GtfsStopsLayer(data=geojson["stops"], name=name, group=group).add_to_qgis()
+            GtfsRoutesLayer(data=geojson["routes"], name=name, group=group).add_to_qgis()
 
         with LayerDownloadContext(name, handler) as ctx:
             get_gtfs_routes_and_stops(gtfs["uuid"], handler=ctx.handler, error_handler=ctx.error_handler)

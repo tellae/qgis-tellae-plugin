@@ -56,7 +56,7 @@ def get_gtfs_routes_and_stops(gtfs_uuid, handler, error_handler):
     routes = request_whale(url=f"/public_transports/{gtfs_uuid}/gtfs_routes", error_handler=error_handler, blocking=True)["content"]["results"]
     stops = request_whale(url=f"/public_transports/{gtfs_uuid}/gtfs_stops", error_handler=error_handler, blocking=True)["content"]["results"]
 
-    features = []
+    route_features = []
     for route in routes:
         properties_copy = copy.deepcopy(route)
         geometry_copy = properties_copy["geometry"]
@@ -66,12 +66,18 @@ def get_gtfs_routes_and_stops(gtfs_uuid, handler, error_handler):
         del properties_copy["_creationDate"]
         del properties_copy["_lastUpdate"]
 
-        features.append({
+        route_features.append({
             "type": "Feature",
             "geometry": geometry_copy,
             "properties": properties_copy
         })
 
+    routes_geojson = {
+        "type": "FeatureCollection",
+        "features": route_features
+    }
+
+    stop_features = []
     for stop in stops:
         properties_copy = copy.deepcopy(stop)
         geometry_copy = properties_copy["geometry"]
@@ -81,18 +87,21 @@ def get_gtfs_routes_and_stops(gtfs_uuid, handler, error_handler):
         del properties_copy["_creationDate"]
         del properties_copy["_lastUpdate"]
 
-        features.append({
+        stop_features.append({
             "type": "Feature",
             "geometry": geometry_copy,
             "properties": properties_copy
         })
 
-    geojson = {
+    stops_geojson = {
         "type": "FeatureCollection",
-        "features": features
+        "features": stop_features
     }
 
-    handler(geojson)
+    handler({
+        "routes": routes_geojson,
+        "stops": stops_geojson
+    })
 
 
 def gtfs_name(gtfs):
