@@ -32,6 +32,10 @@ class LayerStylingException(Exception):
     pass
 
 
+class EmptyLayerException(Exception):
+    pass
+
+
 class QgsKiteLayer:
     ACCEPTED_GEOMETRY_TYPES = []
 
@@ -175,8 +179,13 @@ class QgsKiteLayer:
             QgsExpressionContextUtils.setLayerVariable(self.qgis_layer, key, value)
 
     def _validate_qgis_layer(self):
+        # call isValid method
         if not self.qgis_layer.isValid():
             raise ValueError("QGIS layer is not valid")
+
+        # check layer is not empty
+        if self.qgis_layer.featureCount() == 0:
+            raise EmptyLayerException
 
         # check geometry type
         if self.geometry_type not in self.ACCEPTED_GEOMETRY_TYPES:
@@ -358,6 +367,10 @@ class QgsKiteLayer:
         # evaluate message depending on exception type
         try:
             raise exception
+        # layer is empty
+        except EmptyLayerException:
+            level = Qgis.MessageLevel.Warning
+            message = f"La couche {layer_name} est vide et n'a pas été ajoutée"
         # min zoom not respected
         except MinZoomException:
             level = Qgis.MessageLevel.Warning
