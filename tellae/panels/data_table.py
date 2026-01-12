@@ -10,6 +10,7 @@ class DataTable:
 
         self.table_widget = table_widget
 
+        # total table length is 791, scroll bar is 16 => header width must total to 775
         self._headers = None
 
         # disable table edition
