@@ -99,16 +99,22 @@ class TellaeStore:
         self.main_dialog = tellae_services.dlg
         self.auth_dialog = tellae_services.auth
 
-    def get_filtered_layer_summary(self, selected_theme: str):
-
+    def get_filtered_layer_summary(self, selected_theme: str, search_text: str):
+        # filter layers by theme
         if selected_theme == "Tous":
-            return self.layer_summary
+            items = self.layer_summary
         else:
-            return [
+            items = [
                 layer
                 for layer in self.layer_summary
                 if selected_theme in [THEMES_TRANSLATION[theme] for theme in layer["themes"]]
             ]
+
+        # filter layers from search text
+        if not search_text:
+            return items
+        else:
+            return [x for x in items if search_text.lower() in x["name"][self.locale].lower()]
 
     def get_project_data(self, attribute):
         """

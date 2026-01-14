@@ -193,7 +193,7 @@ QListWidget::item::selected {
          <item>
           <widget class="QStackedWidget" name="stacked_panels_widget">
            <property name="currentIndex">
-            <number>2</number>
+            <number>0</number>
            </property>
            <widget class="QWidget" name="layers">
             <widget class="QWidget" name="verticalLayoutWidget">
@@ -218,7 +218,7 @@ QListWidget::item::selected {
                  <widget class="QLabel" name="label">
                   <property name="geometry">
                    <rect>
-                    <x>10</x>
+                    <x>560</x>
                     <y>10</y>
                     <width>66</width>
                     <height>19</height>
@@ -231,7 +231,7 @@ QListWidget::item::selected {
                  <widget class="QComboBox" name="themeSelector">
                   <property name="geometry">
                    <rect>
-                    <x>10</x>
+                    <x>560</x>
                     <y>30</y>
                     <width>241</width>
                     <height>27</height>
@@ -277,6 +277,29 @@ QListWidget::item::selected {
                   <attribute name="verticalHeaderVisible">
                    <bool>false</bool>
                   </attribute>
+                 </widget>
+                 <widget class="QLineEdit" name="layer_search_bar">
+                  <property name="geometry">
+                   <rect>
+                    <x>10</x>
+                    <y>30</y>
+                    <width>291</width>
+                    <height>27</height>
+                   </rect>
+                  </property>
+                 </widget>
+                 <widget class="QLabel" name="label_11">
+                  <property name="geometry">
+                   <rect>
+                    <x>10</x>
+                    <y>10</y>
+                    <width>81</width>
+                    <height>19</height>
+                   </rect>
+                  </property>
+                  <property name="text">
+                   <string>Rechercher</string>
+                  </property>
                  </widget>
                 </widget>
                 <widget class="QWidget" name="project">
