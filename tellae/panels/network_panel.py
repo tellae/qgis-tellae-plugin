@@ -1,8 +1,8 @@
 from tellae.panels.base_panel import BasePanel
 from tellae.panels.data_table import DataTable
+from tellae.utils.contexts import LayerDownloadContext
 from tellae.utils.utils import log
 from tellae.models.layers import GtfsRoutesLayer, GtfsStopsLayer
-from tellae.services.layers import LayerDownloadContext
 from tellae.services.network import get_gtfs_routes_and_stops, gtfs_date_to_datetime
 from qgis.PyQt.QtCore import Qt
 import datetime

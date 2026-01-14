@@ -1,6 +1,7 @@
 from tellae.tellae_store import TELLAE_STORE
 from tellae.utils import log
 from tellae.utils.requests import request_whale, RequestsException
+from tellae.utils.exceptions import InternalError
 from tellae.services.whale import download_from_binaries
 from qgis.core import Qgis
 
@@ -34,9 +35,7 @@ def update_project_list():
         # update config panel
         TELLAE_STORE.main_dialog.config_panel.fill_project_selector()
     except Exception as e:
-        TELLAE_STORE.main_dialog.display_message_bar("Erreur lors de la récupération des projets",
-                                                     level=Qgis.MessageLevel.Critical)
-        raise e
+        raise ValueError("Erreur lors de la récupération de la liste des projets") from e
 
 
 def select_project(uuid: str):
@@ -58,8 +57,8 @@ def select_project(uuid: str):
 
         # update project info
         TELLAE_STORE.main_dialog.config_panel.on_project_update()
-    except RequestsException as e:
-        log(f"An error occurred while trying to get project {uuid}: {e}")
+    except Exception as e:
+        raise ValueError("Erreur lors de la récupération du projet") from e
 
 
 def get_project_binary_from_hash(binary_hash, attribute, handler, error_handler=None, to_json=True):

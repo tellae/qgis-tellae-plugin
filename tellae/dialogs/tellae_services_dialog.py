@@ -23,6 +23,7 @@
 """
 
 import os
+import traceback
 
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
@@ -32,6 +33,7 @@ from qgis.core import Qgis
 from tellae.tellae_store import TELLAE_STORE
 
 from tellae.panels import LayersPanel, FlowsPanel, NetworkPanel, ConfigPanel, AboutPanel
+from tellae.utils.utils import log
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "main_window.ui"))
@@ -108,6 +110,22 @@ class TellaeServicesDialog(QtWidgets.QDialog, FORM_CLASS):
         item.setIcon(icon)
 
     # primitives
+
+    def message_bar_from_exception(self, exc):
+        """
+        Display snackbar and logs from the given exception.
+
+        :param exc: Exception subclass
+        """
+
+        # display exception message in snackbar
+        self.display_message_bar(str(exc), level=Qgis.MessageLevel.Critical)
+
+        # log exception message
+        log(str(exc), Qgis.MessageLevel.Critical)
+
+        # log exception trace
+        log(str(traceback.format_exc()), Qgis.MessageLevel.Critical)
 
     def display_message_bar(
         self,

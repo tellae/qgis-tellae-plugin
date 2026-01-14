@@ -11,8 +11,8 @@ from qgis.core import (
 )
 
 from tellae.utils import log, RequestsException
+from tellae.utils.contexts import LayerDownloadContext
 from tellae.tellae_store import TELLAE_STORE
-from tellae.services.layers import LayerDownloadContext
 from tellae.utils.requests import request, request_whale
 import json
 

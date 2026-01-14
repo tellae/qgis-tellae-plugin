@@ -41,7 +41,7 @@ class KiteFillLayer(QgsKiteLayer):
             symbol.setColor(value)
 
     def set_symbol_size(self, symbol: QgsSymbol, value, data_defined=False):
-        log("Trying to set size on KiteFillLayer")
+        self.warn_wrong_paint_try("size")
 
     def set_symbol_size_unit(self, symbol: QgsSymbol, value: Qgis.RenderUnit):
-        log("Trying to set size unit on KiteFillLayer")
+        self.warn_wrong_paint_try("size unit")

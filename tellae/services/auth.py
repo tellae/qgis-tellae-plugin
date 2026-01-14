@@ -1,6 +1,7 @@
 from tellae.tellae_store import TELLAE_STORE
-from tellae.utils import log
+from tellae.utils import log, InternalError
 from tellae.utils.requests import request_whale, message_from_request_error
+from tellae.utils.contexts import ProgressContext
 from tellae.services.project import update_project_list, select_project
 from tellae.services.layers import init_layers_table
 from tellae.services.network import init_gtfs_list
@@ -32,7 +33,7 @@ def init_auth():
 
     # try to get existing auth config
     if not _try_existing_indents():
-        log("No existing indents found, opening authentication dialog")
+        log("No existing indents found, opening authentication dialog", "INFO")
         # if no existing indents where found, show auth dialog to manually input new indents
         TELLAE_STORE.auth_dialog.change_page_and_show()
 
@@ -113,9 +114,7 @@ def _login(handler=None, error_handler=None, set_indents=False):
 
 
 def _on_login(user):
-    TELLAE_STORE.main_dialog.start_progress("Initialisation des données Tellae")
-
-    try:
+    with ProgressContext("Récupération des données utilisateur"):
         # update stored used
         update_user(user)
 
@@ -125,13 +124,10 @@ def _on_login(user):
         # select project stored in user
         select_project(user["kite"]["project"])
 
-        # if store is not initiated, do it now
-        if not TELLAE_STORE.store_initiated:
-            init_store()
-    except Exception as e:
-        log(e)
-    finally:
-        TELLAE_STORE.main_dialog.end_progress()
+    # if store is not initiated, do it now
+    if not TELLAE_STORE.store_initiated:
+        with ProgressContext("Initialisation des données Tellae") as progress_context:
+            init_store(progress_context)
 
 
 def _create_or_update_auth_config(name, key, secret):
@@ -209,24 +205,27 @@ def update_user(user):
     TELLAE_STORE.main_dialog.config_panel.set_auth_button_text(user)
 
 
-def init_store():
+def init_store(progress_context):
     """
     Initialise the plugin store with static data from Whale.
     """
     if not TELLAE_STORE.authenticated:
-        log("Trying to initiate store without being authenticated")
-        return
+        raise InternalError("Trying to initiate store without being authenticated")
 
+    errors = False
+
+    # get database layers
     try:
         init_layers_table()
     except Exception as e:
-        TELLAE_STORE.main_dialog.display_message_bar("Erreur lors de la récupération de la table des calques", level=Qgis.MessageLevel.Critical)
-        raise e
+        progress_context.signal_error_without_interrupting(e)
+        errors = True
 
+    # get database networks
     try:
         init_gtfs_list()
     except Exception as e:
-        TELLAE_STORE.main_dialog.display_message_bar("Erreur lors de la récupération de la table réseau", level=Qgis.MessageLevel.Critical)
-        raise e
+        progress_context.signal_error_without_interrupting(e)
+        errors = True
 
-    TELLAE_STORE.store_initiated = True
+    TELLAE_STORE.store_initiated = not errors

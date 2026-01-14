@@ -153,7 +153,7 @@ class QgsKiteLayer:
         """
 
         if not self.source.is_prepared:
-            self.log("Called on_source_prepared but source is not tagged as prepared")
+            self.log("Called on_source_prepared but source is not tagged as prepared", "CRITICAL")
             raise RuntimeError("Source is not prepared")
 
         # create a new QGIS layer instance
@@ -388,7 +388,7 @@ class QgsKiteLayer:
         # generic error message
         except Exception:
             message = f"Erreur lors de l'ajout de la couche '{layer_name}'"
-            self.log(f"An error occured during layer add:\n{str(traceback.format_exc())}")
+            self.log(f"An error occured during layer add:\n{str(traceback.format_exc())}", Qgis.MessageLevel.Critical)
 
         self.popup(message, level)
 
@@ -403,13 +403,22 @@ class QgsKiteLayer:
         if self.verbose:
             TELLAE_STORE.main_dialog.display_message_bar(message, level=level)
 
-    def log(self, message):
+    def warn_wrong_paint_try(self, paint_type):
+        """
+        Log a warning about a wrong paint type trying to be set.
+
+        :param paint_type: paint type
+        """
+        self.log(f"Trying to set '{paint_type}' on {self.__class__.__name__}", "WARNING")
+
+    def log(self, message, level="NO_LEVEL"):
         """
         Log a message with the layer name as prefix.
 
         :param message: message to log
+        :param level: message level
         """
-        log(f"[{self}]: {message}")
+        log(f"[{self}]: {message}", level=level)
 
     def create_legend_group(name):
         """

@@ -2,6 +2,7 @@ import os
 import json
 from qgis.core import (
     QgsMessageLog,
+    Qgis
 )
 
 
@@ -23,9 +24,21 @@ THEMES_TRANSLATION = {
     "walk": "Piéton",
 }
 
+_LOG_LEVEL = {
+    "NO_LEVEL": Qgis.MessageLevel.NoLevel,
+    "SUCCESS": Qgis.MessageLevel.Success,
+    "INFO": Qgis.MessageLevel.Info,
+    "WARNING": Qgis.MessageLevel.Warning,
+    "CRITICAL": Qgis.MessageLevel.Critical
+}
 
-def log(message):
-    QgsMessageLog.logMessage(str(message), "TellaeServices")
+
+
+def log(message, level: Qgis.MessageLevel | str = Qgis.MessageLevel.Info):
+    if isinstance(level, str) and level in _LOG_LEVEL:
+        level = _LOG_LEVEL[level]
+
+    QgsMessageLog.logMessage(str(message), level=level, tag="Tellae")
 
 
 def read_local_config(plugin_dir):

@@ -274,7 +274,7 @@ class DirectMapping(PropsMapping):
 
         if self.paint_type == "color":
             if value_format == "raw":
-                log("Format 'raw' is not implemented")
+                log("Format 'raw' is not implemented", "WARNING")
                 expression = "0,0,0"
             elif value_format == "r g b":
                 expression = f'r_g_b_color("{key}")'
