@@ -388,7 +388,10 @@ class QgsKiteLayer:
         # generic error message
         except Exception:
             message = f"Erreur lors de l'ajout de la couche '{layer_name}'"
-            self.log(f"An error occured during layer add:\n{str(traceback.format_exc())}", Qgis.MessageLevel.Critical)
+            self.log(
+                f"An error occured during layer add:\n{str(traceback.format_exc())}",
+                Qgis.MessageLevel.Critical,
+            )
 
         self.popup(message, level)
 

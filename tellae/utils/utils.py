@@ -1,9 +1,6 @@
 import os
 import json
-from qgis.core import (
-    QgsMessageLog,
-    Qgis
-)
+from qgis.core import QgsMessageLog, Qgis
 
 
 THEMES_TRANSLATION = {
@@ -29,9 +26,8 @@ _LOG_LEVEL = {
     "SUCCESS": Qgis.MessageLevel.Success,
     "INFO": Qgis.MessageLevel.Info,
     "WARNING": Qgis.MessageLevel.Warning,
-    "CRITICAL": Qgis.MessageLevel.Critical
+    "CRITICAL": Qgis.MessageLevel.Critical,
 }
-
 
 
 def log(message, level: Qgis.MessageLevel | str = Qgis.MessageLevel.Info):

@@ -5,6 +5,7 @@ from qgis.core import Qgis
 
 # basic progress context
 
+
 class ProgressContext:
     """
     Basic context manager displaying the progress bar with a static message.
@@ -47,10 +48,12 @@ class ProgressContext:
         :param exc: Exception instance
         """
         TELLAE_STORE.main_dialog.message_bar_from_exception(exc)
+
     _signal_error = staticmethod(_signal_error)
 
 
 # layer download context
+
 
 class LayerDownloadContext:
 
@@ -82,7 +85,9 @@ class LayerDownloadContext:
             self.error_handler(exc_val)
             return False
 
+
 # utils for layer download context
+
 
 def _layer_download_handler(handler):
     def final_handler(result):

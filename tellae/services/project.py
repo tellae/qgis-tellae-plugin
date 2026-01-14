@@ -11,17 +11,17 @@ def update_project_list():
         user = TELLAE_STORE.user
 
         # get list of owned projects
-        owned_projects = [{
-            "uuid": project["uuid"],
-            "name": get_project_name(project)
-        } for project in user["_ownedProjects"]]
+        owned_projects = [
+            {"uuid": project["uuid"], "name": get_project_name(project)}
+            for project in user["_ownedProjects"]
+        ]
         owned_projects = sorted(owned_projects, key=lambda x: x["name"])
 
         # get list of shared projects (can be empty
-        shared_projects = [{
-            "uuid": project["model"],
-            "name": project["metadata"]["name"]
-        } for project in user.get("_projects", [])]
+        shared_projects = [
+            {"uuid": project["model"], "name": project["metadata"]["name"]}
+            for project in user.get("_projects", [])
+        ]
         shared_projects = sorted(shared_projects, key=lambda x: x["name"])
 
         # evaluate full list
@@ -78,6 +78,7 @@ def get_project_binary_from_hash(binary_hash, attribute, handler, error_handler=
 def get_binary_index_from_hash(binary_hash, attribute):
     hashes = [binary["hash"] for binary in TELLAE_STORE.current_project[attribute]]
     return hashes.index(binary_hash)
+
 
 def get_project_name(project):
     return project.get("name", "Mon projet")
