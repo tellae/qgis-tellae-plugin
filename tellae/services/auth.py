@@ -1,7 +1,7 @@
 from tellae.tellae_store import TELLAE_STORE
 from tellae.utils import log
 from tellae.utils.requests import request_whale, message_from_request_error
-from tellae.services.project import select_project
+from tellae.services.project import update_project_list, select_project
 from tellae.services.layers import init_layers_table
 from tellae.services.network import init_gtfs_list
 from qgis.core import (
@@ -116,23 +116,20 @@ def _on_login(user):
     TELLAE_STORE.main_dialog.start_progress("Initialisation des données Tellae")
 
     try:
-        # update user in store (also tags store as authenticated)
-        TELLAE_STORE.set_user(user)
-
-        # update login button
-        TELLAE_STORE.main_dialog.config_panel.set_auth_button_text(user)
+        # update stored used
+        update_user(user)
 
         # update project list
-        TELLAE_STORE.main_dialog.config_panel.fill_project_selector()
+        update_project_list()
 
-        # select project
+        # select project stored in user
         select_project(user["kite"]["project"])
 
         # if store is not initiated, do it now
         if not TELLAE_STORE.store_initiated:
             init_store()
     except Exception as e:
-        pass
+        log(e)
     finally:
         TELLAE_STORE.main_dialog.end_progress()
 
@@ -202,6 +199,14 @@ def get_apikey_from_cache(cfg_name):
             apikey = aux_config.configMap()["username"]
             secret = aux_config.configMap()["password"]
     return apikey, secret
+
+
+def update_user(user):
+    # update user in store (also tags store as authenticated)
+    TELLAE_STORE.set_user(user)
+
+    # update login button
+    TELLAE_STORE.main_dialog.config_panel.set_auth_button_text(user)
 
 
 def init_store():
