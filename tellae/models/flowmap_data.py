@@ -80,7 +80,7 @@ class FlowmapData:
         return location_stats
 
     def _evaluate_max_flow_magnitude(self):
-        return max([float(flow["count"]) for flow in self.flows])
+        return max([float(flow["count"]) for flow in self.flows if flow["origin"] != flow["dest"]])
 
     def _evaluate_max_internal_flow(self):
         return max([stat["interne"] for stat in self._locations_stats.values()])
