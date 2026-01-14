@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.1.0](https://github.com/tellae/qgis-tellae-plugin/compare/v1.0.1...v1.1.0) (2026-01-14)
+
+
+### Features
+
+* added a Flows panel ([#42](https://github.com/tellae/qgis-tellae-plugin/issues/42)) ([57af66a](https://github.com/tellae/qgis-tellae-plugin/commit/57af66a99ec895567ee73037c336eda1839d99a4))
+* added a Network panel ([#43](https://github.com/tellae/qgis-tellae-plugin/issues/43)) ([8ef8524](https://github.com/tellae/qgis-tellae-plugin/commit/8ef8524a2a6d76f34e8b3755b858b549cce699ed))
+* reworked interface and added project layers ([#39](https://github.com/tellae/qgis-tellae-plugin/issues/39)) ([e9cf3e1](https://github.com/tellae/qgis-tellae-plugin/commit/e9cf3e12e1fadeb433fc5efd121205006fdc1c8b))
+
+
+### Bug Fixes
+
+* fixed various errors and improved error management ([#44](https://github.com/tellae/qgis-tellae-plugin/issues/44)) ([d9213a6](https://github.com/tellae/qgis-tellae-plugin/commit/d9213a6a753413f3c6e989cae380a7f29eb4fbdd))
+
 ## [1.0.1](https://github.com/tellae/qgis-tellae-plugin/compare/v1.0.0...v1.0.1) (2025-11-20)
 
 
