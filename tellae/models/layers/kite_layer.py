@@ -32,6 +32,10 @@ class LayerStylingException(Exception):
     pass
 
 
+class EmptyLayerException(Exception):
+    pass
+
+
 class QgsKiteLayer:
     ACCEPTED_GEOMETRY_TYPES = []
 
@@ -149,7 +153,7 @@ class QgsKiteLayer:
         """
 
         if not self.source.is_prepared:
-            self.log("Called on_source_prepared but source is not tagged as prepared")
+            self.log("Called on_source_prepared but source is not tagged as prepared", "CRITICAL")
             raise RuntimeError("Source is not prepared")
 
         # create a new QGIS layer instance
@@ -175,8 +179,13 @@ class QgsKiteLayer:
             QgsExpressionContextUtils.setLayerVariable(self.qgis_layer, key, value)
 
     def _validate_qgis_layer(self):
+        # call isValid method
         if not self.qgis_layer.isValid():
             raise ValueError("QGIS layer is not valid")
+
+        # check layer is not empty
+        if self.qgis_layer.featureCount() == 0:
+            raise EmptyLayerException
 
         # check geometry type
         if self.geometry_type not in self.ACCEPTED_GEOMETRY_TYPES:
@@ -282,6 +291,9 @@ class QgsKiteLayer:
             if not mapping.paint:
                 continue
 
+            if mapping.paint_type in ["text", "tooltip", "filter", "sort", "icon"]:
+                continue
+
             if mapping.legend:
                 if legend is not None:
                     raise ValueError("Cannot have several 'legend' mappings")
@@ -289,8 +301,10 @@ class QgsKiteLayer:
 
             if mapping.mapping_type != "constant":
                 if non_constant is not None:
-                    raise ValueError("Cannot have several 'non-constant' mappings")
-                non_constant = mapping
+                    # if several non-constant, cannot decide, set to True
+                    non_constant = True
+                else:
+                    non_constant = mapping
 
             if mapping.paint_type == "color":
                 if color is not None:
@@ -300,7 +314,7 @@ class QgsKiteLayer:
         if legend is not None:
             return legend
 
-        if non_constant is not None:
+        if non_constant is not None and non_constant is not True:
             return non_constant
 
         if color is not None:
@@ -358,6 +372,10 @@ class QgsKiteLayer:
         # evaluate message depending on exception type
         try:
             raise exception
+        # layer is empty
+        except EmptyLayerException:
+            level = Qgis.MessageLevel.Warning
+            message = f"La couche {layer_name} est vide et n'a pas été ajoutée"
         # min zoom not respected
         except MinZoomException:
             level = Qgis.MessageLevel.Warning
@@ -370,7 +388,10 @@ class QgsKiteLayer:
         # generic error message
         except Exception:
             message = f"Erreur lors de l'ajout de la couche '{layer_name}'"
-            self.log(f"An error occured during layer add:\n{str(traceback.format_exc())}")
+            self.log(
+                f"An error occured during layer add:\n{str(traceback.format_exc())}",
+                Qgis.MessageLevel.Critical,
+            )
 
         self.popup(message, level)
 
@@ -385,13 +406,22 @@ class QgsKiteLayer:
         if self.verbose:
             TELLAE_STORE.main_dialog.display_message_bar(message, level=level)
 
-    def log(self, message):
+    def warn_wrong_paint_try(self, paint_type):
+        """
+        Log a warning about a wrong paint type trying to be set.
+
+        :param paint_type: paint type
+        """
+        self.log(f"Trying to set '{paint_type}' on {self.__class__.__name__}", "WARNING")
+
+    def log(self, message, level="NO_LEVEL"):
         """
         Log a message with the layer name as prefix.
 
         :param message: message to log
+        :param level: message level
         """
-        log(f"[{self}]: {message}")
+        log(f"[{self}]: {message}", level=level)
 
     def create_legend_group(name):
         """

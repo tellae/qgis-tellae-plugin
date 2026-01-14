@@ -1,10 +1,10 @@
 from tellae.panels.base_panel import BasePanel
 from tellae.panels.data_table import DataTable
+from tellae.utils.contexts import LayerDownloadContext
 from tellae.utils.utils import get_binary_name, log
 from tellae.models.layers.add import add_database_layer
 from tellae.models.layers import GeojsonLayer
 from tellae.services.project import get_project_binary_from_hash
-from tellae.services.layers import LayerDownloadContext
 from qgis.PyQt.QtCore import Qt
 
 
@@ -113,6 +113,6 @@ class LayersPanel(BasePanel):
 
     # project tab
 
-    def update_selected_project(self):
+    def on_project_update(self):
         self.dlg.projectNameLayersPanel.setText(f"Projet: {self.store.current_project_name}")
         self.project_layers_table.fill_table_with_items(self.store.get_project_data("spatial_data"))

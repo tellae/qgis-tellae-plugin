@@ -1,9 +1,9 @@
 from tellae.panels.base_panel import BasePanel
 from tellae.panels.data_table import DataTable
 from tellae.utils.utils import get_binary_name, log
+from tellae.utils.contexts import LayerDownloadContext
 from tellae.models.layers import StarlingLayer, FlowmapLayer
 from tellae.services.project import get_project_binary_from_hash
-from tellae.services.layers import LayerDownloadContext
 from tellae.models.flowmap_data import FlowmapData
 
 
@@ -20,7 +20,7 @@ class FlowsPanel(BasePanel):
                 {
                     "text": "Nom",
                     "value": lambda x: get_binary_name(x, with_extension=False),
-                    "width": 729,
+                    "width": 715,
                 },
                 {"text": "Actions", "value": "actions", "width": 60, "slot": button_slot},
             ]
@@ -75,6 +75,6 @@ class FlowsPanel(BasePanel):
 
     # project tab
 
-    def update_selected_project(self):
+    def on_project_update(self):
         self.dlg.projectNameFlowsPanel.setText(f"Projet: {self.store.current_project_name}")
         self.project_flows_table.fill_table_with_items(self.store.get_project_data("flows"))

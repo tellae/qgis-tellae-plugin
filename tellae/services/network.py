@@ -6,54 +6,56 @@ import datetime
 
 
 def init_gtfs_list():
-
-    query = """
-            query Q {
-                PublicTransports(query:"status='READY'"){
-                  results{
-                    uuid
-                    pt_network{
-                      uuid
-                      moa{
+    try:
+        query = """
+                query Q {
+                    PublicTransports(query:"status='READY'"){
+                      results{
                         uuid
-                        name
+                        pt_network{
+                          uuid
+                          moa{
+                            uuid
+                            name
+                          }
+                          name
+                        }
+                        statistics
+                        start_date
+                        end_date
+                        day_types
                       }
-                      name
                     }
-                    statistics
-                    start_date
-                    end_date
-                    day_types
                   }
-                }
-              }
-        """
+            """
 
-    gtfs_list = request_whale(
-        "/graphql",
-        method="POST",
-        headers={"content-type": "application/json"},
-        body={"query": query},
-        blocking=True,
-    )["content"]["data"]["PublicTransports"]["results"]
+        gtfs_list = request_whale(
+            "/graphql",
+            method="POST",
+            headers={"content-type": "application/json"},
+            body={"query": query},
+            blocking=True,
+        )["content"]["data"]["PublicTransports"]["results"]
 
-    # evaluate and store name
-    for gtfs in gtfs_list:
-        gtfs["name"] = gtfs_name(gtfs)
+        # evaluate and store name
+        for gtfs in gtfs_list:
+            gtfs["name"] = gtfs_name(gtfs)
 
-    # sort by name and date
-    gtfs_list = sorted(
-        gtfs_list,
-        key=lambda x: datetime.datetime.strptime(x["start_date"], "%Y-%M-%d"),
-        reverse=True,
-    )
-    gtfs_list = sorted(gtfs_list, key=lambda x: x["name"])
+        # sort by name and date
+        gtfs_list = sorted(
+            gtfs_list,
+            key=lambda x: datetime.datetime.strptime(x["start_date"], "%Y-%M-%d"),
+            reverse=True,
+        )
+        gtfs_list = sorted(gtfs_list, key=lambda x: x["name"])
 
-    # set result in store
-    TELLAE_STORE.gtfs_list = gtfs_list
+        # set result in store
+        TELLAE_STORE.gtfs_list = gtfs_list
 
-    # update ux
-    TELLAE_STORE.main_dialog.network_panel.update_network_list()
+        # update ux
+        TELLAE_STORE.main_dialog.network_panel.update_network_list()
+    except Exception as e:
+        raise ValueError("Erreur lors de la récupération de la table réseau") from e
 
 
 def get_gtfs_routes_and_stops(gtfs_uuid, handler, error_handler):
