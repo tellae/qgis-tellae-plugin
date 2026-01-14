@@ -135,8 +135,6 @@ class FlowmapData:
                 origin = self.get_location_by_id(flow["origin"])
                 dest = self.get_location_by_id(flow["dest"])
                 properties = flow.copy()
-                del properties["origin"]
-                del properties["dest"]
                 properties["count"] = float(properties["count"])
                 feature = {
                     "type": "Feature",
