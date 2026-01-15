@@ -16,29 +16,6 @@ from qgis.core import (
 from PyQt5.QtGui import QColor
 
 
-class FlowmapLayer(MultipleLayer):
-
-    def __init__(self, *args, **kwargs):
-
-        self.flowmap_data = kwargs["data"]
-
-        # convert data to geojson format
-        kwargs["data"] = self.flowmap_data.to_geojson()
-
-        # set editAttributes manually
-        kwargs["editAttributes"] = {"color": TELLAE_PRIMARY_COLOR}
-
-        super().__init__(*args, **kwargs)
-
-    def sub_layer_specs(cls):
-        return [
-            {"layer_class": FlowmapFlowsLayer, "geometry": "LineString"},
-            {"layer_class": FlowmapLocationsLayer, "geometry": "Point"},
-        ]
-
-    sub_layer_specs = classmethod(sub_layer_specs)
-
-
 class FlowmapFlowsLayer(KiteLineLayer):
     """
     A class for displaying flows data with a FlowMap like layer.
@@ -47,6 +24,16 @@ class FlowmapFlowsLayer(KiteLineLayer):
     ACCEPTED_GEOMETRY_TYPES = [Qgis.GeometryType.Line]
 
     LAYER_VARIABLES = {"min_flow_width": 0.5, "max_flow_width": 6}
+
+    def __init__(self, *args, **kwargs):
+
+
+        self.flowmap_data = kwargs["data"]
+
+        # convert data to geojson format
+        kwargs["data"] = self.flowmap_data.to_geojson(flows=True, locations=False)
+
+        super().__init__(*args, **kwargs)
 
     def _update_style(self):
         super()._update_style()
@@ -62,7 +49,7 @@ class FlowmapFlowsLayer(KiteLineLayer):
         self.qgis_layer.setRenderer(renderer)
 
     def get_max(self):
-        return self.parent_layer.flowmap_data.max_flow_magnitude
+        return self.flowmap_data.max_flow_magnitude
 
     def create_symbol(self):
 
@@ -133,8 +120,16 @@ class FlowmapLocationsLayer(KiteCircleLayer):
 
     LAYER_VARIABLES = {"min_location_size": 1, "max_location_size": 6}
 
+    def __init__(self, *args, **kwargs):
+        self.flowmap_data = kwargs["data"]
+
+        # convert data to geojson format
+        kwargs["data"] = self.flowmap_data.to_geojson(flows=False, locations=True)
+
+        super().__init__(*args, **kwargs)
+
     def get_max(self):
-        return self.parent_layer.flowmap_data.max_internal_flow
+        return self.flowmap_data.max_internal_flow
 
     def create_symbol(self):
 
