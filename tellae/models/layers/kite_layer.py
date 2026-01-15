@@ -203,9 +203,9 @@ class QgsKiteLayer(LayerItem):
         if not self.qgis_layer.isValid():
             raise ValueError("QGIS layer is not valid")
 
-        # check layer is not empty
-        if self.qgis_layer.featureCount() == 0:
-            raise EmptyLayerException
+        # # check layer is not empty
+        # if self.qgis_layer.featureCount() == 0:
+        #     raise EmptyLayerException
 
         # check geometry type
         if self.geometry_type not in self.ACCEPTED_GEOMETRY_TYPES:
