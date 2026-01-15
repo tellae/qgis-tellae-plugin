@@ -78,6 +78,7 @@ def get_gtfs_routes_and_stops(gtfs_uuid, handler, error_handler):
         del properties_copy["gtfs"]
         del properties_copy["_creationDate"]
         del properties_copy["_lastUpdate"]
+        del properties_copy["uuid"]
 
         route_features.append(
             {"type": "Feature", "geometry": geometry_copy, "properties": properties_copy}
@@ -94,6 +95,7 @@ def get_gtfs_routes_and_stops(gtfs_uuid, handler, error_handler):
         del properties_copy["gtfs"]
         del properties_copy["_creationDate"]
         del properties_copy["_lastUpdate"]
+        del properties_copy["uuid"]
 
         stop_features.append(
             {"type": "Feature", "geometry": geometry_copy, "properties": properties_copy}
