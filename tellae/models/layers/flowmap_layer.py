@@ -1,4 +1,5 @@
 from .multiple_layer import MultipleLayer
+from .layer_group import LayerGroup
 from .line_layer import KiteLineLayer
 from .circle_layer import KiteCircleLayer
 from tellae.utils.constants import TELLAE_PRIMARY_COLOR
@@ -14,6 +15,29 @@ from qgis.core import (
     QgsFeatureRequest,
 )
 from PyQt5.QtGui import QColor
+
+
+class FlowmapLayers(LayerGroup):
+    """
+    Layer group containing a FlowmapFlowsLayer and a FlowmapLocationsLayer.
+    """
+
+    def __init__(self, name, *args, **kwargs):
+
+        super().__init__(name=name, verbose=True)
+
+        if not "editAttributes" in kwargs:
+            kwargs["editAttributes"] = {"color": TELLAE_PRIMARY_COLOR}
+
+        # create two sub layers
+        self.append_layer(FlowmapFlowsLayer(
+            *args,
+            **kwargs,
+        ))
+        self.append_layer(FlowmapLocationsLayer(
+            *args,
+            **kwargs
+        ))
 
 
 class FlowmapFlowsLayer(KiteLineLayer):

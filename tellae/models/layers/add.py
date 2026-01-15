@@ -27,6 +27,4 @@ LAYER_CLASSES = {
     "KiteFillLayer": KiteFillLayer,
     "StarlingLayer": StarlingLayer,
     "GeojsonLayer": GeojsonLayer,
-    "GtfsRoutesLayer": GtfsRoutesLayer,
-    "GtfsStopsLayer": GtfsStopsLayer,
 }

@@ -3,7 +3,7 @@ from tellae.panels.data_table import DataTable
 from tellae.utils.utils import get_binary_name, log
 from tellae.utils.constants import TELLAE_PRIMARY_COLOR
 from tellae.utils.contexts import LayerDownloadContext
-from tellae.models.layers import StarlingLayer, FlowmapFlowsLayer, FlowmapLocationsLayer
+from tellae.models.layers import StarlingLayer, FlowmapLayers
 from tellae.services.project import get_project_binary_from_hash
 from tellae.models.flowmap_data import FlowmapData
 
@@ -47,18 +47,9 @@ class FlowsPanel(BasePanel):
             flowmap_data = FlowmapData.from_zip_stream(result["content"])
             aggregated_flowmap_data = flowmap_data.agg_by_od()
             # add Flowmap layers
-            group = FlowmapFlowsLayer.create_legend_group(name)
-            FlowmapFlowsLayer(
-                data=aggregated_flowmap_data,
+            FlowmapLayers(
                 name=name,
-                group=group,
-                editAttributes={"color": TELLAE_PRIMARY_COLOR}
-            ).add_to_qgis()
-            FlowmapLocationsLayer(
                 data=aggregated_flowmap_data,
-                name=name,
-                group=group,
-                editAttributes={"color": TELLAE_PRIMARY_COLOR}
             ).add_to_qgis()
 
         with LayerDownloadContext(name, handler) as ctx:

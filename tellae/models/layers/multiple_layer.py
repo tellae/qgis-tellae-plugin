@@ -5,6 +5,7 @@ from qgis.core import (
     QgsProject,
     QgsVectorTileBasicRendererStyle,
 )
+from .layer_group import LayerGroup
 
 
 class MultipleLayer(QgsKiteLayer, ABC):
@@ -17,6 +18,8 @@ class MultipleLayer(QgsKiteLayer, ABC):
     def __init__(self, *args, **kwargs):
 
         super().__init__(*args, **kwargs)
+
+        self._multiple_layer_group = LayerGroup(name=self.name, verbose=self.verbose)
 
         self.sub_layers = []
 
@@ -31,13 +34,16 @@ class MultipleLayer(QgsKiteLayer, ABC):
                 dataProperties=self.data_properties,
                 verbose=False,
                 source_parameters={"geometry": spec["geometry"]},
-                name=self.name,
                 datasets=self.datasets,
                 main_dataset=self.main_dataset,
                 parent=self,
             )
 
+            # add layer to list of sublayers
             self.sub_layers.append(layer)
+
+            # add layer to group
+            self._multiple_layer_group.append_layer(layer)
 
     @abstractmethod
     def sub_layer_specs(cls):
@@ -52,11 +58,8 @@ class MultipleLayer(QgsKiteLayer, ABC):
             layer.source = self.source
 
     def on_source_prepared(self):
-        # create a group for the sublayers
-        self.group = self.create_legend_group(self.name)
 
         for layer in self.sub_layers:
-            layer.group = self.group
             layer.on_source_prepared()
 
         self._on_layer_added()
