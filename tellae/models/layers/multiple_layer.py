@@ -9,7 +9,7 @@ from qgis.core import (
 
 class MultipleLayer(QgsKiteLayer, ABC):
     """
-    Layer containing several sub-layers (QgsKiteLayer instances).
+    Layer containing several sub-layers sharing the same source.
 
     Sub-layers are added to a QgsLayerTreeGroup with the layer name.
     """
