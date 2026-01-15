@@ -1,4 +1,5 @@
 from qgis.core import (
+    Qgis,
     QgsProject,
 )
 from .layer_item import LayerItem
@@ -56,4 +57,8 @@ class LayerGroup(LayerItem):
         """
         for layer in self._layers:
             layer.add_to_qgis()
+
+        self.popup(
+            f"Les couches '{self.name}' a été ajoutées avec succès !", Qgis.MessageLevel.Success
+        )
 
