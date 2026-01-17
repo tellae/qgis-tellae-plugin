@@ -128,11 +128,3 @@ def message_from_request_error(result):
     status_message = result["status_message"]
     reason = result["reason"]
     return str(result["exception"])
-
-
-class BlockingRequestError(Exception):
-    def __init__(self, call_result):
-        self.result = call_result
-
-    def message(self):
-        return message_from_request_error(self.result)

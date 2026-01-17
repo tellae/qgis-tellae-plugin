@@ -2,14 +2,7 @@ from tellae.utils.utils import (
     THEMES_TRANSLATION,
     log,
 )
-from tellae.utils.requests import RequestsException
-from tellae.models.layers import (
-    QgsKiteLayer,
-    LayerInitialisationError,
-    LayerStylingException,
-    MinZoomException,
-    EmptyLayerException,
-)
+from tellae.utils import RequestsException, MinZoomException, EmptyLayerException
 from tellae.utils.requests import request_whale
 from tellae.tellae_store import TELLAE_STORE
 from qgis.core import (
@@ -94,4 +87,4 @@ def signal_layer_add_error(layer_name, exception):
             Qgis.MessageLevel.Critical,
         )
 
-    self.popup(message, level)
+    # self.popup(message, level)

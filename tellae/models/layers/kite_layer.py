@@ -16,25 +16,9 @@ from tellae.models.layers.layer_source import (
     SharkSource,
     VectorTileGeojsonSource,
 )
-from tellae.utils.utils import log
-from tellae.utils import RequestsException
+from tellae.utils import RequestsException, MinZoomException, EmptyLayerException, log
 import traceback
 
-
-class LayerInitialisationError(Exception):
-    pass
-
-
-class MinZoomException(Exception):
-    pass
-
-
-class LayerStylingException(Exception):
-    pass
-
-
-class EmptyLayerException(Exception):
-    pass
 
 
 class QgsKiteLayer(LayerItem):
