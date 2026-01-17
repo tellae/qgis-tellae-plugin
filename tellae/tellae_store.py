@@ -114,7 +114,14 @@ class TellaeStore:
         if not search_text:
             return items
         else:
-            return [x for x in items if search_text.lower() in x["name"][self.locale].lower()]
+            return [
+                x
+                for x in items
+                if (search_text.lower() in x["name"][self.locale].lower())
+                or (
+                    search_text.lower() in self.datasets_summary[x["main_dataset"]]["provider_name"].lower()
+                )
+            ]
 
     def get_project_data(self, attribute):
         """
