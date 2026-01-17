@@ -124,3 +124,30 @@ def _start_of_layer_download(layer_name):
 def _end_of_layer_download():
     # stop progress bar
     TELLAE_STORE.main_dialog.end_progress()
+
+
+# layer init context
+
+class LayerInitContext:
+    """
+    Simple context used for initialising layers classes and catching errors.
+
+    Displays a popup upon error.
+    """
+
+    def __init__(self, layer_name, verbose=True):
+
+        self.layer_name = layer_name
+
+        self.verbose = verbose
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # signal error
+        if exc_type is not None and self.verbose:
+            # TODO: call equivalent of signal_layer_add_error
+            log(f"ERROR with {self.layer_name}")
+
+        return True

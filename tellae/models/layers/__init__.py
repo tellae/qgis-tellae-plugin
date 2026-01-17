@@ -3,6 +3,7 @@ from .kite_layer import (
     LayerInitialisationError,
     LayerStylingException,
     MinZoomException,
+    EmptyLayerException,
 )
 from .layer_group import LayerGroup
 from .circle_layer import KiteCircleLayer

@@ -1,6 +1,6 @@
 from tellae.panels.base_panel import BasePanel
 from tellae.panels.data_table import DataTable
-from tellae.utils.contexts import LayerDownloadContext
+from tellae.utils.contexts import LayerDownloadContext, LayerInitContext
 from tellae.utils.utils import log
 from tellae.models.layers import GtfsLayers
 from tellae.services.network import get_gtfs_routes_and_stops, gtfs_date_to_datetime
@@ -53,7 +53,8 @@ class NetworkPanel(BasePanel):
         name = gtfs["name"]
 
         def handler(geojson):
-            GtfsLayers(name=name, data=geojson).add_to_qgis()
+            with LayerInitContext(name):
+                GtfsLayers(name=name, data=geojson).add_to_qgis()
 
         with LayerDownloadContext(name, handler) as ctx:
             get_gtfs_routes_and_stops(
