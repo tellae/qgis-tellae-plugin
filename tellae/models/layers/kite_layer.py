@@ -9,6 +9,7 @@ from qgis.core import (
 from tellae.tellae_store import TELLAE_STORE
 from tellae.models.layers.layer_style import ClassicStyle, VectorTilesStyle
 from tellae.models.props_mapping import PropsMapping
+from tellae.services.layers import signal_layer_add_error
 from .layer_item import LayerItem
 from tellae.models.layers.layer_source import (
     QgsLayerSource,
@@ -241,7 +242,8 @@ class QgsKiteLayer(LayerItem):
             # call source preparation (should call on_source_prepared method when done, possibly async)
             self.source.prepare()
         except Exception as e:
-            self.signal_layer_add_error(e)
+            if self.verbose:
+                signal_layer_add_error(self.name, e)
 
     def _add_to_qgis(self):
         # add layer aliases

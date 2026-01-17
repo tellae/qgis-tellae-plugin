@@ -87,4 +87,4 @@ def signal_layer_add_error(layer_name, exception):
             Qgis.MessageLevel.Critical,
         )
 
-    # self.popup(message, level)
+    TELLAE_STORE.main_dialog.display_message_bar(message, level=level)

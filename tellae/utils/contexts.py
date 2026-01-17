@@ -1,4 +1,5 @@
 from tellae.tellae_store import TELLAE_STORE
+from tellae.services.layers import signal_layer_add_error
 from tellae.utils import log
 from qgis.core import Qgis
 
@@ -147,7 +148,6 @@ class LayerInitContext:
     def __exit__(self, exc_type, exc_val, exc_tb):
         # signal error
         if exc_type is not None and self.verbose:
-            # TODO: call equivalent of signal_layer_add_error
-            log(f"ERROR with {self.layer_name}")
+            signal_layer_add_error(self.layer_name, exc_val)
 
         return True
