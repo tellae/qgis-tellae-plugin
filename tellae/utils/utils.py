@@ -1,9 +1,6 @@
 import os
 import json
-from qgis.core import (
-    QgsMessageLog,
-)
-from qgis.PyQt.QtWidgets import QTableWidgetItem, QTableWidget
+from qgis.core import QgsMessageLog, Qgis
 
 
 THEMES_TRANSLATION = {
@@ -24,9 +21,20 @@ THEMES_TRANSLATION = {
     "walk": "Piéton",
 }
 
+_LOG_LEVEL = {
+    "NO_LEVEL": Qgis.MessageLevel.NoLevel,
+    "SUCCESS": Qgis.MessageLevel.Success,
+    "INFO": Qgis.MessageLevel.Info,
+    "WARNING": Qgis.MessageLevel.Warning,
+    "CRITICAL": Qgis.MessageLevel.Critical,
+}
 
-def log(message):
-    QgsMessageLog.logMessage(str(message), "TellaeServices")
+
+def log(message, level: Qgis.MessageLevel | str = Qgis.MessageLevel.Info):
+    if isinstance(level, str) and level in _LOG_LEVEL:
+        level = _LOG_LEVEL[level]
+
+    QgsMessageLog.logMessage(str(message), level=level, tag="Tellae")
 
 
 def read_local_config(plugin_dir):
@@ -99,47 +107,6 @@ def read_local_config(plugin_dir):
 # def create_vector_layer_instance(layer_name, url):
 #
 #     return QgsVectorTileLayer(url, layer_name)
-
-
-def fill_table_widget(table_widget, headers, items):
-    # disable table edition
-    table_widget.setEditTriggers(QTableWidget.NoEditTriggers)
-
-    # set number of rows and columns
-    table_widget.setRowCount(len(items))
-    table_widget.setColumnCount(len(headers))
-
-    # setup headers
-    table_widget.setHorizontalHeaderLabels([header["text"] for header in headers])
-    for col, header in enumerate(headers):
-        if "width" in header:
-            table_widget.setColumnWidth(col, header["width"])
-
-    # populate table cells
-    for row, layer in enumerate(items):
-        for col, header in enumerate(headers):
-            # evaluate its content depending on the row and column
-            if "slot" in header:
-                header["slot"](table_widget, row, col, layer, header)
-                continue
-            elif callable(header["value"]):
-                text = header["value"](layer)
-            else:
-                text = layer[header["value"]]
-
-            # create a table cell
-            cell = QTableWidgetItem(text)
-
-            # set cell text and tooltip
-            # cell.setText(text)
-            cell.setToolTip(text)
-
-            # set text alignment
-            if "align" in header:
-                cell.setTextAlignment(header["align"])
-
-            # put the cell in the table
-            table_widget.setItem(row, col, cell)
 
 
 def get_binary_name(binary, with_extension=True):

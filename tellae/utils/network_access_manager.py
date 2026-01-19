@@ -38,37 +38,17 @@ __date__ = "August 2016"
 import re
 import io
 import urllib.parse
-
+import hashlib
 from qgis.PyQt.QtCore import QUrl, QEventLoop
 
 from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkReply
 
 from qgis.core import QgsApplication, QgsNetworkAccessManager, QgsMessageLog
 
-from tellae.utils import log
+from tellae.utils import RequestsException, RequestsExceptionConnectionError, RequestsExceptionTimeout, RequestsExceptionUserAbort, UnauthorizedError, log
 
 # FIXME: ignored
 DEFAULT_MAX_REDIRECTS = 4
-
-
-class RequestsException(Exception):
-    pass
-
-
-class RequestsExceptionTimeout(RequestsException):
-    pass
-
-
-class RequestsExceptionConnectionError(RequestsException):
-    pass
-
-
-class RequestsExceptionUserAbort(RequestsException):
-    pass
-
-
-class UnauthorizedError(RequestsException):
-    pass
 
 
 class Map(dict):
@@ -212,10 +192,26 @@ class NetworkAccessManager(object):
         self.msg_log(f"http_call request: {url}")
 
         self.blocking_mode = blocking
+
         req = QNetworkRequest()
         # Avoid double quoting form QUrl
         url = urllib.parse.unquote(url)
         req.setUrl(QUrl(url))
+
+        # encode body and set content header
+        if method.lower() in ["post", "put"]:
+            if isinstance(body, io.IOBase):
+                body = body.read()
+            elif isinstance(body, str):
+                body = body.encode()
+            elif isinstance(body, dict):
+                body = str(json.dumps(body)).encode(encoding="utf-8")
+            else:
+                raise TypeError("Unsupported type for request body")
+            hash_object = hashlib.sha256(body)
+            hash_value = hash_object.hexdigest()
+            headers["X-Amz-Content-SHA256"] = hash_value
+
         if headers is not None:
             # This fixes a weird error with compressed content not being correctly
             # inflated.
@@ -231,6 +227,7 @@ class NetworkAccessManager(object):
                 self.msg_log("Setting header %s to %s" % (k, v))
                 if k and v:
                     req.setRawHeader(k.encode(), v.encode())
+
         if self.authid:
             self.msg_log(f"Update request w/ authid: {self.authid}")
             self.auth_manager().updateNetworkRequest(req, self.authid)
@@ -248,12 +245,6 @@ class NetworkAccessManager(object):
         for k, v in list(headers.items()):
             self.msg_log("%s: %s" % (k, v))
         if method.lower() in ["post", "put"]:
-            if isinstance(body, io.IOBase):
-                body = body.read()
-            if isinstance(body, str):
-                body = body.encode()
-            if isinstance(body, dict):
-                body = str(json.dumps(body)).encode(encoding="utf-8")
             self.reply = func(req, body)
         else:
             self.reply = func(req)
@@ -392,7 +383,10 @@ class NetworkAccessManager(object):
 
                 ba = self.reply.readAll()
                 self.http_call_result.content = bytes(ba)
-                self.http_call_result.text = str(ba.data(), encoding="utf-8")
+                try:
+                    self.http_call_result.text = str(ba.data(), encoding="utf-8")
+                except UnicodeDecodeError:
+                    self.http_call_result.text = ""
                 self.http_call_result.ok = True
 
         # Let's log the whole response for debugging purposes:

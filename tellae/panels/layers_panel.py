@@ -1,11 +1,10 @@
 from tellae.panels.base_panel import BasePanel
-from tellae.utils import *
-from tellae.utils.utils import fill_table_widget, get_binary_name, log
-from tellae.models.layers import add_custom_layer, add_database_layer
+from tellae.panels.data_table import DataTable
+from tellae.utils.contexts import LayerDownloadContext
+from tellae.utils.utils import get_binary_name, log
+from tellae.models.layers.add import add_database_layer
+from tellae.models.layers import GeojsonLayer
 from tellae.services.project import get_project_binary_from_hash
-from tellae.services.layers import LayerDownloadContext
-from qgis.PyQt.QtWidgets import QPushButton
-from PyQt5.QtWidgets import QStyle
 from qgis.PyQt.QtCore import Qt
 
 
@@ -15,31 +14,85 @@ class LayersPanel(BasePanel):
 
         super().__init__(main_dialog)
 
+        # database layers filtering options
+        self.search_text = ""
         self.selected_theme = "Tous"
+
+        # filtered list of database layers
         self.layers = []
+
+        self.database_layers_table = DataTable(self, self.dlg.tableWidget)
+        self.project_layers_table = DataTable(self, self.dlg.projectLayersTable)
 
     def setup(self):
         # set default tab to 0
         self.dlg.add_layers_tab.setCurrentIndex(0)
 
-        # add listener on theme update
-        self.dlg.themeSelector.currentTextChanged.connect(self.update_theme)
+        # add listener to theme selector
+        self.dlg.themeSelector.currentTextChanged.connect(self.on_theme_update)
 
-    # actions
+        # add listener to search bar
+        self.dlg.layer_search_bar.textChanged.connect(self.on_search_update)
 
-    def update_theme(self, new_theme):
+        # set database table headers
+        button_slot = self.database_layers_table.table_button_slot(self.add_database_layer)
+        self.database_layers_table.set_headers(
+            [
+                {"text": "Nom", "value": lambda x: x["name"][self.store.locale], "width": 355},
+                {
+                    "text": "Date",
+                    "value": lambda x: self.store.datasets_summary[x["main_dataset"]].get(
+                        "date", ""
+                    ),
+                    "width": 80,
+                    "align": Qt.AlignCenter,
+                },
+                {
+                    "text": "Source",
+                    "value": lambda x: self.store.datasets_summary[x["main_dataset"]][
+                        "provider_name"
+                    ],
+                    "width": 280,
+                },
+                {"text": "Actions", "value": "actions", "width": 60, "slot": button_slot},
+            ]
+        )
+
+        # set project table headers
+        button_slot = self.project_layers_table.table_button_slot(self.add_spatial_data)
+        self.project_layers_table.set_headers(
+            [
+                {
+                    "text": "Nom",
+                    "value": lambda x: get_binary_name(x, with_extension=False),
+                    "width": 715,
+                },
+                {"text": "Actions", "value": "actions", "width": 60, "slot": button_slot},
+            ]
+        )
+
+    def on_search_update(self, search_text):
+        # update stored value
+        self.search_text = search_text
+
+        # update layers table
+        self.update_database_layers_table()
+
+    def on_theme_update(self, new_theme):
         # update selected theme
         self.selected_theme = new_theme
 
         # update layers table
-        self.fill_layers_table()
+        self.update_database_layers_table()
+
+    # actions
 
     def add_spatial_data(self, row_idx):
         binary = self.store.get_project_data("spatial_data")[row_idx]
         name = get_binary_name(binary, with_extension=False)
 
         def handler(result):
-            add_custom_layer(result["content"], name)
+            GeojsonLayer(data=result["content"], name=name).add_to_qgis()
 
         with LayerDownloadContext(name, handler) as ctx:
             get_project_binary_from_hash(
@@ -65,69 +118,15 @@ class LayersPanel(BasePanel):
         # to "all"
         self.dlg.themeSelector.setCurrentText("Tous")
 
-    def fill_layers_table(self):
-        # get table widget
-        table = self.dlg.tableWidget
-
+    def update_database_layers_table(self):
         # get list of layers to display
-        self.layers = self.store.get_filtered_layer_summary(self.selected_theme)
+        self.layers = self.store.get_filtered_layer_summary(self.selected_theme, self.search_text)
 
-        # action slot
-
-        def action_slot(table_widget, row_ix, col_ix, _, __):
-            btn = QPushButton(table)
-            btn.setIcon(self.dlg.style().standardIcon(QStyle.SP_DialogSaveButton))
-            btn.clicked.connect(lambda state, x=row_ix: self.add_database_layer(x))
-            table_widget.setCellWidget(row_ix, col_ix, btn)
-
-        # setup table headers
-        # total table length is 791, scroll bar is 16 => header width must total to 775
-        headers = [
-            {"text": "Nom", "value": lambda x: x["name"][self.store.locale], "width": 355},
-            {
-                "text": "Date",
-                "value": lambda x: self.store.datasets_summary[x["main_dataset"]].get("date", ""),
-                "width": 80,
-                "align": Qt.AlignCenter,
-            },
-            {
-                "text": "Source",
-                "value": lambda x: self.store.datasets_summary[x["main_dataset"]]["provider_name"],
-                "width": 280,
-            },
-            {"text": "Actions", "value": "actions", "width": 60, "slot": action_slot},
-        ]
-
-        fill_table_widget(table, headers, self.layers)
+        # fill table
+        self.database_layers_table.fill_table_with_items(self.layers)
 
     # project tab
 
-    def update_selected_project(self):
+    def on_project_update(self):
         self.dlg.projectNameLayersPanel.setText(f"Projet: {self.store.current_project_name}")
-        self.fill_project_spatial_data_table()
-
-    def fill_project_spatial_data_table(self):
-        table = self.dlg.projectLayersTable
-
-        spatial_data = self.store.get_project_data("spatial_data")
-
-        def action_slot(table_widget, row_ix, col_ix, _, __):
-            btn = QPushButton(table_widget)
-            btn.setIcon(self.dlg.style().standardIcon(QStyle.SP_DialogSaveButton))
-            btn.clicked.connect(lambda state, x=row_ix: self.add_spatial_data(x))
-            table_widget.setCellWidget(row_ix, col_ix, btn)
-
-        # setup table headers
-        # total table length is 721, scroll bar is 16 => header width must total to 705
-        headers = [
-            {
-                "text": "Nom",
-                "value": lambda x: get_binary_name(x, with_extension=False),
-                "width": 729,
-            },
-            {"text": "Actions", "value": "actions", "width": 60, "slot": action_slot},
-        ]
-
-        fill_table_widget(table, headers, spatial_data)
-
-    # utils
+        self.project_layers_table.fill_table_with_items(self.store.get_project_data("spatial_data"))

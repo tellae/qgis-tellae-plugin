@@ -274,7 +274,7 @@ class DirectMapping(PropsMapping):
 
         if self.paint_type == "color":
             if value_format == "raw":
-                log("Format 'raw' is not implemented")
+                log("Format 'raw' is not implemented", "WARNING")
                 expression = "0,0,0"
             elif value_format == "r g b":
                 expression = f'r_g_b_color("{key}")'
@@ -292,8 +292,30 @@ class CategoryMapping(PropsMapping):
     mapping_type = "category"
 
     def _to_paint_value(self):
-        # implement this using CASE expression
-        raise NotImplementedError
+        key = self.mapping_options["key"]
+
+        # start expression
+        expression = "CASE "
+
+        # add cases
+        for val, paint_value in self.mapping_options["values_map"].items():
+            if isinstance(paint_value, str):
+                paint_value = f"'{paint_value}'"
+            if isinstance(val, str):
+                val = f"'{val}'"
+            expression += f'WHEN "{key}" = {val} THEN {paint_value} '
+
+        # add default
+        if "default" in self.mapping_options:
+            default_paint_value = self.mapping_options["default"]
+            if isinstance(default_paint_value, str):
+                default_paint_value = f"'{val}'"
+            expression += f"ELSE {default_paint_value} "
+
+        # end expression
+        expression += "END"
+
+        return QgsProperty.fromExpression(expression), True
 
     def create_renderer(self, layer, symbol_updater) -> QgsCategorizedSymbolRenderer:
         """

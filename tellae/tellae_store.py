@@ -8,8 +8,10 @@ class TellaeStore:
     # tab values enumeration (number corresponds to page number)
     class Tabs(IntEnum):
         layers = 0
-        config = 1
-        about = 2
+        flows = 1
+        network = 2
+        config = 3
+        about = 4
 
     def __init__(self):
 
@@ -56,6 +58,9 @@ class TellaeStore:
         # number of custom layers
         self.nb_custom_layers = 0
 
+        # network
+        self.gtfs_list = []
+
         # local config
         self.local_config = None
         self.read_local_config()
@@ -94,15 +99,28 @@ class TellaeStore:
         self.main_dialog = tellae_services.dlg
         self.auth_dialog = tellae_services.auth
 
-    def get_filtered_layer_summary(self, selected_theme: str):
-
+    def get_filtered_layer_summary(self, selected_theme: str, search_text: str):
+        # filter layers by theme
         if selected_theme == "Tous":
-            return self.layer_summary
+            items = self.layer_summary
         else:
-            return [
+            items = [
                 layer
                 for layer in self.layer_summary
                 if selected_theme in [THEMES_TRANSLATION[theme] for theme in layer["themes"]]
+            ]
+
+        # filter layers from search text
+        if not search_text:
+            return items
+        else:
+            return [
+                x
+                for x in items
+                if (search_text.lower() in x["name"][self.locale].lower())
+                or (
+                    search_text.lower() in self.datasets_summary[x["main_dataset"]]["provider_name"].lower()
+                )
             ]
 
     def get_project_data(self, attribute):
