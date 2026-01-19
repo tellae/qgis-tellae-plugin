@@ -335,7 +335,6 @@ class NetworkAccessManager(object):
                 header_value = str(v.data(), encoding="utf-8")
             except UnicodeDecodeError:
                 header_value = str(v.data(), encoding="latin-1")
-            log (header_value)
             self.http_call_result.headers[str(k.data(), encoding="utf-8")] = header_value
             self.http_call_result.headers[str(k.data(), encoding="utf-8").lower()] = header_value
 
