@@ -1,4 +1,5 @@
 from .multiple_layer import MultipleLayer
+from .layer_group import LayerGroup
 from .line_layer import KiteLineLayer
 from .circle_layer import KiteCircleLayer
 from tellae.utils.constants import TELLAE_PRIMARY_COLOR
@@ -16,27 +17,27 @@ from qgis.core import (
 from PyQt5.QtGui import QColor
 
 
-class FlowmapLayer(MultipleLayer):
+class FlowmapLayers(LayerGroup):
+    """
+    Layer group containing a FlowmapFlowsLayer and a FlowmapLocationsLayer.
+    """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, name, *args, **kwargs):
 
-        self.flowmap_data = kwargs["data"]
+        super().__init__(name=name, verbose=True)
 
-        # convert data to geojson format
-        kwargs["data"] = self.flowmap_data.to_geojson()
+        if not "editAttributes" in kwargs:
+            kwargs["editAttributes"] = {"color": TELLAE_PRIMARY_COLOR}
 
-        # set editAttributes manually
-        kwargs["editAttributes"] = {"color": TELLAE_PRIMARY_COLOR}
-
-        super().__init__(*args, **kwargs)
-
-    def sub_layer_specs(cls):
-        return [
-            {"layer_class": FlowmapFlowsLayer, "geometry": "LineString"},
-            {"layer_class": FlowmapLocationsLayer, "geometry": "Point"},
-        ]
-
-    sub_layer_specs = classmethod(sub_layer_specs)
+        # create two sub layers
+        self.append_layer(FlowmapFlowsLayer(
+            *args,
+            **kwargs,
+        ))
+        self.append_layer(FlowmapLocationsLayer(
+            *args,
+            **kwargs
+        ))
 
 
 class FlowmapFlowsLayer(KiteLineLayer):
@@ -47,6 +48,16 @@ class FlowmapFlowsLayer(KiteLineLayer):
     ACCEPTED_GEOMETRY_TYPES = [Qgis.GeometryType.Line]
 
     LAYER_VARIABLES = {"min_flow_width": 0.5, "max_flow_width": 6}
+
+    def __init__(self, *args, **kwargs):
+
+
+        self.flowmap_data = kwargs["data"]
+
+        # convert data to geojson format
+        kwargs["data"] = self.flowmap_data.to_geojson(flows=True, locations=False)
+
+        super().__init__(*args, **kwargs)
 
     def _update_style(self):
         super()._update_style()
@@ -62,7 +73,7 @@ class FlowmapFlowsLayer(KiteLineLayer):
         self.qgis_layer.setRenderer(renderer)
 
     def get_max(self):
-        return self.parent_layer.flowmap_data.max_flow_magnitude
+        return self.flowmap_data.max_flow_magnitude
 
     def create_symbol(self):
 
@@ -133,8 +144,16 @@ class FlowmapLocationsLayer(KiteCircleLayer):
 
     LAYER_VARIABLES = {"min_location_size": 1, "max_location_size": 6}
 
+    def __init__(self, *args, **kwargs):
+        self.flowmap_data = kwargs["data"]
+
+        # convert data to geojson format
+        kwargs["data"] = self.flowmap_data.to_geojson(flows=False, locations=True)
+
+        super().__init__(*args, **kwargs)
+
     def get_max(self):
-        return self.parent_layer.flowmap_data.max_internal_flow
+        return self.flowmap_data.max_internal_flow
 
     def create_symbol(self):
 

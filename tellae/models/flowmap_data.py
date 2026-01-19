@@ -80,7 +80,7 @@ class FlowmapData:
         return location_stats
 
     def _evaluate_max_flow_magnitude(self):
-        return max([float(flow["count"]) for flow in self.flows])
+        return max([float(flow["count"]) for flow in self.flows if flow["origin"] != flow["dest"]])
 
     def _evaluate_max_internal_flow(self):
         return max([stat["interne"] for stat in self._locations_stats.values()])
@@ -135,8 +135,6 @@ class FlowmapData:
                 origin = self.get_location_by_id(flow["origin"])
                 dest = self.get_location_by_id(flow["dest"])
                 properties = flow.copy()
-                del properties["origin"]
-                del properties["dest"]
                 properties["count"] = float(properties["count"])
                 feature = {
                     "type": "Feature",

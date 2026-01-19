@@ -14,6 +14,7 @@ from tellae.utils import log, RequestsException
 from tellae.utils.contexts import LayerDownloadContext
 from tellae.tellae_store import TELLAE_STORE
 from tellae.utils.requests import request, request_whale
+from tellae.services.layers import signal_layer_add_error
 import json
 
 
@@ -87,7 +88,7 @@ class QgsLayerSource(ABC):
 
         :param exception: Exception subclass
         """
-        self.layer.signal_layer_add_error(exception)
+        signal_layer_add_error(self.layer.name, exception)
 
 
 class GeojsonSource(QgsLayerSource):

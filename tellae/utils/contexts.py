@@ -1,4 +1,5 @@
 from tellae.tellae_store import TELLAE_STORE
+from tellae.services.layers import signal_layer_add_error
 from tellae.utils import log
 from qgis.core import Qgis
 
@@ -65,8 +66,19 @@ class LayerDownloadContext:
 
         self.error_handler = self._evaluate_error_handler(error_handler)
 
+        self.download_successful = False
+
     def _evaluate_handler(self, handler):
-        return _layer_download_handler(handler)
+        def final_handler(result):
+            # mark layer download as successful
+            self.download_successful = True
+
+            # signal end of download
+            _end_of_layer_download()
+
+            handler(result)
+
+        return final_handler
 
     def _evaluate_error_handler(self, error_handler):
         return _layer_download_error_handler(self.layer_name, error_handler)
@@ -78,25 +90,15 @@ class LayerDownloadContext:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if exc_type is None:
-            return True
-        else:
-            # call handler if error occurred within context
-            self.error_handler(exc_val)
-            return False
+        if exc_type is not None:
+            if not self.download_successful:
+                # call handler if error occurred within context and download has not successfully ended
+                self.error_handler(exc_val)
+
+        return not self.download_successful
 
 
 # utils for layer download context
-
-
-def _layer_download_handler(handler):
-    def final_handler(result):
-        # signal end of download
-        _end_of_layer_download()
-
-        handler(result)
-
-    return final_handler
 
 
 def _layer_download_error_handler(layer_name, error_handler=None):
@@ -123,3 +125,29 @@ def _start_of_layer_download(layer_name):
 def _end_of_layer_download():
     # stop progress bar
     TELLAE_STORE.main_dialog.end_progress()
+
+
+# layer init context
+
+class LayerInitContext:
+    """
+    Simple context used for initialising layers classes and catching errors.
+
+    Displays a popup upon error.
+    """
+
+    def __init__(self, layer_name, verbose=True):
+
+        self.layer_name = layer_name
+
+        self.verbose = verbose
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # signal error
+        if exc_type is not None and self.verbose:
+            signal_layer_add_error(self.layer_name, exc_val)
+
+        return True

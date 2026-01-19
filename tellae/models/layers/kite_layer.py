@@ -9,34 +9,20 @@ from qgis.core import (
 from tellae.tellae_store import TELLAE_STORE
 from tellae.models.layers.layer_style import ClassicStyle, VectorTilesStyle
 from tellae.models.props_mapping import PropsMapping
+from tellae.services.layers import signal_layer_add_error
+from .layer_item import LayerItem
 from tellae.models.layers.layer_source import (
     QgsLayerSource,
     GeojsonSource,
     SharkSource,
     VectorTileGeojsonSource,
 )
-from tellae.utils.utils import log
-from tellae.utils import RequestsException
+from tellae.utils import RequestsException, MinZoomException, EmptyLayerException, log
 import traceback
 
 
-class LayerInitialisationError(Exception):
-    pass
 
-
-class MinZoomException(Exception):
-    pass
-
-
-class LayerStylingException(Exception):
-    pass
-
-
-class EmptyLayerException(Exception):
-    pass
-
-
-class QgsKiteLayer:
+class QgsKiteLayer(LayerItem):
     ACCEPTED_GEOMETRY_TYPES = []
 
     LAYER_VARIABLES = {}
@@ -49,15 +35,17 @@ class QgsKiteLayer:
         sourceType="geojson",
         layerProps=None,
         dataProperties=None,
-        verbose=True,
+        verbose=None,
         source_parameters=None,
-        name="Unnamed",
+        name=None,
         datasets=None,
         main_dataset=None,
         parent=None,
-        group=None,
         **kwargs,
     ):
+
+        super().__init__(name=name, verbose=verbose)
+
         # layer id
         self.id = layer_id
 
@@ -73,16 +61,10 @@ class QgsKiteLayer:
         # parent layer instance
         self.parent_layer = parent
 
-        # legend group
-        self.group = group
+        # layer group
+        self._group = None
 
         # layer descriptive properties, used to determine layer display
-
-        # layer name (displayed in Qgis legend)
-        if isinstance(name, dict):
-            self.name = name[TELLAE_STORE.locale]
-        else:
-            self.name = name
 
         # object used to determine layer contents
         self.data = data
@@ -110,11 +92,29 @@ class QgsKiteLayer:
 
         # util attributes
 
-        # whether to display information with popup
-        self.verbose = verbose
-
     def __str__(self):
         return f"{self.name} ({self.__class__.__name__})"
+
+    @property
+    def name (self):
+        if self._name is None:
+            if self._group is not None:
+                return self._group.name
+            else:
+                return "Unnamed"
+        elif isinstance(self._name, dict):
+            return self._name[TELLAE_STORE.locale]
+        return self._name
+
+    @property
+    def verbose(self):
+        if self._verbose is None:
+            if self._group is None:
+                return True
+            else:  # if there is a group, display information if it doesn't
+                return not self._group.verbose
+        else:
+            return self._verbose
 
     @property
     def is_vector(self):
@@ -125,6 +125,11 @@ class QgsKiteLayer:
         if self.qgis_layer is None:
             return None
         return self.qgis_layer.geometryType()
+
+    def set_group(self, group):
+        if self._group is not None:
+            raise ValueError("Cannot add layer to several groups")
+        self._group = group
 
     def _setup(self):
         # if no id was provided, use an incremented custom layer id
@@ -183,9 +188,9 @@ class QgsKiteLayer:
         if not self.qgis_layer.isValid():
             raise ValueError("QGIS layer is not valid")
 
-        # check layer is not empty
-        if self.qgis_layer.featureCount() == 0:
-            raise EmptyLayerException
+        # # check layer is not empty
+        # if self.qgis_layer.featureCount() == 0:
+        #     raise EmptyLayerException
 
         # check geometry type
         if self.geometry_type not in self.ACCEPTED_GEOMETRY_TYPES:
@@ -237,7 +242,8 @@ class QgsKiteLayer:
             # call source preparation (should call on_source_prepared method when done, possibly async)
             self.source.prepare()
         except Exception as e:
-            self.signal_layer_add_error(e)
+            if self.verbose:
+                signal_layer_add_error(self.name, e)
 
     def _add_to_qgis(self):
         # add layer aliases
@@ -263,10 +269,10 @@ class QgsKiteLayer:
         if self.qgis_layer.featureCount() == 0:
             return
 
-        if self.group is not None:
+        if self._group is not None:
             # do not add the layer to the legend as it will already be added when linking group
             QgsProject.instance().addMapLayer(self.qgis_layer, False)
-            self.group.addLayer(self.qgis_layer)
+            self._group.qgis_group.addLayer(self.qgis_layer)
         else:
             QgsProject.instance().addMapLayer(self.qgis_layer)
 
@@ -395,17 +401,6 @@ class QgsKiteLayer:
 
         self.popup(message, level)
 
-    def popup(self, message: str, level: Qgis.MessageLevel):
-        """
-        Display a popup if the layer is tagged as verbose.
-
-        :param message: popup message
-        :param level: message priority level
-        """
-        # display a popup if verbose
-        if self.verbose:
-            TELLAE_STORE.main_dialog.display_message_bar(message, level=level)
-
     def warn_wrong_paint_try(self, paint_type):
         """
         Log a warning about a wrong paint type trying to be set.
@@ -413,25 +408,3 @@ class QgsKiteLayer:
         :param paint_type: paint type
         """
         self.log(f"Trying to set '{paint_type}' on {self.__class__.__name__}", "WARNING")
-
-    def log(self, message, level="NO_LEVEL"):
-        """
-        Log a message with the layer name as prefix.
-
-        :param message: message to log
-        :param level: message level
-        """
-        log(f"[{self}]: {message}", level=level)
-
-    def create_legend_group(name):
-        """
-        Create a legend group to which layers can be appended.
-
-        :param name: group name
-
-        :return: QgsLayerTreeGroup instance
-        """
-        root = QgsProject.instance().layerTreeRoot()
-        return root.insertGroup(0, name)
-
-    create_legend_group = staticmethod(create_legend_group)

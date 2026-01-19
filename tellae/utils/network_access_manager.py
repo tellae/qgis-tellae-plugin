@@ -45,30 +45,10 @@ from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkReply
 
 from qgis.core import QgsApplication, QgsNetworkAccessManager, QgsMessageLog
 
-from tellae.utils import log
+from tellae.utils import RequestsException, RequestsExceptionConnectionError, RequestsExceptionTimeout, RequestsExceptionUserAbort, UnauthorizedError, log
 
 # FIXME: ignored
 DEFAULT_MAX_REDIRECTS = 4
-
-
-class RequestsException(Exception):
-    pass
-
-
-class RequestsExceptionTimeout(RequestsException):
-    pass
-
-
-class RequestsExceptionConnectionError(RequestsException):
-    pass
-
-
-class RequestsExceptionUserAbort(RequestsException):
-    pass
-
-
-class UnauthorizedError(RequestsException):
-    pass
 
 
 class Map(dict):

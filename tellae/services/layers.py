@@ -2,8 +2,13 @@ from tellae.utils.utils import (
     THEMES_TRANSLATION,
     log,
 )
+from tellae.utils import RequestsException, MinZoomException, EmptyLayerException
 from tellae.utils.requests import request_whale
 from tellae.tellae_store import TELLAE_STORE
+from qgis.core import (
+    Qgis,
+)
+import traceback
 
 
 def init_layers_table():
@@ -44,3 +49,42 @@ def init_layers_table():
         TELLAE_STORE.main_dialog.layers_panel.fill_layers_table()
     except Exception as e:
         raise ValueError("Erreur lors de la récupération de la table des calques") from e
+
+
+def signal_layer_add_error(layer_name, exception):
+    """
+    Signal that an error was encountered while creating the layer or adding it to Qgis.
+
+    :param layer_name: name of the layer that generated the error
+    :param exception: Exception instance
+    """
+
+    # log(f"An error occurred during layer add: {exception.__repr__()}")
+    level = Qgis.MessageLevel.Critical
+
+    # evaluate message depending on exception type
+    try:
+        raise exception
+    # layer is empty
+    except EmptyLayerException:
+        level = Qgis.MessageLevel.Warning
+        message = f"La couche {layer_name} est vide et n'a pas été ajoutée"
+    # min zoom not respected
+    except MinZoomException:
+        level = Qgis.MessageLevel.Warning
+        message = f"Vous devez zoomer pour charger la couche '{layer_name}'"
+    # network error message
+    except RequestsException:
+        message = f"Erreur lors du téléchargement de la couche '{layer_name}'"
+    except NotImplementedError:
+        message = f"La couche '{layer_name}' nécessite des fonctionalités non implémentées pour le moment"
+    # generic error message
+    except Exception:
+        message = f"Erreur lors de l'ajout de la couche '{layer_name}'"
+
+        log(
+            f"An error occured during layer add:\n{str(traceback.format_exc())}",
+            Qgis.MessageLevel.Critical,
+        )
+
+    TELLAE_STORE.main_dialog.display_message_bar(message, level=level)
