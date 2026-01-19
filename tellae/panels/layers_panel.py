@@ -14,7 +14,11 @@ class LayersPanel(BasePanel):
 
         super().__init__(main_dialog)
 
+        # database layers filtering options
+        self.search_text = ""
         self.selected_theme = "Tous"
+
+        # filtered list of database layers
         self.layers = []
 
         self.database_layers_table = DataTable(self, self.dlg.tableWidget)
@@ -24,8 +28,11 @@ class LayersPanel(BasePanel):
         # set default tab to 0
         self.dlg.add_layers_tab.setCurrentIndex(0)
 
-        # add listener on theme update
-        self.dlg.themeSelector.currentTextChanged.connect(self.update_theme)
+        # add listener to theme selector
+        self.dlg.themeSelector.currentTextChanged.connect(self.on_theme_update)
+
+        # add listener to search bar
+        self.dlg.layer_search_bar.textChanged.connect(self.on_search_update)
 
         # set database table headers
         button_slot = self.database_layers_table.table_button_slot(self.add_database_layer)
@@ -58,20 +65,27 @@ class LayersPanel(BasePanel):
                 {
                     "text": "Nom",
                     "value": lambda x: get_binary_name(x, with_extension=False),
-                    "width": 729,
+                    "width": 715,
                 },
                 {"text": "Actions", "value": "actions", "width": 60, "slot": button_slot},
             ]
         )
 
-    # actions
+    def on_search_update(self, search_text):
+        # update stored value
+        self.search_text = search_text
 
-    def update_theme(self, new_theme):
+        # update layers table
+        self.update_database_layers_table()
+
+    def on_theme_update(self, new_theme):
         # update selected theme
         self.selected_theme = new_theme
 
         # update layers table
-        self.fill_layers_table()
+        self.update_database_layers_table()
+
+    # actions
 
     def add_spatial_data(self, row_idx):
         binary = self.store.get_project_data("spatial_data")[row_idx]
@@ -104,9 +118,9 @@ class LayersPanel(BasePanel):
         # to "all"
         self.dlg.themeSelector.setCurrentText("Tous")
 
-    def fill_layers_table(self):
+    def update_database_layers_table(self):
         # get list of layers to display
-        self.layers = self.store.get_filtered_layer_summary(self.selected_theme)
+        self.layers = self.store.get_filtered_layer_summary(self.selected_theme, self.search_text)
 
         # fill table
         self.database_layers_table.fill_table_with_items(self.layers)

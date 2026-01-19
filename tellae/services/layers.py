@@ -46,7 +46,7 @@ def init_layers_table():
 
         # fill UI using results
         TELLAE_STORE.main_dialog.layers_panel.fill_theme_selector()
-        TELLAE_STORE.main_dialog.layers_panel.fill_layers_table()
+        TELLAE_STORE.main_dialog.layers_panel.update_database_layers_table()
     except Exception as e:
         raise ValueError("Erreur lors de la récupération de la table des calques") from e
 
