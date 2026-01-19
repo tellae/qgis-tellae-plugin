@@ -209,7 +209,7 @@ QListWidget::item::selected {
               <item>
                <widget class="QTabWidget" name="add_layers_tab">
                 <property name="currentIndex">
-                 <number>0</number>
+                 <number>1</number>
                 </property>
                 <widget class="QWidget" name="database">
                  <attribute name="title">
@@ -314,6 +314,9 @@ QListWidget::item::selected {
                     <width>791</width>
                     <height>621</height>
                    </rect>
+                  </property>
+                  <property name="verticalScrollBarPolicy">
+                   <enum>Qt::ScrollBarAlwaysOn</enum>
                   </property>
                   <property name="alternatingRowColors">
                    <bool>true</bool>

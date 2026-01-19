@@ -65,7 +65,7 @@ class LayersPanel(BasePanel):
                 {
                     "text": "Nom",
                     "value": lambda x: get_binary_name(x, with_extension=False),
-                    "width": 729,
+                    "width": 715,
                 },
                 {"text": "Actions", "value": "actions", "width": 60, "slot": button_slot},
             ]
