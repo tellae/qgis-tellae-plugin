@@ -214,8 +214,9 @@ class NetworkAccessManager(object):
         self.blocking_mode = blocking
 
         req = QNetworkRequest()
-        # Avoid double quoting form QUrl
-        url = urllib.parse.unquote(url)
+        # Avoid double quoting form QUrl (commented out because causes symbols like ">"
+        # to be converted to their html form (&gt;) and break the url
+        # url = urllib.parse.unquote(url)
         req.setUrl(QUrl(url))
 
         # encode body and set content header
