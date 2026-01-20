@@ -119,7 +119,8 @@ class TellaeStore:
                 for x in items
                 if (search_text.lower() in x["name"][self.locale].lower())
                 or (
-                    search_text.lower() in self.datasets_summary[x["main_dataset"]]["provider_name"].lower()
+                    search_text.lower()
+                    in self.datasets_summary[x["main_dataset"]]["provider_name"].lower()
                 )
             ]
 

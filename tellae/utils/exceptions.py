@@ -4,6 +4,7 @@ Exceptions used by the plugin
 
 # generic exceptions
 
+
 class InternalError(Exception):
 
     def __init__(self, message):
@@ -12,6 +13,7 @@ class InternalError(Exception):
 
 
 # layer exceptions
+
 
 class LayerInitialisationError(Exception):
     pass
@@ -31,8 +33,10 @@ class EmptyLayerException(Exception):
 
 # request exceptions
 
+
 class RequestsException(Exception):
     pass
+
 
 class RequestsExceptionTimeout(RequestsException):
     pass

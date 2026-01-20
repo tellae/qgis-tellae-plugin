@@ -18,13 +18,5 @@ class GtfsLayers(LayerGroup):
         del kwargs["data"]
 
         # create two sub layers
-        self.append_layer(GtfsStopsLayer(
-            *args,
-            **kwargs,
-            data=stops
-        ))
-        self.append_layer(GtfsRoutesLayer(
-            *args,
-            **kwargs,
-            data=routes
-        ))
+        self.append_layer(GtfsStopsLayer(*args, **kwargs, data=stops))
+        self.append_layer(GtfsRoutesLayer(*args, **kwargs, data=routes))

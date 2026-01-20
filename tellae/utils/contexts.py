@@ -129,6 +129,7 @@ def _end_of_layer_download():
 
 # layer init context
 
+
 class LayerInitContext:
     """
     Simple context used for initialising layers classes and catching errors.

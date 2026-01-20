@@ -9,7 +9,7 @@ class LayerItem:
 
     def __init__(self, name, verbose=True):
         # displayed name
-        self._name : str | dict = name
+        self._name: str | dict = name
 
         # whether to display information with popup
         self._verbose: bool | None = verbose
@@ -44,4 +44,3 @@ class LayerItem:
         :param level: message level
         """
         log(f"[{self}]: {message}", level=level)
-

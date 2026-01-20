@@ -21,7 +21,6 @@ from tellae.utils import RequestsException, MinZoomException, EmptyLayerExceptio
 import traceback
 
 
-
 class QgsKiteLayer(LayerItem):
     ACCEPTED_GEOMETRY_TYPES = []
 
@@ -96,7 +95,7 @@ class QgsKiteLayer(LayerItem):
         return f"{self.name} ({self.__class__.__name__})"
 
     @property
-    def name (self):
+    def name(self):
         if self._name is None:
             if self._group is not None:
                 return self._group.name
