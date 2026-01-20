@@ -30,14 +30,13 @@ class FlowmapLayers(LayerGroup):
             kwargs["editAttributes"] = {"color": TELLAE_PRIMARY_COLOR}
 
         # create two sub layers
-        self.append_layer(FlowmapFlowsLayer(
-            *args,
-            **kwargs,
-        ))
-        self.append_layer(FlowmapLocationsLayer(
-            *args,
-            **kwargs
-        ))
+        self.append_layer(
+            FlowmapFlowsLayer(
+                *args,
+                **kwargs,
+            )
+        )
+        self.append_layer(FlowmapLocationsLayer(*args, **kwargs))
 
 
 class FlowmapFlowsLayer(KiteLineLayer):
@@ -50,7 +49,6 @@ class FlowmapFlowsLayer(KiteLineLayer):
     LAYER_VARIABLES = {"min_flow_width": 0.5, "max_flow_width": 6}
 
     def __init__(self, *args, **kwargs):
-
 
         self.flowmap_data = kwargs["data"]
 

@@ -77,7 +77,9 @@ def signal_layer_add_error(layer_name, exception):
     except RequestsException:
         message = f"Erreur lors du téléchargement de la couche '{layer_name}'"
     except NotImplementedError:
-        message = f"La couche '{layer_name}' nécessite des fonctionalités non implémentées pour le moment"
+        message = (
+            f"La couche '{layer_name}' nécessite des fonctionalités non implémentées pour le moment"
+        )
     # generic error message
     except Exception:
         message = f"Erreur lors de l'ajout de la couche '{layer_name}'"

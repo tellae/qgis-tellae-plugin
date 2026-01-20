@@ -61,4 +61,3 @@ class LayerGroup(LayerItem):
         self.popup(
             f"Les couches '{self.name}' a été ajoutées avec succès !", Qgis.MessageLevel.Success
         )
-
