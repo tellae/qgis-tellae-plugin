@@ -194,8 +194,9 @@ class NetworkAccessManager(object):
         self.blocking_mode = blocking
 
         req = QNetworkRequest()
-        # Avoid double quoting form QUrl
-        url = urllib.parse.unquote(url)
+        # Avoid double quoting form QUrl (commented out because causes symbols like ">"
+        # to be converted to their html form (&gt;) and break the url
+        # url = urllib.parse.unquote(url)
         req.setUrl(QUrl(url))
 
         # encode body and set content header
@@ -311,12 +312,16 @@ class NetworkAccessManager(object):
         self.http_call_result.status = httpStatus
         self.http_call_result.status_message = httpStatusMessage
         for k, v in self.reply.rawHeaderPairs():
-            self.http_call_result.headers[str(k.data(), encoding="utf-8")] = str(
-                v.data(), encoding="utf-8"
-            )
-            self.http_call_result.headers[str(k.data(), encoding="utf-8").lower()] = str(
-                v.data(), encoding="utf-8"
-            )
+            try:
+                header_value = str(v.data(), encoding="utf-8")
+            except UnicodeDecodeError:
+                try:
+                    header_value = str(v.data(), encoding="latin-1")
+                except Exception:
+                    log(f"Could not decode value of header: {str(k.data(), encoding='utf-8')}")
+                    header_value = v.data()
+            self.http_call_result.headers[str(k.data(), encoding="utf-8")] = header_value
+            self.http_call_result.headers[str(k.data(), encoding="utf-8").lower()] = header_value
 
         if err != QNetworkReply.NetworkError.NoError:
             # handle error
