@@ -4,7 +4,7 @@
 
 [general]
 name=Tellae
-qgisMinimumVersion=3.0
+qgisMinimumVersion=3.40
 description=Access Tellae services from QGIS
 # x-release-please-start-version
 version=1.0.1
