@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/tellae/qgis-tellae-plugin/compare/v2.0.0...v2.0.1) (2026-01-23)
+
+
+### Bug Fixes
+
+* fixed release workflow ([e948d0b](https://github.com/tellae/qgis-tellae-plugin/commit/e948d0b4bb13b5a1c3678dad6566d8539cf8d870))
+
 ## [2.0.0](https://github.com/tellae/qgis-tellae-plugin/compare/v1.0.1...v2.0.0) (2026-01-22)
 
 
