@@ -12,18 +12,19 @@ def init_gtfs_list():
                     PublicTransports(query:"status='READY'"){
                       results{
                         uuid
-                        pt_network{
+                        name
+                        moa {
                           uuid
-                          moa{
-                            uuid
-                            name
-                          }
                           name
                         }
+                        moa_name
+                        network_name
+                        source
                         statistics
                         start_date
                         end_date
                         day_types
+                        deprecated
                       }
                     }
                   }
@@ -36,10 +37,7 @@ def init_gtfs_list():
             body={"query": query},
             blocking=True,
         )["content"]["data"]["PublicTransports"]["results"]
-
-        # evaluate and store name
-        for gtfs in gtfs_list:
-            gtfs["name"] = gtfs_name(gtfs)
+        gtfs_list = [gtfs for gtfs in gtfs_list if not gtfs["deprecated"]]
 
         # sort by name and date
         gtfs_list = sorted(
