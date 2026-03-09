@@ -75,7 +75,7 @@ class QgsKiteLayer(LayerItem):
         self.source_parameters = source_parameters if source_parameters is not None else dict()
 
         # description of the properties of the data
-        self.data_properties = dataProperties if dataProperties is not None else dict()
+        self.data_properties = dataProperties if dataProperties else dict()
 
         self.edit_attributes = editAttributes if editAttributes is not None else dict()
         self._read_edit_attributes()
