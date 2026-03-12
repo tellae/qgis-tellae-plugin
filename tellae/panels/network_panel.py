@@ -43,7 +43,7 @@ class NetworkPanel(BasePanel):
         if text == "":
             gtfs_list = self.store.gtfs_list
         else:
-            gtfs_list = [x for x in self.store.gtfs_list if text.lower() in x["name"].lower()]
+            gtfs_list = [x for x in self.store.gtfs_list if text.lower() in x["name"].lower() or text.lower() in x["network_name"].lower() or text.lower() in (x["moa"]["name"] if x["moa"] else x["moa_name"]).lower()]
 
         return gtfs_list
 
