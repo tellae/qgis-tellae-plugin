@@ -23,11 +23,13 @@ class NetworkPanel(BasePanel):
         button_slot = self.database_network_table.table_button_slot(self.add_network)
         self.database_network_table.set_headers(
             [
-                {"text": "Nom", "value": "name", "width": 435},
+                {"text": "Nom", "value": "name", "width": 235},
+                {"text": "AOM", "value": lambda x: x["moa"]["name"] if x["moa"] else x["moa_name"], "width": 150},
+                {"text": "Réseau", "value": "network_name", "width": 150},
                 {
-                    "text": "Date",
+                    "text": "Période",
                     "value": lambda x: f'{gtfs_date_to_datetime(x["start_date"])} - {gtfs_date_to_datetime(x["end_date"])}',
-                    "width": 280,
+                    "width": 180,
                     "align": Qt.AlignCenter,
                 },
                 {"text": "Actions", "value": "actions", "width": 60, "slot": button_slot},
