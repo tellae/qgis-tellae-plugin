@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.2](https://github.com/tellae/qgis-tellae-plugin/compare/v2.0.1...v2.0.2) (2026-03-12)
+
+
+### Bug Fixes
+
+* fixed error on loading the mobility-organizing-authorities layer ([#52](https://github.com/tellae/qgis-tellae-plugin/issues/52)) ([d1365a7](https://github.com/tellae/qgis-tellae-plugin/commit/d1365a7f7e5599a72d709e258fbaa8cead93aae3))
+* updated the plugin to request the new network database ([#54](https://github.com/tellae/qgis-tellae-plugin/issues/54)) ([50822d8](https://github.com/tellae/qgis-tellae-plugin/commit/50822d8fd640d093ea28ee10bf8c38111ad44090))
+
 ## [2.0.1](https://github.com/tellae/qgis-tellae-plugin/compare/v2.0.0...v2.0.1) (2026-01-23)
 
 
