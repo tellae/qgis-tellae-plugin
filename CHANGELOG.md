@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.1.0](https://github.com/tellae/qgis-tellae-plugin/compare/v2.0.2...v2.1.0) (2026-03-16)
+
+
+### Features
+
+* **ux:** move add buttons to the left of the tables ([f8af49e](https://github.com/tellae/qgis-tellae-plugin/commit/f8af49e0ca662f85698641cbed562d0427bfcc39))
+
+
+### Bug Fixes
+
+* fixed coloring error of some layers ([#56](https://github.com/tellae/qgis-tellae-plugin/issues/56)) ([2c2ab36](https://github.com/tellae/qgis-tellae-plugin/commit/2c2ab3630d74033b74434dce520a6ff1b00249a1))
+
 ## [2.0.2](https://github.com/tellae/qgis-tellae-plugin/compare/v2.0.1...v2.0.2) (2026-03-12)
 
 
