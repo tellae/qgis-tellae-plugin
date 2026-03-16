@@ -58,7 +58,18 @@ def r_g_b_color(color):
     Convert 'r g b' string to 'r,g,b'
     """
     color_array = color.split(" ")
-    assert len(color_array) == 3, "String should with format 'r g b'"
+    assert len(color_array) == 3, "String should have format 'r g b'"
+
+    return ",".join(color_array)
+
+@qgsfunction(group="Tellae", referenced_columns=[])
+def rgb_mapbox_color(color):
+    """
+    Convert mapbox color 'rgb(r,g,b)' string to 'r,g,b'
+    """
+
+    color_array = color[4:-1].split(",")
+    assert len(color_array) == 3, "String should have format 'rgb(r,g,b)'"
 
     return ",".join(color_array)
 
@@ -274,8 +285,10 @@ class DirectMapping(PropsMapping):
 
         if self.paint_type == "color":
             if value_format == "raw":
-                log("Format 'raw' is not implemented", "WARNING")
-                expression = "0,0,0"
+                log("Format 'raw' is deprecated, do you mean 'rgb_mapbox' ?", "WARNING")
+                expression = "'0,0,0'"
+            elif value_format == "rgb_mapbox":
+                expression = f'rgb_mapbox_color("{key}")'
             elif value_format == "r g b":
                 expression = f'r_g_b_color("{key}")'
             else:
