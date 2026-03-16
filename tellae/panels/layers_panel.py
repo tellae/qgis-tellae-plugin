@@ -38,6 +38,7 @@ class LayersPanel(BasePanel):
         button_slot = self.database_layers_table.table_button_slot(self.add_database_layer)
         self.database_layers_table.set_headers(
             [
+                {"text": "Actions", "value": "actions", "width": 60, "slot": button_slot},
                 {"text": "Nom", "value": lambda x: x["name"][self.store.locale], "width": 355},
                 {
                     "text": "Date",
@@ -54,7 +55,6 @@ class LayersPanel(BasePanel):
                     ],
                     "width": 280,
                 },
-                {"text": "Actions", "value": "actions", "width": 60, "slot": button_slot},
             ]
         )
 
@@ -62,12 +62,12 @@ class LayersPanel(BasePanel):
         button_slot = self.project_layers_table.table_button_slot(self.add_spatial_data)
         self.project_layers_table.set_headers(
             [
+                {"text": "Actions", "value": "actions", "width": 60, "slot": button_slot},
                 {
                     "text": "Nom",
                     "value": lambda x: get_binary_name(x, with_extension=False),
                     "width": 715,
                 },
-                {"text": "Actions", "value": "actions", "width": 60, "slot": button_slot},
             ]
         )
 

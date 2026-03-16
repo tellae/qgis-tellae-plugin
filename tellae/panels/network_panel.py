@@ -23,8 +23,13 @@ class NetworkPanel(BasePanel):
         button_slot = self.database_network_table.table_button_slot(self.add_network)
         self.database_network_table.set_headers(
             [
+                {"text": "Actions", "value": "actions", "width": 60, "slot": button_slot},
                 {"text": "Nom", "value": "name", "width": 235},
-                {"text": "AOM", "value": lambda x: x["moa"]["name"] if x["moa"] else x["moa_name"], "width": 150},
+                {
+                    "text": "AOM",
+                    "value": lambda x: x["moa"]["name"] if x["moa"] else x["moa_name"],
+                    "width": 150,
+                },
                 {"text": "Réseau", "value": "network_name", "width": 150},
                 {
                     "text": "Période",
@@ -32,7 +37,6 @@ class NetworkPanel(BasePanel):
                     "width": 180,
                     "align": Qt.AlignCenter,
                 },
-                {"text": "Actions", "value": "actions", "width": 60, "slot": button_slot},
             ]
         )
 
@@ -44,7 +48,13 @@ class NetworkPanel(BasePanel):
             gtfs_list = self.store.gtfs_list
         else:
             text_lower = text.lower()
-            gtfs_list = [x for x in self.store.gtfs_list if text_lower in x["name"].lower() or text_lower in x["network_name"].lower() or text_lower in (x["moa"]["name"] if x["moa"] else x["moa_name"]).lower()]
+            gtfs_list = [
+                x
+                for x in self.store.gtfs_list
+                if text_lower in x["name"].lower()
+                or text_lower in x["network_name"].lower()
+                or text_lower in (x["moa"]["name"] if x["moa"] else x["moa_name"]).lower()
+            ]
 
         return gtfs_list
 

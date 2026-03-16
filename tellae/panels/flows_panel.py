@@ -18,12 +18,12 @@ class FlowsPanel(BasePanel):
         button_slot = self.project_flows_table.table_button_slot(self.add_project_flows)
         self.project_flows_table.set_headers(
             [
+                {"text": "Actions", "value": "actions", "width": 60, "slot": button_slot},
                 {
                     "text": "Nom",
                     "value": lambda x: get_binary_name(x, with_extension=False),
                     "width": 715,
                 },
-                {"text": "Actions", "value": "actions", "width": 60, "slot": button_slot},
             ]
         )
 

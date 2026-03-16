@@ -104,7 +104,6 @@ def get_gtfs_routes_and_stops(gtfs_uuid, handler, error_handler):
     handler({"routes": routes_geojson, "stops": stops_geojson})
 
 
-
 def gtfs_date_to_datetime(gtfs_date):
     res = datetime.datetime.strptime(gtfs_date, "%Y-%M-%d")
     return res.strftime("%d/%M/%Y")

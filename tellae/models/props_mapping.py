@@ -62,6 +62,7 @@ def r_g_b_color(color):
 
     return ",".join(color_array)
 
+
 @qgsfunction(group="Tellae", referenced_columns=[])
 def rgb_mapbox_color(color):
     """
