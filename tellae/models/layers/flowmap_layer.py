@@ -140,7 +140,7 @@ class FlowmapFlowsLayer(KiteLineLayer):
 class FlowmapLocationsLayer(KiteCircleLayer):
     ACCEPTED_GEOMETRY_TYPES = [Qgis.GeometryType.Point]
 
-    LAYER_VARIABLES = {"min_location_size": 1, "max_location_size": 6}
+    LAYER_VARIABLES = {"min_location_size": 1, "max_location_size": 13}
 
     def __init__(self, *args, **kwargs):
         self.flowmap_data = kwargs["data"]
@@ -151,16 +151,15 @@ class FlowmapLocationsLayer(KiteCircleLayer):
         super().__init__(*args, **kwargs)
 
     def get_max(self):
-        return self.flowmap_data.max_internal_flow
+        return self.flowmap_data.max_location_total_flow
 
     def create_symbol(self):
 
         symbol = super().create_symbol()
-
         symbol_layer = symbol.symbolLayer(0)
 
         # define size from expression
-        expression = f'max(@min_location_size, @max_location_size/{self.get_max()}*"interne")'
+        expression = f'max(@min_location_size, @max_location_size/{self.get_max()}*("interne" + "sortant" + "entrant"))'
         symbol_layer.setDataDefinedProperty(
             QgsSimpleMarkerSymbolLayer.Property.Size, QgsProperty.fromExpression(expression)
         )
