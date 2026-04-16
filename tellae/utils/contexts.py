@@ -103,12 +103,19 @@ class LayerDownloadContext:
 
 def _layer_download_error_handler(layer_name, error_handler=None):
     def final_handler(result):
-        log(f"Error while downloading '{layer_name}': {result['exception']}", "CRITICAL")
-        log(result, "CRITICAL")
-        TELLAE_STORE.main_dialog.display_message_bar(
-            f"Erreur lors du téléchargement de la couche '{layer_name}': {result['status_code']} ({result['status_message']})",
-            level=Qgis.MessageLevel.Critical,
-        )
+        if isinstance(result, dict):
+            log(f"Error while downloading '{layer_name}': {result['exception']}", "CRITICAL")
+            log(result, "CRITICAL")
+            TELLAE_STORE.main_dialog.display_message_bar(
+                f"Erreur lors du téléchargement de la couche '{layer_name}': {result['status_code']} ({result['status_message']})",
+                level=Qgis.MessageLevel.Critical,
+            )
+        else:
+            log(f"Python error while downloading {layer_name}': {result}", "CRITICAL")
+            TELLAE_STORE.main_dialog.display_message_bar(
+                f"Erreur interne lors du téléchargement de la couche '{layer_name}'",
+                level=Qgis.MessageLevel.Critical,
+            )
 
         _end_of_layer_download()
 
