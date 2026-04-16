@@ -34,7 +34,7 @@ Upon your first use of the plugin, you will be presented with an authentication 
 
 ### API key creation
 
-Open [Kite](https://kite.tellae.fr/) and open the `Settings` dialog using the top right menu.
+Open [Kite](https://kite.tellae.fr/) and go to the `Settings` dialog using the top right menu.
 Go to the `API keys` tab: you can see the list of your already created API keys. 
 To create a new one, click <kbd>Add a new API key</kbd>.
 
@@ -45,7 +45,7 @@ Then, click on the underlined API key's _identifier_. This will copy it to your 
 You can then paste it in the _Identifiant_ field of the authentication window.
 
 Click <kbd>Ok</kbd>. If the authentication is successful, the authentication window should close and you should
-see your name appear on the top right button of the main window.
+see your name appear in the `Configuration` tab of the plugin.
 
 ### Authentication management
 
@@ -53,7 +53,7 @@ Upon successful authentication, your identifiers will be safely stored using QGI
 authentication database system, where they will be protected by a master password.
 
 You can find the identifiers used by the **Tellae** plugin in the 
-`Authentication` tab of the <kbd>Preferences</kbd> menu, under the name `AWS-Tellae`.
+`Authentication` tab of QGIS' <kbd>Preferences</kbd> menu, under the name `AWS-Tellae`.
 
 ## Contact
 
