@@ -1,6 +1,6 @@
 from tellae.tellae_store import TELLAE_STORE
 from tellae.utils import log
-from tellae.utils.requests import request_whale
+from tellae.utils.requests import request_whale, request_whale_with_continuation_token
 import copy
 import datetime
 
@@ -58,14 +58,13 @@ def init_gtfs_list():
 
 def get_gtfs_routes_and_stops(gtfs_uuid, handler, error_handler):
 
-    routes = request_whale(
+    routes = request_whale_with_continuation_token(
         url=f"/public_transports/{gtfs_uuid}/gtfs_routes",
         error_handler=error_handler,
-        blocking=True,
-    )["content"]["results"]
-    stops = request_whale(
-        url=f"/public_transports/{gtfs_uuid}/gtfs_stops", error_handler=error_handler, blocking=True
-    )["content"]["results"]
+    )
+    stops = request_whale_with_continuation_token(
+        url=f"/public_transports/{gtfs_uuid}/gtfs_stops", error_handler=error_handler
+    )
 
     route_features = []
     for route in routes:

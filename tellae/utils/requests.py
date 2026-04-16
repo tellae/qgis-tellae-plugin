@@ -2,6 +2,7 @@ from tellae.utils.network_access_manager import NetworkAccessManager, RequestsEx
 from tellae.utils.utils import log
 from tellae.tellae_store import TELLAE_STORE
 import json
+from urllib.parse import quote_plus
 
 
 def request(
@@ -96,6 +97,43 @@ def request_whale(url, **kwargs):
     # make the request using the AWS authentication
     return request(whale_url, auth_cfg=TELLAE_STORE.authCfg, **kwargs)
 
+def request_whale_with_continuation_token(url, max_calls=10, **kwargs):
+    """
+    Whale request for results with more than 1000 items.
+
+    Only blocking requests are supported.
+
+    :param url: base url to request
+    :param max_calls: maximum number of subsequent calls
+    :param kwargs: see request function params
+
+    :return: concatenation of all request results
+    """
+
+    full_results = []
+    finished = False
+    nb_calls = 0
+    query_string = ""
+    while not finished and nb_calls <= max_calls:
+        nb_calls += 1
+        response = request_whale(
+            f"{url}{query_string}", blocking=True, **kwargs
+        )
+        if not response["ok"]:
+            log(f"Error while requesting: {url + query_string}")
+
+        response_content = response["content"]
+        full_results += response_content["results"]
+
+        if "continuationToken" in response_content:
+            query_string = "?q=" + quote_plus(f'OFFSET "{response_content["continuationToken"]}"')
+        else:
+            finished = True
+
+    if nb_calls > max_calls:
+        raise ValueError(f"Reached maximum number of continuation token calls on '{url}'")
+
+    return full_results
 
 def process_call_result(call_result, to_json, handler=None, error_handler=None):
     """
