@@ -63,7 +63,8 @@ def get_gtfs_routes_and_stops(gtfs_uuid, handler, error_handler):
         error_handler=error_handler,
     )
     stops = request_whale_with_continuation_token(
-        url=f"/public_transports/{gtfs_uuid}/gtfs_stops", error_handler=error_handler
+        url=f"/public_transports/{gtfs_uuid}/gtfs_stops",
+        error_handler=error_handler,
     )
 
     route_features = []
