@@ -79,7 +79,7 @@ class PropsMapping(ABC):
 
     mapping_type = None
 
-    SYMBOL_SIZE_UNIT = Qgis.RenderUnit.Points
+    SYMBOL_SIZE_UNIT = Qgis.RenderUnit.Pixels
 
     def __init__(
         self,

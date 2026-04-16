@@ -30,6 +30,8 @@ class FlowmapData:
 
         self._max_internal_flow = self._evaluate_max_internal_flow()
 
+        self._max_location_total_flow = self._evaluate_max_location_total_flow()
+
     @property
     def flows(self):
         return self._flows
@@ -45,6 +47,10 @@ class FlowmapData:
     @property
     def max_internal_flow(self):
         return self._max_internal_flow
+
+    @property
+    def max_location_total_flow(self):
+        return self._max_location_total_flow
 
     def _evaluate_locations_dict(self):
 
@@ -84,6 +90,9 @@ class FlowmapData:
 
     def _evaluate_max_internal_flow(self):
         return max([stat["interne"] for stat in self._locations_stats.values()])
+
+    def _evaluate_max_location_total_flow(self):
+        return max([stat["interne"] + stat["sortant"] + stat["entrant"] for stat in self._locations_stats.values()])
 
     def get_location_by_id(self, location_id):
         return self._locations_dict[location_id]

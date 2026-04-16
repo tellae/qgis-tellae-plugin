@@ -1,5 +1,5 @@
 from .kite_layer import QgsKiteLayer
-
+from tellae.utils.utils import log
 from qgis.core import (
     Qgis,
     QgsSymbolLayer,
@@ -43,8 +43,11 @@ class KiteCircleLayer(QgsKiteLayer):
         self, symbol: QgsMarkerSymbol, value: int | float | QgsProperty, data_defined=False
     ):
         if data_defined:
+            # TODO: data defined size does not apply 2*5*(value**0.5)
             symbol.setDataDefinedSize(value)
         else:
+            # transform to match kite render: kite does 5*sqrt(val), and is a radius, thus *2
+            value = 2*5*(value**0.5)
             symbol.setSize(value)
 
     def set_symbol_size_unit(self, symbol: QgsMarkerSymbol, value: Qgis.RenderUnit):
