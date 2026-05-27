@@ -3,7 +3,15 @@ from tellae.utils import log
 from tellae.utils.requests import request_whale, RequestsException
 from tellae.utils.exceptions import InternalError
 from tellae.services.whale import download_from_binaries
+from tellae.services.network import update_project_gtfs_list
 from qgis.core import Qgis
+
+
+PROJECT_NAME_LABELS = [
+    "projectNameLayersPanel",
+    "projectNameFlowsPanel",
+    "projectNameNetworkPanel"
+]
 
 
 def update_project_list():
@@ -51,11 +59,20 @@ def select_project(uuid: str):
         # update store
         TELLAE_STORE.set_current_project(project)
 
+        # update project gtfs list
+        update_project_gtfs_list()
+
         # update project data tables
         TELLAE_STORE.main_dialog.layers_panel.on_project_update()
         TELLAE_STORE.main_dialog.flows_panel.on_project_update()
+        TELLAE_STORE.main_dialog.network_panel.on_project_update()
 
-        # update project info
+        # update project name labels
+        for label_id in PROJECT_NAME_LABELS:
+            getattr(TELLAE_STORE.main_dialog, label_id).setText(f"Projet: {TELLAE_STORE.current_project_name}")
+
+
+        # update project info in config panel
         TELLAE_STORE.main_dialog.config_panel.on_project_update()
     except Exception as e:
         raise ValueError("Erreur lors de la récupération du projet") from e

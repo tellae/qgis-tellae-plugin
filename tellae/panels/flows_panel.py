@@ -80,5 +80,4 @@ class FlowsPanel(BasePanel):
     # project tab
 
     def on_project_update(self):
-        self.dlg.projectNameFlowsPanel.setText(f"Projet: {self.store.current_project_name}")
         self.project_flows_table.fill_table_with_items(self.store.get_project_data("flows"))

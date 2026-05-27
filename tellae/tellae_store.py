@@ -60,6 +60,7 @@ class TellaeStore:
 
         # network
         self.gtfs_list = []
+        self.project_gtfs_list = []
 
         # local config
         self.local_config = None

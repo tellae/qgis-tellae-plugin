@@ -118,7 +118,7 @@ QListWidget::item::selected {
      </item>
      <item>
       <property name="text">
-       <string>Network</string>
+       <string>Réseau</string>
       </property>
      </item>
      <item>
@@ -448,7 +448,7 @@ QListWidget::item::selected {
               <item>
                <widget class="QTabWidget" name="add_network_tab">
                 <property name="currentIndex">
-                 <number>0</number>
+                 <number>1</number>
                 </property>
                 <widget class="QWidget" name="database_2">
                  <attribute name="title">
@@ -503,6 +503,52 @@ QListWidget::item::selected {
                   </property>
                   <property name="text">
                    <string>Rechercher</string>
+                  </property>
+                 </widget>
+                </widget>
+                <widget class="QWidget" name="network_project_tab">
+                 <attribute name="title">
+                  <string>Projet</string>
+                 </attribute>
+                 <widget class="QTableWidget" name="network_project_table">
+                  <property name="geometry">
+                   <rect>
+                    <x>10</x>
+                    <y>70</y>
+                    <width>791</width>
+                    <height>621</height>
+                   </rect>
+                  </property>
+                  <property name="toolTip">
+                   <string/>
+                  </property>
+                  <property name="autoFillBackground">
+                   <bool>false</bool>
+                  </property>
+                  <property name="verticalScrollBarPolicy">
+                   <enum>Qt::ScrollBarAlwaysOn</enum>
+                  </property>
+                  <property name="alternatingRowColors">
+                   <bool>true</bool>
+                  </property>
+                  <property name="selectionMode">
+                   <enum>QAbstractItemView::NoSelection</enum>
+                  </property>
+                  <attribute name="verticalHeaderVisible">
+                   <bool>false</bool>
+                  </attribute>
+                 </widget>
+                 <widget class="QLabel" name="projectNameNetworkPanel">
+                  <property name="geometry">
+                   <rect>
+                    <x>10</x>
+                    <y>10</y>
+                    <width>431</width>
+                    <height>19</height>
+                   </rect>
+                  </property>
+                  <property name="text">
+                   <string>Projet :</string>
                   </property>
                  </widget>
                 </widget>
