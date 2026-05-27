@@ -54,12 +54,12 @@ class NetworkPanel(BasePanel):
     def searched_gtfs(self):
         text = self.dlg.network_search_bar.text()
         if text == "":
-            gtfs_list = self.store.gtfs_list
+            gtfs_list = self.store.database_gtfs_list
         else:
             text_lower = text.lower()
             gtfs_list = [
                 x
-                for x in self.store.gtfs_list
+                for x in self.store.database_gtfs_list
                 if text_lower in x["name"].lower()
                 or text_lower in x["network_name"].lower()
                 or text_lower in (x["moa"]["name"] if x["moa"] else x["moa_name"]).lower()

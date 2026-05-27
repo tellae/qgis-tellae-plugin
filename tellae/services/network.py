@@ -5,13 +5,13 @@ import copy
 import datetime
 
 
-def init_gtfs_list():
+def init_database_gtfs_list():
     try:
         gtfs_list = get_gtfs_graphql("")
         gtfs_list = [gtfs for gtfs in gtfs_list if gtfs["project"] is None and gtfs["public"]]
 
         # set result in store
-        TELLAE_STORE.gtfs_list = gtfs_list
+        TELLAE_STORE.database_gtfs_list = gtfs_list
 
         # update ux
         TELLAE_STORE.main_dialog.network_panel.update_database_network_list()
