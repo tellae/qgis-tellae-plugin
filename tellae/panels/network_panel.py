@@ -5,7 +5,7 @@ from tellae.utils.utils import log
 from tellae.models.layers import GtfsLayers
 from tellae.services.network import get_gtfs_routes_and_stops, gtfs_date_to_datetime
 from qgis.PyQt.QtCore import Qt
-
+from qgis.core import Qgis
 
 class NetworkPanel(BasePanel):
 
@@ -72,6 +72,11 @@ class NetworkPanel(BasePanel):
     def add_network(self, network_list, row_idx):
 
         gtfs = self.network_lists[network_list][row_idx]
+
+        if gtfs["status"] != "READY" or gtfs.get("_lastAnalysis", [{"status": "SUCCESS"}])[0]["status"] != "SUCCESS":
+            self.store.main_dialog.display_message_bar("Le réseau est dans un état d'erreur et ne peut pas être ajouté", level=Qgis.MessageLevel.Warning)
+            return
+
         name = gtfs["name"]
 
         def handler(geojson):
