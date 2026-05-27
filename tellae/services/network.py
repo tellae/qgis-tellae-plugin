@@ -5,56 +5,105 @@ import copy
 import datetime
 
 
-def init_gtfs_list():
+def init_database_gtfs_list():
     try:
-        query = """
-                query Q {
-                    PublicTransports(query:"status='READY'"){
-                      results{
-                        uuid
-                        name
-                        moa {
-                          uuid
-                          name
-                        }
-                        moa_name
-                        network_name
-                        source
-                        statistics
-                        start_date
-                        end_date
-                        day_types
-                        deprecated
-                      }
-                    }
-                  }
-            """
-
-        gtfs_list = request_whale(
-            "/graphql",
-            method="POST",
-            headers={"content-type": "application/json"},
-            body={"query": query},
-            blocking=True,
-        )["content"]["data"]["PublicTransports"]["results"]
-        gtfs_list = [gtfs for gtfs in gtfs_list if not gtfs["deprecated"]]
-
-        # sort by name and date
-        gtfs_list = sorted(
-            gtfs_list,
-            key=lambda x: datetime.datetime.strptime(x["start_date"], "%Y-%M-%d"),
-            reverse=True,
-        )
-        gtfs_list = sorted(gtfs_list, key=lambda x: x["name"])
+        gtfs_list = get_gtfs_graphql("")
+        gtfs_list = [gtfs for gtfs in gtfs_list if gtfs["project"] is None and gtfs["public"]]
 
         # set result in store
-        TELLAE_STORE.gtfs_list = gtfs_list
+        TELLAE_STORE.database_gtfs_list = gtfs_list
 
         # update ux
-        TELLAE_STORE.main_dialog.network_panel.update_network_list()
+        TELLAE_STORE.main_dialog.network_panel.update_database_network_list()
     except Exception as e:
-        raise ValueError("Erreur lors de la récupération de la table réseau") from e
+        raise ValueError("Erreur lors de la récupération de la base de GTFS") from e
 
+
+def update_project_gtfs_list():
+    try:
+        project_gtfs = get_gtfs_graphql(f"project='{TELLAE_STORE.current_project['uuid']}'")
+
+        # set result in store
+        TELLAE_STORE.project_gtfs_list = project_gtfs
+
+        # update ux
+        TELLAE_STORE.main_dialog.network_panel.update_project_network_list()
+    except Exception as e:
+        raise ValueError("Erreur lors de la récupération des GTFS de l'utilisateur") from e
+
+def get_gtfs_graphql(query: str):
+    final_query = """
+             query Q {
+                 PublicTransports(query:"$query"){
+                   results{
+                      uuid
+                      _creationDate
+                      _lastUpdate
+                      project {
+                        name
+                      }
+                      name
+                      moa{
+                        uuid
+                        name
+                      }
+                      moa_name
+                      network_name
+                      source
+                      public
+                      deprecated
+                      status
+                      _lastAnalysis {
+                        _creationDate
+                        uuid
+                        status
+                        statusDetails
+                        errorMessage
+                        config
+                        _outputs
+                        analysisVersion
+                      }
+                      analysisFrom {
+                        _creationDate
+                        uuid
+                        status
+                        statusDetails
+                        errorMessage
+                        config
+                        _outputs
+                        analysisVersion
+                      }
+                      dist_units
+                      start_date
+                      end_date
+                      data
+                      config
+                      statistics
+                      day_types
+                      graphs
+                   }
+                 }
+               }
+         """.replace("$query", query)
+
+    gtfs_list = request_whale(
+        "/graphql",
+        method="POST",
+        headers={"content-type": "application/json"},
+        body={"query": final_query},
+        blocking=True,
+    )["content"]["data"]["PublicTransports"]["results"]
+    gtfs_list = [gtfs for gtfs in gtfs_list if not gtfs["deprecated"]]
+
+    # sort by name and date
+    gtfs_list = sorted(
+        gtfs_list,
+        key=lambda x: datetime.datetime.strptime(x.get("start_date", "1990-01-01") or "1990-01-01", "%Y-%M-%d"),
+        reverse=True,
+    )
+    gtfs_list = sorted(gtfs_list, key=lambda x: x["name"])
+
+    return gtfs_list
 
 def get_gtfs_routes_and_stops(gtfs_uuid, handler, error_handler):
 

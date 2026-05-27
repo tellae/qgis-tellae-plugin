@@ -4,7 +4,7 @@ from tellae.utils.requests import request_whale, message_from_request_error
 from tellae.utils.contexts import ProgressContext
 from tellae.services.project import update_project_list, select_project
 from tellae.services.layers import init_layers_table
-from tellae.services.network import init_gtfs_list
+from tellae.services.network import init_database_gtfs_list
 from qgis.core import (
     QgsApplication,
     QgsAuthMethodConfig,
@@ -223,7 +223,7 @@ def init_store(progress_context):
 
     # get database networks
     try:
-        init_gtfs_list()
+        init_database_gtfs_list()
     except Exception as e:
         progress_context.signal_error_without_interrupting(e)
         errors = True

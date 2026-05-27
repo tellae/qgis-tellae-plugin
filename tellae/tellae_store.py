@@ -59,7 +59,8 @@ class TellaeStore:
         self.nb_custom_layers = 0
 
         # network
-        self.gtfs_list = []
+        self.database_gtfs_list = []
+        self.project_gtfs_list = []
 
         # local config
         self.local_config = None
