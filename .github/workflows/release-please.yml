@@ -46,11 +46,10 @@ jobs:
           python-version: 3.9.25
       - name: Install qgis-plugin-ci
         if: ${{ steps.release.outputs.release_created }}
-        run: pip3 install qgis-plugin-ci==2.8.10
+        run: pip3 install qgis-plugin-ci==2.10.0
       - name: Publish new plugin version in the QGIS Python plugins repository
         if: ${{ steps.release.outputs.release_created }}
         run: python .github/publish_plugin.py
         env:
-          OSGEO_USERNAME: ${{ secrets.OSGEO_USERNAME }}
-          OSGEO_PASSWORD: ${{ secrets.OSGEO_PASSWORD }}
+          PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
           ARCHIVE_FILENAME: tellae_plugin.zip
