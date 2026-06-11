@@ -1,5 +1,5 @@
 from qgis.PyQt.QtWidgets import QPushButton, QTableWidgetItem, QTableWidget
-from PyQt5.QtWidgets import QStyle
+from qgis.PyQt.QtWidgets import QStyle
 
 
 class DataTable:
@@ -14,7 +14,7 @@ class DataTable:
         self._headers = None
 
         # disable table edition
-        self.table_widget.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.table_widget.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
 
     @property
     def headers(self):
