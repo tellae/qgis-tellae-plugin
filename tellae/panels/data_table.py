@@ -32,6 +32,8 @@ class DataTable:
         for col, header in enumerate(self._headers):
             if "width" in header:
                 self.table_widget.setColumnWidth(col, header["width"])
+            if "tooltip" in header:
+                self.table_widget.horizontalHeaderItem(col).setToolTip(header["tooltip"])
 
     def fill_table_with_items(self, items):
 
