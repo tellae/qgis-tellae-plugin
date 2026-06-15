@@ -43,7 +43,7 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
         uses: actions/setup-python@v5
         with:
-          python-version: 3.10
+          python-version: 3.10.20
       - name: Install qgis-plugin-ci
         if: ${{ steps.release.outputs.release_created }}
         run: pip3 install qgis-plugin-ci==2.10.0
