@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.2.0](https://github.com/tellae/qgis-tellae-plugin/compare/v2.1.0...v2.2.0) (2026-06-15)
+
+
+### Features
+
+* add a 'Project' tab to Network ([#65](https://github.com/tellae/qgis-tellae-plugin/issues/65)) ([386d1f3](https://github.com/tellae/qgis-tellae-plugin/commit/386d1f3216f5b04270777ac5a3821cac039d035d))
+* plugin internationalization ([#69](https://github.com/tellae/qgis-tellae-plugin/issues/69)) ([e2c04f0](https://github.com/tellae/qgis-tellae-plugin/commit/e2c04f0bcedd2e391b0e33fe1e8b7f372a5c869d))
+
 ## [2.1.0](https://github.com/tellae/qgis-tellae-plugin/compare/v2.0.2...v2.1.0) (2026-04-16)
 
 
