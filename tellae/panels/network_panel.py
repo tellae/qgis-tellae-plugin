@@ -6,6 +6,8 @@ from tellae.models.layers import GtfsLayers
 from tellae.services.network import get_gtfs_routes_and_stops, gtfs_date_to_datetime
 from qgis.PyQt.QtCore import Qt
 from qgis.core import Qgis
+from tellae import tr
+
 
 class NetworkPanel(BasePanel):
 
@@ -35,16 +37,17 @@ class NetworkPanel(BasePanel):
     def _set_table_headers(self, table, network_list: str):
         button_slot = table.table_button_slot(lambda x: self.add_network(network_list, x))
         table.set_headers([
-            {"text": "Actions", "value": "actions", "width": 60, "slot": button_slot},
-            {"text": "Nom", "value": "name", "width": 235},
+            {"text": tr("Actions"), "value": "actions", "width": 60, "slot": button_slot},
+            {"text": tr("Nom"), "value": "name", "width": 235},
             {
-                "text": "AOM",
+                "text": tr("AOM"),
+                "tooltip": tr("Authorité organisatrice de la mobilité"),
                 "value": lambda x: x["moa"]["name"] if x["moa"] else x["moa_name"],
                 "width": 150,
             },
-            {"text": "Réseau", "value": "network_name", "width": 150},
+            {"text": tr("Réseau"), "value": "network_name", "width": 150},
             {
-                "text": "Période",
+                "text": tr("Période"),
                 "value": lambda x: f'{gtfs_date_to_datetime(x["start_date"])} - {gtfs_date_to_datetime(x["end_date"])}' if x["start_date"] is not None else "",
                 "width": 180,
                 "align": Qt.AlignCenter,
@@ -74,7 +77,7 @@ class NetworkPanel(BasePanel):
         gtfs = self.network_lists[network_list][row_idx]
 
         if gtfs["status"] != "READY" or gtfs.get("_lastAnalysis", [{"status": "SUCCESS"}])[0]["status"] != "SUCCESS":
-            self.store.main_dialog.display_message_bar("Le réseau est dans un état d'erreur et ne peut pas être ajouté", level=Qgis.MessageLevel.Warning)
+            self.store.main_dialog.display_message_bar(tr("Le réseau est dans un état d'erreur et ne peut pas être ajouté"), level=Qgis.MessageLevel.Warning)
             return
 
         name = gtfs["name"]

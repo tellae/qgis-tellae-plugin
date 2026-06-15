@@ -35,7 +35,7 @@
     </rect>
    </property>
    <property name="placeholderText">
-    <string>12345-abcde</string>
+    <string notr="true">12345-abcde</string>
    </property>
   </widget>
   <widget class="QLabel" name="keyLabel">
@@ -162,7 +162,7 @@
     </rect>
    </property>
    <property name="placeholderText">
-    <string>tai-a1b2c3d4e5</string>
+    <string notr="true">tai-a1b2c3d4e5</string>
    </property>
   </widget>
   <widget class="QPushButton" name="helpButton">
@@ -181,7 +181,8 @@
     <string>Aide</string>
    </property>
    <property name="icon">
-    <iconset theme="help"/>
+    <iconset theme="help">
+     <normaloff>.</normaloff>.</iconset>
    </property>
   </widget>
  </widget>

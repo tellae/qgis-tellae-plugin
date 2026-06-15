@@ -1,5 +1,5 @@
 from tellae.tellae_store import TELLAE_STORE
-from tellae.utils import log, InternalError
+from tellae.utils import log, InternalError, tr
 from tellae.utils.requests import request_whale, message_from_request_error
 from tellae.utils.contexts import ProgressContext
 from tellae.services.project import update_project_list, select_project
@@ -114,7 +114,7 @@ def _login(handler=None, error_handler=None, set_indents=False):
 
 
 def _on_login(user):
-    with ProgressContext("Récupération des données utilisateur"):
+    with ProgressContext(tr("Récupération des données utilisateur")):
         # update stored used
         update_user(user)
 
@@ -126,7 +126,7 @@ def _on_login(user):
 
     # if store is not initiated, do it now
     if not TELLAE_STORE.store_initiated:
-        with ProgressContext("Initialisation des données Tellae") as progress_context:
+        with ProgressContext(tr("Initialisation des données Tellae")) as progress_context:
             init_store(progress_context)
 
 

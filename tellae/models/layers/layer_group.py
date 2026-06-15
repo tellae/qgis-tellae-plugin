@@ -3,6 +3,7 @@ from qgis.core import (
     QgsProject,
 )
 from .layer_item import LayerItem
+from tellae import tr
 
 
 class LayerGroup(LayerItem):
@@ -59,5 +60,5 @@ class LayerGroup(LayerItem):
             layer.add_to_qgis()
 
         self.popup(
-            f"Les couches '{self.name}' a été ajoutées avec succès !", Qgis.MessageLevel.Success
+            tr("Les couches '{}' ont été ajoutées avec succès").format(self.name), Qgis.MessageLevel.Success
         )

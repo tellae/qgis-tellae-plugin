@@ -6,6 +6,7 @@ from tellae.models.layers.add import add_database_layer
 from tellae.models.layers import GeojsonLayer
 from tellae.services.project import get_project_binary_from_hash
 from qgis.PyQt.QtCore import Qt
+from tellae import tr
 
 
 class LayersPanel(BasePanel):
@@ -16,7 +17,7 @@ class LayersPanel(BasePanel):
 
         # database layers filtering options
         self.search_text = ""
-        self.selected_theme = "Tous"
+        self.selected_theme = tr("Tous")
 
         # filtered list of database layers
         self.layers = []
@@ -38,10 +39,10 @@ class LayersPanel(BasePanel):
         button_slot = self.database_layers_table.table_button_slot(self.add_database_layer)
         self.database_layers_table.set_headers(
             [
-                {"text": "Actions", "value": "actions", "width": 60, "slot": button_slot},
-                {"text": "Nom", "value": lambda x: x["name"][self.store.locale], "width": 355},
+                {"text": tr("Actions"), "value": "actions", "width": 60, "slot": button_slot},
+                {"text": tr("Nom"), "value": lambda x: x["name"][self.store.locale], "width": 355},
                 {
-                    "text": "Date",
+                    "text": tr("Date"),
                     "value": lambda x: self.store.datasets_summary[x["main_dataset"]].get(
                         "date", ""
                     ),
@@ -49,7 +50,7 @@ class LayersPanel(BasePanel):
                     "align": Qt.AlignCenter,
                 },
                 {
-                    "text": "Source",
+                    "text": tr("Source"),
                     "value": lambda x: self.store.datasets_summary[x["main_dataset"]][
                         "provider_name"
                     ],
@@ -62,9 +63,9 @@ class LayersPanel(BasePanel):
         button_slot = self.project_layers_table.table_button_slot(self.add_spatial_data)
         self.project_layers_table.set_headers(
             [
-                {"text": "Actions", "value": "actions", "width": 60, "slot": button_slot},
+                {"text": tr("Actions"), "value": "actions", "width": 60, "slot": button_slot},
                 {
-                    "text": "Nom",
+                    "text": tr("Nom"),
                     "value": lambda x: get_binary_name(x, with_extension=False),
                     "width": 715,
                 },
@@ -112,11 +113,11 @@ class LayersPanel(BasePanel):
 
     def fill_theme_selector(self):
         # set list of layers
-        self.dlg.themeSelector.addItems(["Tous"] + self.store.themes)
+        self.dlg.themeSelector.addItems([tr("Tous")] + self.store.themes)
 
         # set default selection
         # to "all"
-        self.dlg.themeSelector.setCurrentText("Tous")
+        self.dlg.themeSelector.setCurrentText(tr("Tous"))
 
     def update_database_layers_table(self):
         # get list of layers to display

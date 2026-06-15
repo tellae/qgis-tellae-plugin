@@ -1,7 +1,25 @@
-from tellae.utils.utils import read_local_config, THEMES_TRANSLATION, log, get_binary_name
+from tellae.utils.utils import read_local_config, log, get_binary_name
+from tellae.utils import tr
 import os
 from enum import IntEnum
 
+THEMES_TRANSLATION = {
+    "carpooling": tr("Covoiturage"),
+    "demography": tr("Démographie"),
+    "employment": tr("Emploi"),
+    "rail": tr("Ferroviaire"),
+    "schooling": tr("Formation"),
+    "travel_generators": tr("Générateurs de déplacements"),
+    "mobility": tr("Mobilités"),
+    "land_use": tr("Occupation du sol"),
+    "income": tr("Revenus et niveau de vie"),
+    "public_transport": tr("Transports publics"),
+    "zoning": tr("Zonages et périmètres"),
+    "car_sharing": tr("Autopartage"),
+    "bike": tr("Vélo"),
+    "car": tr("Voiture"),
+    "walk": tr("Piéton"),
+}
 
 class TellaeStore:
 
@@ -79,7 +97,7 @@ class TellaeStore:
         if self.current_project is None:
             return ""
         else:
-            return self.current_project.get("name", "Mon projet")
+            return self.current_project.get("name", tr("Mon projet"))
 
     def read_local_config(self):
         # read local config
@@ -95,6 +113,14 @@ class TellaeStore:
 
     # STORE ACTIONS
 
+    def set_locale(self, locale: str):
+        if locale == "en_US":
+            self.locale = "en"
+        elif locale == "fr_FR":
+            self.locale = "fr"
+        else:
+            raise ValueError(f"Unknown locale '{locale}'")
+
     def set_dialogs(self, tellae_services):
         self.tellae_services = tellae_services
         self.main_dialog = tellae_services.dlg
@@ -102,7 +128,7 @@ class TellaeStore:
 
     def get_filtered_layer_summary(self, selected_theme: str, search_text: str):
         # filter layers by theme
-        if selected_theme == "Tous":
+        if selected_theme == tr("Tous"):
             items = self.layer_summary
         else:
             items = [

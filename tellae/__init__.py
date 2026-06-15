@@ -35,3 +35,5 @@ def classFactory(iface):  # pylint: disable=invalid-name
     from .tellae_services import TellaeServices
 
     return TellaeServices(iface)
+
+from tellae.utils.i18n import tr

@@ -31,6 +31,8 @@ from tellae.dialogs.tellae_services_dialog import TellaeServicesDialog
 from tellae.dialogs.tellae_auth_dialog import TellaeAuthDialog
 from tellae.tellae_store import TELLAE_STORE
 from tellae.services.auth import init_auth
+from tellae.utils import log, tr
+from tellae.utils.i18n import setup_translation
 
 import os.path
 
@@ -51,17 +53,13 @@ class TellaeServices:
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
         # initialize locale
-        locale = QSettings().value("locale/userLocale")[0:2]
-        locale_path = os.path.join(self.plugin_dir, "i18n", "TellaeServices_{}.qm".format(locale))
 
-        if os.path.exists(locale_path):
-            self.translator = QTranslator()
-            self.translator.load(locale_path)
-            QCoreApplication.installTranslator(self.translator)
+        self.translator = None
+        self.use_translation()
 
         # Declare instance attributes
         self.actions = []
-        self.menu = self.tr("&Tellae Services")
+        self.menu = tr("&Tellae Services")
 
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads
@@ -70,20 +68,26 @@ class TellaeServices:
         # read local config if there is one
         # res = read_local_config(self.plugin_dir)
 
-    # noinspection PyMethodMayBeStatic
-    def tr(self, message):
-        """Get the translation for a string using Qt translation API.
+    def use_translation(self):
+        locale, file_path = setup_translation(
+            folder=os.path.join(self.plugin_dir, "i18n"),
+        )
+        log(locale)
+        if not file_path and locale != "fr_FR":
+            log('Translation not found: {}. Using english translation'.format(locale))
+            locale, file_path = setup_translation(
+                folder=os.path.join(self.plugin_dir, "i18n"),
+                force_locale="en_US"
+            )
 
-        We implement this ourselves since we do not inherit QObject.
+            log('Translation from file {}'.format(file_path))
+            self.translator = QTranslator()
+            self.translator.load(file_path)
+            QCoreApplication.installTranslator(self.translator)
 
-        :param message: String for translation.
-        :type message: str, QString
+        # set Tellae locale
+        TELLAE_STORE.set_locale(locale)
 
-        :returns: Translated version of message.
-        :rtype: QString
-        """
-        # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
-        return QCoreApplication.translate("TellaeServices", message)
 
     def add_action(
         self,
@@ -163,7 +167,7 @@ class TellaeServices:
         icon_path = f"{self.plugin_dir}/tellae.png"
         self.add_action(
             icon_path,
-            text=self.tr("Tellae services"),
+            text=tr("Plugin Tellae"),
             callback=self.run,
             parent=self.iface.mainWindow(),
         )
@@ -174,7 +178,7 @@ class TellaeServices:
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
-            self.iface.removePluginMenu(self.tr("&Tellae Services"), action)
+            self.iface.removePluginMenu(tr("&Tellae Services"), action)
             self.iface.removeToolBarIcon(action)
 
     def _init_dialogs(self):

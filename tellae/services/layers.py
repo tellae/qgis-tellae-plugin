@@ -1,10 +1,9 @@
 from tellae.utils.utils import (
-    THEMES_TRANSLATION,
     log,
 )
-from tellae.utils import RequestsException, MinZoomException, EmptyLayerException
+from tellae.utils import RequestsException, MinZoomException, EmptyLayerException, tr
 from tellae.utils.requests import request_whale
-from tellae.tellae_store import TELLAE_STORE
+from tellae.tellae_store import TELLAE_STORE, THEMES_TRANSLATION
 from qgis.core import (
     Qgis,
 )
@@ -68,21 +67,21 @@ def signal_layer_add_error(layer_name, exception):
     # layer is empty
     except EmptyLayerException:
         level = Qgis.MessageLevel.Warning
-        message = f"La couche {layer_name} est vide et n'a pas été ajoutée"
+        message = tr("La couche '{}' est vide et n'a pas été ajoutée").format(layer_name)
     # min zoom not respected
     except MinZoomException:
         level = Qgis.MessageLevel.Warning
-        message = f"Vous devez zoomer pour charger la couche '{layer_name}'"
+        message = tr("Vous devez zoomer pour charger la couche '{}'").format(layer_name)
     # network error message
     except RequestsException:
-        message = f"Erreur lors du téléchargement de la couche '{layer_name}'"
+        message = tr("Erreur lors du téléchargement de la couche '{}'").format(layer_name)
     except NotImplementedError:
         message = (
-            f"La couche '{layer_name}' nécessite des fonctionalités non implémentées pour le moment"
+            tr("La couche '{}' nécessite des fonctionalités non implémentées pour le moment").format(layer_name)
         )
     # generic error message
     except Exception:
-        message = f"Erreur lors de l'ajout de la couche '{layer_name}'"
+        message = tr("Erreur lors de l'ajout de la couche '{}'").format(layer_name)
 
         log(
             f"An error occured during layer add:\n{str(traceback.format_exc())}",

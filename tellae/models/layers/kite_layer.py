@@ -17,7 +17,7 @@ from tellae.models.layers.layer_source import (
     SharkSource,
     VectorTileGeojsonSource,
 )
-from tellae.utils import RequestsException, MinZoomException, EmptyLayerException, log
+from tellae.utils import RequestsException, MinZoomException, EmptyLayerException, tr, log
 import traceback
 
 
@@ -359,46 +359,46 @@ class QgsKiteLayer(LayerItem):
         Signal that the layer was successfully added to Qgis.
         """
         self.popup(
-            f"La couche '{self.name}' a été ajoutée avec succès !", Qgis.MessageLevel.Success
+            tr("La couche '{}' a été ajoutée avec succès").format(self.name), Qgis.MessageLevel.Success
         )
 
-    def signal_layer_add_error(self, exception):
-        """
-        Signal that an error was encountered while adding the layer to Qgis.
-
-        :param exception: Exception instance
-        """
-
-        layer_name = self.name
-
-        # log(f"An error occurred during layer add: {exception.__repr__()}")
-        level = Qgis.MessageLevel.Critical
-
-        # evaluate message depending on exception type
-        try:
-            raise exception
-        # layer is empty
-        except EmptyLayerException:
-            level = Qgis.MessageLevel.Warning
-            message = f"La couche {layer_name} est vide et n'a pas été ajoutée"
-        # min zoom not respected
-        except MinZoomException:
-            level = Qgis.MessageLevel.Warning
-            message = f"Vous devez zoomer pour charger la couche '{layer_name}'"
-        # network error message
-        except RequestsException:
-            message = f"Erreur lors du téléchargement de la couche '{layer_name}'"
-        except NotImplementedError:
-            message = f"La couche '{layer_name}' nécessite des fonctionalités non implémentées pour le moment"
-        # generic error message
-        except Exception:
-            message = f"Erreur lors de l'ajout de la couche '{layer_name}'"
-            self.log(
-                f"An error occured during layer add:\n{str(traceback.format_exc())}",
-                Qgis.MessageLevel.Critical,
-            )
-
-        self.popup(message, level)
+    # def signal_layer_add_error(self, exception):
+    #     """
+    #     Signal that an error was encountered while adding the layer to Qgis.
+    #
+    #     :param exception: Exception instance
+    #     """
+    #
+    #     layer_name = self.name
+    #
+    #     # log(f"An error occurred during layer add: {exception.__repr__()}")
+    #     level = Qgis.MessageLevel.Critical
+    #
+    #     # evaluate message depending on exception type
+    #     try:
+    #         raise exception
+    #     # layer is empty
+    #     except EmptyLayerException:
+    #         level = Qgis.MessageLevel.Warning
+    #         message = tr("La couche '%1' est vide et n'a pas été ajoutée").format(layer_name)
+    #     # min zoom not respected
+    #     except MinZoomException:
+    #         level = Qgis.MessageLevel.Warning
+    #         message = tr("Vous devez zoomer pour charger la couche '%1'").format(layer_name)
+    #     # network error message
+    #     except RequestsException:
+    #         message = tr("Erreur lors du téléchargement de la couche '%1'").format(layer_name)
+    #     except NotImplementedError:
+    #         message = tr("La couche '%1' nécessite des fonctionalités non implémentées pour le moment").format(layer_name)
+    #     # generic error message
+    #     except Exception:
+    #         message = tr("Erreur lors de l'ajout de la couche '%1'").format(layer_name)
+    #         self.log(
+    #             f"An error occured during layer add:\n{str(traceback.format_exc())}",
+    #             Qgis.MessageLevel.Critical,
+    #         )
+    #
+    #     self.popup(message, level)
 
     def warn_wrong_paint_try(self, paint_type):
         """

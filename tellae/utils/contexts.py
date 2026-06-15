@@ -1,6 +1,6 @@
 from tellae.tellae_store import TELLAE_STORE
 from tellae.services.layers import signal_layer_add_error
-from tellae.utils import log
+from tellae.utils import log, tr
 from qgis.core import Qgis
 
 
@@ -107,13 +107,13 @@ def _layer_download_error_handler(layer_name, error_handler=None):
             log(f"Error while downloading '{layer_name}': {result['exception']}", "CRITICAL")
             log(result, "CRITICAL")
             TELLAE_STORE.main_dialog.display_message_bar(
-                f"Erreur lors du téléchargement de la couche '{layer_name}': {result['status_code']} ({result['status_message']})",
+                tr("Erreur lors du téléchargement de la couche '{}': {} ({})").format(layer_name, result['status_code'], result['status_message']),
                 level=Qgis.MessageLevel.Critical,
             )
         else:
             log(f"Python error while downloading {layer_name}': {result}", "CRITICAL")
             TELLAE_STORE.main_dialog.display_message_bar(
-                f"Erreur interne lors du téléchargement de la couche '{layer_name}'",
+                tr("Erreur interne lors du téléchargement de la couche '{}'").format(layer_name),
                 level=Qgis.MessageLevel.Critical,
             )
 
@@ -126,7 +126,7 @@ def _layer_download_error_handler(layer_name, error_handler=None):
 
 
 def _start_of_layer_download(layer_name):
-    TELLAE_STORE.main_dialog.start_progress(f"Téléchargement de la couche '{layer_name}' ...")
+    TELLAE_STORE.main_dialog.start_progress(tr("Téléchargement de la couche '{}' ...").format(layer_name))
 
 
 def _end_of_layer_download():

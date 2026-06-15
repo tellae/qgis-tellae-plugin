@@ -1,5 +1,5 @@
 from tellae.tellae_store import TELLAE_STORE
-from tellae.utils import log
+from tellae.utils import log, tr
 from tellae.utils.requests import request_whale, RequestsException
 from tellae.utils.exceptions import InternalError
 from tellae.services.whale import download_from_binaries
@@ -98,4 +98,4 @@ def get_binary_index_from_hash(binary_hash, attribute):
 
 
 def get_project_name(project):
-    return project.get("name", "Mon projet")
+    return project.get("name", tr("Mon projet"))
