@@ -16,6 +16,7 @@ from abc import ABC, abstractmethod
 import copy
 
 from tellae.utils import log
+from tellae import tr
 
 
 MAPPING_CONSTS = {
@@ -496,7 +497,7 @@ class ContinuousMapping(PropsMapping):
         classification_method = QgsClassificationCustom()
 
         # label format and precision
-        label_format = "%1 à %2"
+        label_format = f"%1 {tr('à')} %2"
         if "unit" in self.legend_options:
             label_format += f" {self.legend_options['unit']}"
         classification_method.setLabelFormat(label_format)
@@ -552,11 +553,11 @@ class ContinuousMapping(PropsMapping):
     def get_label(self, interval):
         intervals = self.mapping_options["intervals"]
         if interval == 0:
-            label = f"Moins de {intervals[0]}"
+            label = tr("Moins de {}").format(intervals[0])
         elif interval == len(intervals):
-            label = f"Plus de {intervals[-1]}"
+            label = tr("Plus de {}").format(intervals[-1])
         else:
-            label = f"{intervals[interval-1]} à {intervals[interval]}"
+            label = tr("{} à {}").format(intervals[interval-1], intervals[interval])
 
         if "unit" in self.legend_options:
             label += f" {self.legend_options['unit']}"

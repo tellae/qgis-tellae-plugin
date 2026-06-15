@@ -3,24 +3,6 @@ import json
 from qgis.core import QgsMessageLog, Qgis
 
 
-THEMES_TRANSLATION = {
-    "carpooling": "Covoiturage",
-    "demography": "Démographie",
-    "employment": "Emploi",
-    "rail": "Ferroviaire",
-    "schooling": "Formation",
-    "travel_generators": "Générateurs de déplacements",
-    "mobility": "Mobilités",
-    "land_use": "Occupation du sol",
-    "income": "Revenus et niveau de vie",
-    "public_transport": "Transports publics",
-    "zoning": "Zonages et périmètres",
-    "car_sharing": "Autopartage",
-    "bike": "Vélo",
-    "car": "Voiture",
-    "walk": "Piéton",
-}
-
 _LOG_LEVEL = {
     "NO_LEVEL": Qgis.MessageLevel.NoLevel,
     "SUCCESS": Qgis.MessageLevel.Success,

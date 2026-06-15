@@ -6,6 +6,7 @@ from tellae.utils.contexts import LayerDownloadContext
 from tellae.models.layers import StarlingLayer, FlowmapLayers
 from tellae.services.project import get_project_binary_from_hash
 from tellae.models.flowmap_data import FlowmapData
+from tellae import tr
 
 
 class FlowsPanel(BasePanel):
@@ -18,9 +19,9 @@ class FlowsPanel(BasePanel):
         button_slot = self.project_flows_table.table_button_slot(self.add_project_flows)
         self.project_flows_table.set_headers(
             [
-                {"text": "Actions", "value": "actions", "width": 60, "slot": button_slot},
+                {"text": tr("Actions"), "value": "actions", "width": 60, "slot": button_slot},
                 {
-                    "text": "Nom",
+                    "text": tr("Nom"),
                     "value": lambda x: get_binary_name(x, with_extension=False),
                     "width": 715,
                 },

@@ -209,7 +209,7 @@ QListWidget::item::selected {
               <item>
                <widget class="QTabWidget" name="add_layers_tab">
                 <property name="currentIndex">
-                 <number>1</number>
+                 <number>0</number>
                 </property>
                 <widget class="QWidget" name="database">
                  <attribute name="title">
@@ -356,7 +356,7 @@ QListWidget::item::selected {
               </rect>
              </property>
              <property name="text">
-              <string>Cartographiez les données territoriales sur votre carte </string>
+              <string>Cartographiez les données territoriales</string>
              </property>
             </widget>
            </widget>
@@ -448,7 +448,7 @@ QListWidget::item::selected {
               <item>
                <widget class="QTabWidget" name="add_network_tab">
                 <property name="currentIndex">
-                 <number>1</number>
+                 <number>0</number>
                 </property>
                 <widget class="QWidget" name="database_2">
                  <attribute name="title">

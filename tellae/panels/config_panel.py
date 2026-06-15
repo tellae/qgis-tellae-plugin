@@ -1,7 +1,7 @@
 from tellae.panels.base_panel import BasePanel
 from tellae.services.project import select_project, get_project_name
 from tellae.utils.utils import log
-
+from tellae import tr
 
 class ConfigPanel(BasePanel):
 
@@ -22,7 +22,7 @@ class ConfigPanel(BasePanel):
 
     def set_auth_button_text(self, user):
         if user is None:
-            text = "Login"
+            text = tr("Se connecter")
         else:
             text = f'{user["firstName"]} {user["lastName"]}'
 
@@ -45,13 +45,13 @@ class ConfigPanel(BasePanel):
         if index == -1:
             raise ValueError(f"Could not find the project with name")
 
-        self.dlg.start_progress("Récupération des données du projet")
+        self.dlg.start_progress(tr("Récupération des données du projet"))
         select_project(self.store.projects[index]["uuid"])
         self.dlg.end_progress()
 
     def reload_project(self):
         if self.store.current_project is not None:
-            self.dlg.start_progress("Récupération des données du projet")
+            self.dlg.start_progress(tr("Récupération des données du projet"))
             select_project(self.store.current_project["uuid"])
             self.dlg.end_progress()
 
