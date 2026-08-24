@@ -59,7 +59,9 @@ def r_g_b_color(color):
     Convert 'r g b' string to 'r,g,b'
     """
     color_array = color.split(" ")
-    assert len(color_array) == 3, "String should have format 'r g b'"
+
+    if len(color_array) != 3:
+        raise ValueError("String should have format 'r g b'")
 
     return ",".join(color_array)
 
@@ -71,7 +73,9 @@ def rgb_mapbox_color(color):
     """
 
     color_array = color[4:-1].split(",")
-    assert len(color_array) == 3, "String should have format 'rgb(r,g,b)'"
+
+    if len(color_array) != 3:
+        raise ValueError("String should have format 'rgb(r,g,b)'")
 
     return ",".join(color_array)
 

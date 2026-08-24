@@ -26,7 +26,8 @@ class KiteLineLayer(QgsKiteLayer):
 
         if isinstance(symbol, QgsFillSymbol):
             symbol_layer = symbol.symbolLayer(0)
-            assert isinstance(symbol_layer, QgsSimpleFillSymbolLayer)
+            if not isinstance(symbol_layer, QgsSimpleFillSymbolLayer):
+                raise ValueError("Symbol layer should be QgsSimpleFillSymbolLayer")
             # KiteLineLayer polygons are drawn without fill color
             # and with a solid border stroke (as if it was a LineString)
             symbol_layer.setBrushStyle(Qt.BrushStyle.NoBrush)
@@ -62,7 +63,8 @@ class KiteLineLayer(QgsKiteLayer):
             else:
                 symbol_layer = symbol.symbolLayer(0)
                 # should be QgsSimpleFillSymbolLayer instance
-                assert isinstance(symbol_layer, QgsSimpleFillSymbolLayer)
+                if not isinstance(symbol_layer, QgsSimpleFillSymbolLayer):
+                    raise ValueError("Symbol layer should be QgsSimpleFillSymbolLayer")
                 symbol_layer.setStrokeWidth(value)
 
     def set_symbol_size_unit(self, symbol: QgsMarkerSymbol, value: Qgis.RenderUnit):
@@ -70,5 +72,6 @@ class KiteLineLayer(QgsKiteLayer):
             symbol.setWidthUnit(value)
         else:
             symbol_layer = symbol.symbolLayer(0)
-            assert isinstance(symbol_layer, QgsSimpleFillSymbolLayer)
+            if not isinstance(symbol_layer, QgsSimpleFillSymbolLayer):
+                raise ValueError("Symbol layer should be QgsSimpleFillSymbolLayer")
             symbol_layer.setStrokeWidthUnit(value)

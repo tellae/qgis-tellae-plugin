@@ -25,7 +25,8 @@ class KiteFillLayer(QgsKiteLayer):
         symbol = super().create_symbol()
 
         symbol_layer = symbol.symbolLayer(0)
-        assert isinstance(symbol_layer, QgsSimpleFillSymbolLayer)
+        if not isinstance(symbol_layer, QgsSimpleFillSymbolLayer):
+            raise ValueError("Symbol layer should be QgsSimpleFillSymbolLayer")
 
         # KiteFillLayer polygons are drawn without border stroke
         symbol_layer.setStrokeStyle(Qt.PenStyle.NoPen)

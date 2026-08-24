@@ -22,7 +22,8 @@ class KiteCircleLayer(QgsKiteLayer):
         symbol = super().create_symbol()
 
         symbol_layer = symbol.symbolLayer(0)
-        assert isinstance(symbol_layer, QgsSimpleMarkerSymbolLayer)
+        if not isinstance(symbol_layer, QgsSimpleMarkerSymbolLayer):
+            raise ValueError("Symbol layer should be QgsSimpleMarkerSymbolLayer")
 
         # KiteCircleLayer circles are drawn without border stroke
         symbol_layer.setStrokeStyle(Qt.PenStyle.NoPen)
