@@ -123,12 +123,12 @@ QListWidget::item::selected {
      </item>
      <item>
       <property name="text">
-       <string>Parameters</string>
+       <string>Paramètres</string>
       </property>
      </item>
      <item>
       <property name="text">
-       <string>About</string>
+       <string>À propos</string>
       </property>
      </item>
     </widget>
@@ -193,7 +193,7 @@ QListWidget::item::selected {
          <item>
           <widget class="QStackedWidget" name="stacked_panels_widget">
            <property name="currentIndex">
-            <number>0</number>
+            <number>3</number>
            </property>
            <widget class="QWidget" name="layers">
             <widget class="QWidget" name="verticalLayoutWidget">
@@ -209,7 +209,7 @@ QListWidget::item::selected {
               <item>
                <widget class="QTabWidget" name="add_layers_tab">
                 <property name="currentIndex">
-                 <number>0</number>
+                 <number>1</number>
                 </property>
                 <widget class="QWidget" name="database">
                  <attribute name="title">
@@ -304,7 +304,7 @@ QListWidget::item::selected {
                 </widget>
                 <widget class="QWidget" name="project">
                  <attribute name="title">
-                  <string>Projet</string>
+                  <string>Mes données</string>
                  </attribute>
                  <widget class="QTableWidget" name="projectLayersTable">
                   <property name="geometry">
@@ -391,7 +391,7 @@ QListWidget::item::selected {
                 </property>
                 <widget class="QWidget" name="project_3">
                  <attribute name="title">
-                  <string>Projet</string>
+                  <string>Mes données</string>
                  </attribute>
                  <widget class="QTableWidget" name="projectFlowsTable">
                   <property name="geometry">
@@ -448,7 +448,7 @@ QListWidget::item::selected {
               <item>
                <widget class="QTabWidget" name="add_network_tab">
                 <property name="currentIndex">
-                 <number>0</number>
+                 <number>1</number>
                 </property>
                 <widget class="QWidget" name="database_2">
                  <attribute name="title">
@@ -508,7 +508,7 @@ QListWidget::item::selected {
                 </widget>
                 <widget class="QWidget" name="network_project_tab">
                  <attribute name="title">
-                  <string>Projet</string>
+                  <string>Mes données</string>
                  </attribute>
                  <widget class="QTableWidget" name="network_project_table">
                   <property name="geometry">
@@ -581,7 +581,7 @@ QListWidget::item::selected {
               </rect>
              </property>
              <property name="text">
-              <string>Login</string>
+              <string>Se connecter</string>
              </property>
              <property name="autoDefault">
               <bool>false</bool>
