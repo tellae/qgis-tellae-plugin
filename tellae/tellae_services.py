@@ -72,18 +72,18 @@ class TellaeServices:
         locale, file_path = setup_translation(
             folder=os.path.join(self.plugin_dir, "i18n"),
         )
-        log(locale)
         if not file_path and locale != "fr_FR":
-            log('Translation not found: {}. Using english translation'.format(locale))
+            log("Translation not found: '{}'. Using english translation".format(locale))
             locale, file_path = setup_translation(
                 folder=os.path.join(self.plugin_dir, "i18n"),
                 force_locale="en_US"
             )
 
+        if file_path:
             log('Translation from file {}'.format(file_path))
-            self.translator = QTranslator()
-            self.translator.load(file_path)
-            QCoreApplication.installTranslator(self.translator)
+        self.translator = QTranslator()
+        self.translator.load(file_path)
+        QCoreApplication.installTranslator(self.translator)
 
         # set Tellae locale
         TELLAE_STORE.set_locale(locale)

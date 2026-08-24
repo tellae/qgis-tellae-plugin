@@ -290,16 +290,6 @@
         <translation>Network</translation>
     </message>
     <message>
-        <location filename="../dialogs/main_window.ui" line="126"/>
-        <source>Parameters</source>
-        <translation>Parameters</translation>
-    </message>
-    <message>
-        <location filename="../dialogs/main_window.ui" line="131"/>
-        <source>About</source>
-        <translation>About</translation>
-    </message>
-    <message>
         <location filename="../dialogs/main_window.ui" line="455"/>
         <source>Base de données</source>
         <translation>Database</translation>
@@ -315,11 +305,6 @@
         <translation>Search</translation>
     </message>
     <message>
-        <location filename="../dialogs/main_window.ui" line="511"/>
-        <source>Projet</source>
-        <translation>Project</translation>
-    </message>
-    <message>
         <location filename="../dialogs/main_window.ui" line="551"/>
         <source>Projet :</source>
         <translation>Project :</translation>
@@ -333,11 +318,6 @@
         <location filename="../dialogs/main_window.ui" line="569"/>
         <source>Visualisez un réseau de transport public</source>
         <translation>Visualize a public transport network</translation>
-    </message>
-    <message>
-        <location filename="../dialogs/main_window.ui" line="584"/>
-        <source>Login</source>
-        <translation>Login</translation>
     </message>
     <message>
         <location filename="../dialogs/main_window.ui" line="600"/>
@@ -398,6 +378,26 @@
         <location filename="../dialogs/main_window.ui" line="359"/>
         <source>Cartographiez les données territoriales</source>
         <translation>Plot geographic data on the map</translation>
+    </message>
+    <message>
+        <location filename="../dialogs/main_window.ui" line="511"/>
+        <source>Mes données</source>
+        <translation>My data</translation>
+    </message>
+    <message>
+        <location filename="../dialogs/main_window.ui" line="584"/>
+        <source>Se connecter</source>
+        <translation>Login</translation>
+    </message>
+    <message>
+        <location filename="../dialogs/main_window.ui" line="126"/>
+        <source>Paramètres</source>
+        <translation>Parameters</translation>
+    </message>
+    <message>
+        <location filename="../dialogs/main_window.ui" line="131"/>
+        <source>À propos</source>
+        <translation>About</translation>
     </message>
 </context>
 </TS>
