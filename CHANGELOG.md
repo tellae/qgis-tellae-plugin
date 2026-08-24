@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.4](https://github.com/tellae/qgis-tellae-plugin/compare/v2.2.3...v2.2.4) (2026-08-24)
+
+
+### Bug Fixes
+
+* removed use of assert in code ([eee1ecc](https://github.com/tellae/qgis-tellae-plugin/commit/eee1ecc8608c0a36a0efd83a826d90cf4f299392))
+
 ## [2.2.3](https://github.com/tellae/qgis-tellae-plugin/compare/v2.2.2...v2.2.3) (2026-08-24)
 
 
