@@ -73,7 +73,7 @@ class TellaeServices:
             folder=os.path.join(self.plugin_dir, "i18n"),
         )
         if not file_path and locale != "fr_FR":
-            log('Translation not found: {}. Using english translation'.format(locale))
+            log("Translation not found: '{}'. Using english translation".format(locale))
             locale, file_path = setup_translation(
                 folder=os.path.join(self.plugin_dir, "i18n"),
                 force_locale="en_US"
