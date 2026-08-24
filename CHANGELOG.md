@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.3](https://github.com/tellae/qgis-tellae-plugin/compare/v2.2.2...v2.2.3) (2026-08-24)
+
+
+### Bug Fixes
+
+* fixed translation not displaying properly ([#73](https://github.com/tellae/qgis-tellae-plugin/issues/73)) ([3a265a2](https://github.com/tellae/qgis-tellae-plugin/commit/3a265a29c4b3084c0b144e66ea64d61336e51aee))
+
 ## [2.2.2](https://github.com/tellae/qgis-tellae-plugin/compare/v2.2.1...v2.2.2) (2026-06-15)
 
 
