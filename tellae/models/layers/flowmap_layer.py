@@ -14,7 +14,7 @@ from qgis.core import (
     QgsArrowSymbolLayer,
     QgsFeatureRequest,
 )
-from PyQt5.QtGui import QColor
+from qgis.PyQt.QtGui import QColor
 
 
 class FlowmapLayers(LayerGroup):

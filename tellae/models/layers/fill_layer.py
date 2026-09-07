@@ -8,7 +8,7 @@ from qgis.core import (
     QgsSymbol,
     QgsProperty,
 )
-from PyQt5.QtGui import QColor
+from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtCore import Qt
 
 from tellae.utils import log
