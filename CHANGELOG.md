@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.0](https://github.com/tellae/qgis-tellae-plugin/compare/v2.2.4...v2.3.0) (2026-10-14)
+
+
+### Features
+
+* make the plugin compatible with QGIS 4 ([#77](https://github.com/tellae/qgis-tellae-plugin/issues/77)) ([e8865bf](https://github.com/tellae/qgis-tellae-plugin/commit/e8865bf1ac056bac61a7d9d84382a752b0dd3164))
+
 ## [2.2.4](https://github.com/tellae/qgis-tellae-plugin/compare/v2.2.3...v2.2.4) (2026-08-24)
 
 
