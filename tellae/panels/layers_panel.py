@@ -47,7 +47,7 @@ class LayersPanel(BasePanel):
                         "date", ""
                     ),
                     "width": 80,
-                    "align": Qt.AlignCenter,
+                    "align": Qt.AlignmentFlag.AlignCenter,
                 },
                 {
                     "text": tr("Source"),

@@ -30,7 +30,7 @@ class TellaeAuthDialog(QtWidgets.QDialog, FORM_CLASS):
     def validate(self):
         try:
             try_new_indents(self.keyEdit.text(), self.secretEdit.text())
-            self.done(QDialog.Accepted)
+            self.done(QDialog.DialogCode.Accepted)
         except Exception as e:
             self.display_error_message(str(e))
 

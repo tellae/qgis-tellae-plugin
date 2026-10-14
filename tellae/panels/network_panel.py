@@ -50,7 +50,7 @@ class NetworkPanel(BasePanel):
                 "text": tr("Période"),
                 "value": lambda x: f'{gtfs_date_to_datetime(x["start_date"])} - {gtfs_date_to_datetime(x["end_date"])}' if x["start_date"] is not None else "",
                 "width": 180,
-                "align": Qt.AlignCenter,
+                "align": Qt.AlignmentFlag.AlignCenter,
             },
         ])
 

@@ -10,7 +10,7 @@ from qgis.core import (
     QgsRendererRange,
     QgsClassificationCustom,
 )
-from PyQt5.QtGui import QColor
+from qgis.PyQt.QtGui import QColor
 
 from abc import ABC, abstractmethod
 import copy

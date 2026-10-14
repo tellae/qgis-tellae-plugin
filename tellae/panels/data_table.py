@@ -1,6 +1,9 @@
 from qgis.PyQt.QtWidgets import QPushButton, QTableWidgetItem, QTableWidget
-from PyQt5.QtWidgets import QStyle
-
+from qgis.PyQt.QtWidgets import QStyle
+from qgis.PyQt.QtGui import QIcon
+from qgis.core import (
+    QgsApplication,
+)
 
 class DataTable:
 
@@ -14,7 +17,7 @@ class DataTable:
         self._headers = None
 
         # disable table edition
-        self.table_widget.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.table_widget.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
 
     @property
     def headers(self):
@@ -66,11 +69,11 @@ class DataTable:
                 # put the cell in the table
                 self.table_widget.setItem(row, col, cell)
 
-    def table_button_slot(self, handler, icon="SP_DialogSaveButton"):
+    def table_button_slot(self, handler, icon="symbologyAdd.svg"):
 
         def button_maker(table_widget, row_ix, col_ix, _, __):
             btn = QPushButton(table_widget)
-            btn.setIcon(self.parent_panel.dlg.style().standardIcon(getattr(QStyle, icon)))
+            btn.setIcon(QIcon(QgsApplication.iconPath(icon)))
             btn.clicked.connect(lambda state, x=row_ix: handler(x))
             table_widget.setCellWidget(row_ix, col_ix, btn)
 
