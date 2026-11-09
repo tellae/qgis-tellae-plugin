@@ -166,11 +166,11 @@ class GeojsonSource(QgsLayerSource):
 
         file_vector = QgsVectorLayer(data, name, "ogr")
 
-        if os.name == "posix":
+        if file_vector.isTemporary():
             return file_vector
 
-        # for non posix systems, convert the layer provider to 'memory'
-        # (temp files are considered 'memory' only on posix)
+        # convert the layer provider to 'memory'
+        # (temp files are considered 'memory' only on linux it seems)
         vector = file_vector.materialize(QgsFeatureRequest())
         if vector is None:
             raise RuntimeError("Error while converting to memory layer")
