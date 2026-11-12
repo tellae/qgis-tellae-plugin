@@ -8,7 +8,9 @@ from qgis.core import (
     QgsVectorTileLayer,
     QgsCoordinateTransform,
     QgsCoordinateReferenceSystem,
+    QgsFeatureRequest,
 )
+import os
 
 from tellae.utils import log, RequestsException
 from tellae.utils.contexts import LayerDownloadContext
@@ -143,18 +145,15 @@ class GeojsonSource(QgsLayerSource):
         self._mark_as_prepared()
 
     def create_temp_file(self):
-        try:
-            file_path = self.path
-            if file_path == "":
-                file = tempfile.NamedTemporaryFile(suffix=".geojson")
-                file.close()
-                file_path = file.name
-            with open(file_path, "wb") as f:
-                f.write(self.data)
-        except FileNotFoundError:
-            raise FileNotFoundError
-        except PermissionError:
-            raise PermissionError
+        file_path = self.path
+        if file_path == "":
+            # get temporary file name
+            file = tempfile.NamedTemporaryFile(suffix=".geojson")
+            file.close()
+            file_path = file.name
+
+        with open(file_path, "wb") as f:
+            f.write(self.data)
 
         self.path = file_path
 
@@ -165,7 +164,25 @@ class GeojsonSource(QgsLayerSource):
         if geometry is not None:
             data = f"{data}|geometrytype={geometry}"
 
-        return QgsVectorLayer(data, name, "ogr")
+        file_vector = QgsVectorLayer(data, name, "ogr")
+
+        if file_vector.isTemporary():
+            return file_vector
+
+        # convert the layer provider to 'memory'
+        # (temp files are considered 'memory' only on linux it seems)
+        vector = file_vector.materialize(QgsFeatureRequest())
+        if vector is None:
+            raise RuntimeError("Error while converting to memory layer")
+        vector.setName(name)
+        vector.updateExtents()
+
+        # delete source file if its still there
+        if os.path.exists(data):
+            file_vector.deleteLater()
+            # os.remove(data)  # crashes on windows, so we don't delete
+
+        return vector
 
 
 class SharkSource(GeojsonSource):
