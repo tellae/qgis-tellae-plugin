@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.0](https://github.com/tellae/qgis-tellae-plugin/compare/v2.3.0...v2.4.0) (2026-11-12)
+
+
+### Features
+
+* use memory layers on windows to match linux behavior ([#79](https://github.com/tellae/qgis-tellae-plugin/issues/79)) ([aad0dcc](https://github.com/tellae/qgis-tellae-plugin/commit/aad0dcceadf3b4424681c1b058e1b92a97dc1202))
+
 ## [2.3.0](https://github.com/tellae/qgis-tellae-plugin/compare/v2.2.4...v2.3.0) (2026-10-14)
 
 
